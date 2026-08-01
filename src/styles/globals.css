@@ -1,0 +1,60 @@
+/* ─── LuxRide Design Tokens ──────────────────────────────────────────────── */
+:root {
+  --lux-dark:       #0f1623;
+  --lux-dark-2:     #182030;
+  --lux-green:      #009933;
+  --lux-green-light:#00b33c;
+  --lux-gold:       #C9A84C;
+  --lux-gold-light: #E0C06A;
+  --lux-beige:      #F5F1EA;
+  --lux-orange:     #FF9933;
+  --lux-charcoal:   #1e2530;
+  --lux-bronze:     #8B6914;
+}
+
+@theme inline {
+  --color-lux-dark:        var(--lux-dark);
+  --color-lux-dark-2:      var(--lux-dark-2);
+  --color-lux-green:       var(--lux-green);
+  --color-lux-green-light: var(--lux-green-light);
+  --color-lux-gold:        var(--lux-gold);
+  --color-lux-gold-light:  var(--lux-gold-light);
+  --color-lux-beige:       var(--lux-beige);
+  --color-lux-orange:      var(--lux-orange);
+  --color-lux-charcoal:    var(--lux-charcoal);
+  --color-lux-bronze:      var(--lux-bronze);
+}
+
+.luxride-shell {
+  font-family: var(--font-body);
+  color: var(--lux-charcoal);
+}
+
+.luxride-shell h1,
+.luxride-shell h2,
+.luxride-shell h3,
+.luxride-shell h4,
+.luxride-shell button,
+.luxride-shell nav {
+  font-family: var(--font-heading);
+}
+
+.luxride-shell :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--lux-orange) 75%, white);
+  outline-offset: 3px;
+}
+
+.luxride-shell img {
+  max-width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .luxride-shell *,
+  .luxride-shell *::before,
+  .luxride-shell *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
