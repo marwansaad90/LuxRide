@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, CalendarDays, Clock, Luggage, MapPin, Users } from "lucide-react";
 import { useNavigate } from "react-router";
 import {
-  FLEET,
+  SELECTABLE_FLEET,
   TripType,
   VehicleId,
   availableTripTypes,
@@ -13,6 +13,7 @@ import {
 } from "./data";
 import { formatEur } from "./bookingState";
 import { locationLabel, useLang } from "./i18n";
+import { VehicleSegmentedSelector } from "./VehicleSegmentedSelector";
 
 const PICKUPS = pickupLocations();
 
@@ -30,34 +31,53 @@ export function EstimateYourTrip() {
   const [vehicleId, setVehicleId] = useState<VehicleId>("xpander");
   const [pax, setPax] = useState("2");
   const [luggage, setLuggage] = useState("2");
+  const [notice, setNotice] = useState("");
 
-  const vehicle = FLEET.find((v) => v.id === vehicleId)!;
+  const vehicle = SELECTABLE_FLEET.find((v) => v.id === vehicleId) ?? SELECTABLE_FLEET[0];
   const route = findRoute(from, to);
+  const supportedTrips = useMemo(() => availableTripTypes(route), [route]);
   const breakdown = useMemo(
-    () => (route ? computePrice(route, trip, vehicle) : null),
+    () => (route && vehicle ? computePrice(route, trip, vehicle) : null),
     [route, trip, vehicle],
   );
-  const supportedTrips = useMemo(() => availableTripTypes(route), [route]);
   const todayLocal = useMemo(() => {
     const now = new Date();
     return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().split("T")[0];
   }, []);
 
   useEffect(() => {
-    if (route && !supportedTrips.includes(trip)) {
-      setTrip(supportedTrips[0] ?? "oneWay");
-    }
-  }, [route, supportedTrips, trip]);
+    if (!route || supportedTrips.includes(trip)) return;
+    const nextTrip = supportedTrips[0] ?? "oneWay";
+    setTrip(nextTrip);
+    setNotice(isAR ? "تم تحديث نوع الرحلة حسب المسار المحدد." : "Trip type was updated for the selected route.");
+  }, [isAR, route, supportedTrips, trip]);
+
+  function clampForVehicle(id: VehicleId) {
+    const nextVehicle = SELECTABLE_FLEET.find((v) => v.id === id);
+    if (!nextVehicle) return;
+    const nextPax = Math.min(Number(pax), nextVehicle.pax);
+    const nextLuggage = Math.min(Number(luggage), nextVehicle.luggage);
+    setVehicleId(id);
+    setPax(String(nextPax));
+    setLuggage(String(nextLuggage));
+    setNotice(
+      nextPax !== Number(pax) || nextLuggage !== Number(luggage)
+        ? (isAR
+          ? "تم تحديث حدود الركاب والحقائب للسيارة المحددة."
+          : "Passenger and luggage limits were updated for the selected vehicle.")
+        : "",
+    );
+  }
 
   function handlePickup(value: string) {
     setFrom(value);
-    const d = destinationsFor(value);
-    setDests(d);
-    if (!d.includes(to)) setTo(d[0]);
+    const nextDests = destinationsFor(value);
+    setDests(nextDests);
+    setTo(nextDests.includes(to) ? to : nextDests[0]);
   }
 
   function handleContinue() {
-    if (!breakdown || !date || !time || !vehicle.available) return;
+    if (!breakdown || !date || !time || !vehicle) return;
     const params = new URLSearchParams({
       trip,
       from,
@@ -71,249 +91,174 @@ export function EstimateYourTrip() {
     navigate(`/booking?${params.toString()}`);
   }
 
-  const tripTypes: { id: TripType; label: string }[] = [
-    { id: "oneWay", label: isAR ? "ذهاب فقط" : "One Way" },
-    { id: "overday", label: isAR ? "يوم كامل" : "Overday" },
-    { id: "overnight", label: isAR ? "مبيت" : "Overnight" },
+  const tripTypes: { id: TripType; label: string; desc: string }[] = [
+    { id: "oneWay", label: isAR ? "ذهاب فقط" : "One Way", desc: isAR ? "رحلة واحدة" : "Single direction" },
+    { id: "overday", label: isAR ? "يوم كامل" : "Overday", desc: isAR ? "عودة في اليوم نفسه" : "Same-day return" },
+    { id: "overnight", label: isAR ? "مبيت" : "Overnight", desc: isAR ? "عودة في يوم لاحق" : "Later-date return" },
   ];
 
   const inputCls =
-    "w-full h-11 rounded-lg border border-gray-200 bg-white px-3 text-lux-charcoal text-sm focus:border-lux-green focus:outline-none focus:ring-2 focus:ring-lux-green/20 transition-all";
-
-  const labelCls = "mb-1.5 block text-sm font-semibold text-gray-700";
-
-  const maxPax = vehicle.pax;
-  const maxLuggage = vehicle.luggage;
+    "h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-lux-charcoal transition-all focus:border-lux-green focus:outline-none focus:ring-2 focus:ring-lux-green/25";
+  const labelCls = "mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-gray-700";
 
   return (
-    <section id="estimate" className="bg-white py-14 md:py-20">
-      <div className="mx-auto max-w-5xl px-4 md:px-8">
-        {/* Heading */}
-        <div className="mb-10 text-center">
-          <span className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-lux-green">
-            <span className="h-px w-6 bg-lux-green" />
-            {isAR ? "احسب سعر رحلتك" : "Quick Price Estimate"}
-            <span className="h-px w-6 bg-lux-green" />
-          </span>
-          <h2
-            className="mt-3 text-lux-charcoal"
-            style={{
-              fontFamily: isAR ? "Cairo, sans-serif" : "'Barlow Condensed', sans-serif",
-              fontSize: "clamp(1.8rem, 4vw, 2.6rem)",
-              fontWeight: 700,
-              lineHeight: 1.1,
-            }}
-          >
-            {isAR ? "قدّر رحلتك" : "Estimate Your Trip"}
-          </h2>
-          <p className="mt-2 text-gray-500" style={{ fontSize: "1rem" }}>
-            {isAR
-              ? "اختر وجهتك وسيارتك للحصول على السعر الثابت فوراً"
-              : "Select your route and vehicle to see your fixed price instantly"}
-          </p>
+    <div
+      id="estimate"
+      tabIndex={-1}
+      className="scroll-mt-24 rounded-2xl border border-white/70 bg-white/95 p-4 shadow-[0_22px_70px_rgba(15,22,35,0.22)] backdrop-blur-md sm:p-5"
+    >
+      <div className="mb-4">
+        <p className="text-xs uppercase tracking-[0.16em] text-lux-green">
+          {isAR ? "حاسبة السعر" : "Quick Price Estimate"}
+        </p>
+        <h2 className="mt-1 text-lux-charcoal" style={{ fontSize: "1.45rem", fontWeight: 800, lineHeight: 1.1 }}>
+          {isAR ? "قدّر رحلتك" : "Estimate Your Trip"}
+        </h2>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <span className={labelCls}>{isAR ? "نوع الرحلة" : "Trip type"}</span>
+          <div role="radiogroup" aria-label={isAR ? "نوع الرحلة" : "Trip type"} className="grid grid-cols-3 gap-1 rounded-xl bg-gray-100 p-1">
+            {tripTypes.map((tt) => {
+              const supported = supportedTrips.includes(tt.id);
+              const selected = trip === tt.id;
+              const disabledReason = isAR ? "غير متاح لهذا المسار" : "Not available for this route";
+              return (
+                <button
+                  key={tt.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  aria-disabled={!supported}
+                  title={supported ? tt.desc : disabledReason}
+                  disabled={!supported}
+                  onClick={() => setTrip(tt.id)}
+                  className={`min-h-11 rounded-lg px-1.5 py-2 text-center text-xs font-semibold transition-all ${
+                    !supported
+                      ? "cursor-not-allowed text-gray-400"
+                      : selected
+                      ? "bg-lux-green text-white shadow-sm"
+                      : "text-gray-700 hover:bg-white hover:text-lux-green"
+                  }`}
+                >
+                  <span className="block leading-tight">{tt.label}</span>
+                  <span className="sr-only">{supported ? tt.desc : disabledReason}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-gray-100 bg-white shadow-[0_8px_40px_rgba(0,0,0,0.08)] overflow-hidden">
-          {/* Trip type tabs */}
-          <div className="flex border-b border-gray-100 bg-gray-50">
-            {tripTypes.map((tt) => (
-              <button
-                type="button"
-                key={tt.id}
-                onClick={() => setTrip(tt.id)}
-                disabled={!supportedTrips.includes(tt.id)}
-                className={`flex-1 py-3.5 text-sm font-medium transition-all ${
-                  !supportedTrips.includes(tt.id)
-                    ? "cursor-not-allowed bg-gray-100 text-gray-400"
-                    : trip === tt.id
-                    ? "bg-lux-green text-white"
-                    : "text-gray-500 hover:text-lux-green"
-                }`}
-                style={{ fontFamily: isAR ? "Cairo, sans-serif" : "'Barlow Condensed', sans-serif", fontWeight: 600, fontSize: "0.95rem" }}
-              >
-                {tt.label}
-              </button>
-            ))}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label htmlFor="estimate-from" className={labelCls}>
+              <MapPin className="h-3.5 w-3.5 text-lux-green" />
+              {isAR ? "موقع الانطلاق" : "Pickup"}
+            </label>
+            <select id="estimate-from" value={from} onChange={(event) => handlePickup(event.target.value)} className={inputCls}>
+              {PICKUPS.map((pickup) => (
+                <option key={pickup} value={pickup}>{locationLabel(lang, pickup)}</option>
+              ))}
+            </select>
           </div>
+          <div>
+            <label htmlFor="estimate-to" className={labelCls}>
+              <MapPin className="h-3.5 w-3.5 text-lux-green" />
+              {isAR ? "الوجهة" : "Destination"}
+            </label>
+            <select id="estimate-to" value={to} onChange={(event) => setTo(event.target.value)} className={inputCls}>
+              {dests.map((destination) => (
+                <option key={destination} value={destination}>{locationLabel(lang, destination)}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="estimate-date" className={labelCls}>
+              <CalendarDays className="h-3.5 w-3.5 text-lux-green" />
+              {isAR ? "تاريخ الرحلة" : "Date"}
+            </label>
+            <input id="estimate-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} className={inputCls} min={todayLocal} />
+          </div>
+          <div>
+            <label htmlFor="estimate-time" className={labelCls}>
+              <Clock className="h-3.5 w-3.5 text-lux-green" />
+              {isAR ? "وقت الانطلاق" : "Pickup time"}
+            </label>
+            <input id="estimate-time" type="time" value={time} onChange={(event) => setTime(event.target.value)} className={inputCls} />
+          </div>
+        </div>
 
-          <div className="p-6 md:p-8">
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {/* Pickup */}
+        <div>
+          <span className={labelCls}>{isAR ? "السيارة" : "Vehicle"}</span>
+          <VehicleSegmentedSelector id="estimate-vehicle" lang={lang} value={vehicleId} onChange={clampForVehicle} />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="estimate-passengers" className={labelCls}>
+              <Users className="h-3.5 w-3.5 text-lux-green" />
+              {isAR ? "ركاب" : "Passengers"}
+            </label>
+            <select id="estimate-passengers" value={pax} onChange={(event) => setPax(event.target.value)} className={inputCls}>
+              {Array.from({ length: vehicle.pax }, (_, index) => index + 1).map((count) => (
+                <option key={count} value={String(count)}>{count}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="estimate-luggage" className={labelCls}>
+              <Luggage className="h-3.5 w-3.5 text-lux-green" />
+              {isAR ? "حقائب" : "Bags"}
+            </label>
+            <select id="estimate-luggage" value={luggage} onChange={(event) => setLuggage(event.target.value)} className={inputCls}>
+              {Array.from({ length: vehicle.luggage + 1 }, (_, index) => index).map((count) => (
+                <option key={count} value={String(count)}>{count}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {notice && (
+          <p role="status" aria-live="polite" className="rounded-lg border border-lux-orange/30 bg-orange-50 px-3 py-2 text-xs text-gray-700">
+            {notice}
+          </p>
+        )}
+
+        <div className="rounded-xl bg-gray-50 p-4">
+          {breakdown ? (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <label htmlFor="estimate-from" className={labelCls}>
-                  <MapPin className="inline h-3 w-3 mr-1" />
-                  {isAR ? "موقع الانطلاق" : "Pickup Location"}
-                </label>
-                <select
-                  id="estimate-from"
-                  value={from}
-                  onChange={(e) => handlePickup(e.target.value)}
-                  className={inputCls}
-                >
-                  {PICKUPS.map((p) => (
-                      <option key={p} value={p}>{locationLabel(lang, p)}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Destination */}
-              <div>
-                <label htmlFor="estimate-to" className={labelCls}>
-                  <MapPin className="inline h-3 w-3 mr-1" />
-                  {isAR ? "الوجهة" : "Destination"}
-                </label>
-                <select
-                  id="estimate-to"
-                  value={to}
-                  onChange={(e) => setTo(e.target.value)}
-                  className={inputCls}
-                >
-                  {dests.map((d) => (
-                      <option key={d} value={d}>{locationLabel(lang, d)}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Vehicle */}
-              <div>
-                <label htmlFor="estimate-vehicle" className={labelCls}>
-                  {isAR ? "السيارة" : "Vehicle"}
-                </label>
-                <select
-                  id="estimate-vehicle"
-                  value={vehicleId}
-                  onChange={(e) => {
-                    const v = FLEET.find((f) => f.id === e.target.value);
-                    if (v && !v.available) return;
-                    setVehicleId(e.target.value as VehicleId);
-                    const newV = FLEET.find((f) => f.id === e.target.value)!;
-                    if (parseInt(pax) > newV.pax) setPax(String(newV.pax));
-                    if (parseInt(luggage) > newV.luggage) setLuggage(String(newV.luggage));
-                  }}
-                  className={inputCls}
-                >
-                  {FLEET.map((v) => (
-                    <option key={v.id} value={v.id} disabled={!v.available}>
-                      {v.name} — {isAR ? v.capacityAr : v.capacityEn}{!v.available ? ` (${isAR ? "قريباً" : "Coming Soon"})` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Date */}
-              <div>
-                <label htmlFor="estimate-date" className={labelCls}>
-                  <CalendarDays className="inline h-3 w-3 mr-1" />
-                  {isAR ? "تاريخ الرحلة" : "Transfer Date"}
-                </label>
-                <input
-                  id="estimate-date"
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className={inputCls}
-                  min={todayLocal}
-                />
-              </div>
-
-              {/* Time */}
-              <div>
-                <label htmlFor="estimate-time" className={labelCls}>
-                  <Clock className="inline h-3 w-3 mr-1" />
-                  {isAR ? "وقت الانطلاق" : "Pickup Time"}
-                </label>
-                <input
-                  id="estimate-time"
-                  type="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className={inputCls}
-                />
-              </div>
-
-              {/* Passengers + Luggage */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="estimate-passengers" className={labelCls}>
-                    <Users className="inline h-3 w-3 mr-1" />
-                    {isAR ? "ركاب" : "Passengers"}
-                  </label>
-                  <select
-                    id="estimate-passengers"
-                    value={pax}
-                    onChange={(e) => setPax(e.target.value)}
-                    className={inputCls}
-                  >
-                    {Array.from({ length: maxPax }, (_, i) => i + 1).map((n) => (
-                      <option key={n} value={String(n)}>{n}</option>
-                    ))}
-                  </select>
+                <p className="text-xs uppercase tracking-[0.14em] text-gray-500">
+                  {isAR ? "السعر الثابت المقدّر" : "Estimated fixed price"}
+                </p>
+                <div className="mt-1 flex items-baseline gap-2">
+                  {breakdown.discount > 0 && <span className="text-sm text-gray-400 line-through">{formatEur(breakdown.base)}</span>}
+                  <span className="text-lux-green" style={{ fontSize: "1.9rem", fontWeight: 800 }}>
+                    {formatEur(breakdown.total)}
+                  </span>
                 </div>
-                <div>
-                  <label htmlFor="estimate-luggage" className={labelCls}>
-                    <Luggage className="inline h-3 w-3 mr-1" />
-                    {isAR ? "حقائب" : "Bags"}
-                  </label>
-                  <select
-                    id="estimate-luggage"
-                    value={luggage}
-                    onChange={(e) => setLuggage(e.target.value)}
-                    className={inputCls}
-                  >
-                    {Array.from({ length: maxLuggage + 1 }, (_, i) => i).map((n) => (
-                      <option key={n} value={String(n)}>{n}</option>
-                    ))}
-                  </select>
-                </div>
+                <p className="text-xs text-gray-500">
+                  {isAR ? "شامل الضريبة · سعر ثابت" : "Tax included · fixed price"}
+                  {breakdown.airport > 0 && ` · +${formatEur(breakdown.airport)} ${isAR ? "رسوم مطار" : "airport"}`}
+                  {breakdown.permit > 0 && ` · +${formatEur(breakdown.permit)} ${isAR ? "تصريح" : "permit"}`}
+                </p>
               </div>
-            </div>
-
-            {/* Price preview + CTA */}
-            <div className="mt-6 flex flex-col gap-4 rounded-xl bg-gray-50 p-5 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                {breakdown ? (
-                  <>
-                    <p className="text-xs text-gray-500 uppercase tracking-wide">
-                      {isAR ? "السعر الثابت المقدّر" : "Estimated fixed price"}
-                    </p>
-                    <div className="mt-1 flex items-baseline gap-2">
-                      {breakdown.discount > 0 && (
-                        <span className="text-gray-400 line-through text-sm">{formatEur(breakdown.base)}</span>
-                      )}
-                      <span
-                        className="text-lux-green"
-                        style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "2rem" }}
-                      >
-                        {formatEur(breakdown.total)}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      {isAR ? "شامل الضريبة · سعر ثابت" : "Tax included · fixed price"}
-                      {breakdown.airport > 0 && ` · +€${breakdown.airport} ${isAR ? "رسوم مطار" : "airport fee"}`}
-                      {breakdown.permit > 0 && ` · +€${breakdown.permit} ${isAR ? "تصريح" : "permit"}`}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-sm text-gray-400">
-                    {isAR ? "اختر الوجهة لرؤية السعر" : "Select a route to see the price"}
-                  </p>
-                )}
-              </div>
-
               <button
                 type="button"
                 onClick={handleContinue}
-                disabled={!breakdown || !date || !time || !vehicle.available}
-                className="flex shrink-0 items-center justify-center gap-2 rounded-full bg-lux-green px-8 py-3.5 text-white shadow-md shadow-lux-green/25 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
-                style={{ fontFamily: isAR ? "Cairo, sans-serif" : "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "1.05rem" }}
+                disabled={!date || !time}
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-lux-green px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-lux-green/25 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isAR ? "المتابعة لتفاصيل الرحلة" : "Continue to Trip Details"}
-                <ArrowRight className="h-5 w-5" />
+                <ArrowRight className="h-4 w-4 rtl:rotate-180" />
               </button>
             </div>
-          </div>
+          ) : (
+            <p className="text-sm text-gray-500">{isAR ? "هذا النوع غير متاح لهذا المسار." : "This trip type is not available for the selected route."}</p>
+          )}
         </div>
       </div>
-    </section>
+    </div>
   );
 }

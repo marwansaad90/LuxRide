@@ -2,16 +2,21 @@ import { describe, expect, it } from "vitest";
 import {
   ACTIVE_FLEET,
   AIRPORT_SURCHARGE,
+  CLIENT_REVIEW_ENABLE_ALL_VEHICLES,
   FLEET,
   PERMIT_FEE,
+  PRODUCTION_ACTIVE_FLEET,
+  SELECTABLE_FLEET,
   availableTripTypes,
   computePrice,
   destinationsFor,
   findRoute,
 } from "./data";
-import { isValidReturn, readInitialBookingState } from "./bookingState";
+import { normalizeReturnFields, isValidReturn, readInitialBookingState } from "./bookingState";
 
 const xpander = FLEET.find((vehicle) => vehicle.id === "xpander")!;
+const corolla = FLEET.find((vehicle) => vehicle.id === "corolla")!;
+const hiace = FLEET.find((vehicle) => vehicle.id === "hiace")!;
 
 function price(from: string, to: string, trip: "oneWay" | "overday" | "overnight") {
   const route = findRoute(from, to);
@@ -33,14 +38,35 @@ describe("approved LuxRide pricing", () => {
     expect(price("Hurghada", "Sharm El Sheikh", "overnight")?.base).toBe(250);
   });
 
+  it("uses the approved El Gouna to Luxor prices", () => {
+    expect(price("El Gouna", "Luxor", "oneWay")?.base).toBe(85);
+    expect(price("El Gouna", "Luxor", "overday")?.base).toBe(100);
+  });
+
+  it("uses the approved Cairo Overday prices", () => {
+    expect(price("Hurghada", "Cairo", "oneWay")?.base).toBe(110);
+    expect(price("Hurghada", "Cairo", "overday")?.base).toBe(120);
+    expect(price("Makadi Bay", "Cairo", "overday")?.base).toBe(135);
+    expect(price("Safaga", "Cairo", "overday")?.base).toBe(135);
+  });
+
+  it("uses the approved Alexandria Overnight price without inventing other trip types", () => {
+    expect(price("Hurghada", "Alexandria", "overnight")?.base).toBe(180);
+    expect(price("Hurghada", "Alexandria", "oneWay")).toBeNull();
+    expect(price("Hurghada", "Alexandria", "overday")).toBeNull();
+  });
+
   it("applies the airport surcharge exactly once", () => {
     const result = price("Hurghada Airport", "El Gouna", "oneWay")!;
     expect(result.airport).toBe(AIRPORT_SURCHARGE);
     expect(result.total).toBe(15);
   });
 
-  it("applies the Xpander permit exactly once on Luxor", () => {
+  it("applies permit fees exactly once based on selected vehicle", () => {
     expect(price("Hurghada", "Luxor", "oneWay")?.permit).toBe(PERMIT_FEE.mpv);
+    const route = findRoute("Hurghada", "Luxor")!;
+    expect(computePrice(route, "overday", corolla)?.permit).toBe(PERMIT_FEE.sedan);
+    expect(computePrice(route, "overday", hiace)?.permit).toBe(PERMIT_FEE.minivan);
   });
 
   it("keeps discount, subtotal, fees, and final total separate", () => {
@@ -67,8 +93,14 @@ describe("approved LuxRide pricing", () => {
 });
 
 describe("vehicle and route validation", () => {
-  it("keeps only the Xpander bookable with approved capacities", () => {
+  it("preserves production availability while enabling all vehicles for client review", () => {
+    expect(CLIENT_REVIEW_ENABLE_ALL_VEHICLES).toBe(true);
+    expect(PRODUCTION_ACTIVE_FLEET.map((vehicle) => vehicle.id)).toEqual(["xpander"]);
     expect(ACTIVE_FLEET.map((vehicle) => vehicle.id)).toEqual(["xpander"]);
+    expect(SELECTABLE_FLEET.map((vehicle) => vehicle.id)).toEqual(["corolla", "xpander", "hiace"]);
+  });
+
+  it("keeps the approved vehicle passenger and luggage limits", () => {
     expect(FLEET.map(({ id, pax, luggage, available }) => ({ id, pax, luggage, available }))).toEqual([
       { id: "xpander", pax: 4, luggage: 4, available: true },
       { id: "corolla", pax: 3, luggage: 2, available: false },
@@ -107,9 +139,9 @@ describe("vehicle and route validation", () => {
       from: "Hurghada Airport",
       to: "Hurghada",
       trip: "oneWay",
-      vehicleId: "xpander",
-      pax: "4",
-      luggage: "4",
+      vehicleId: "hiace",
+      pax: "8",
+      luggage: "8",
       date: "",
       time: "",
       corrected: true,
@@ -126,5 +158,20 @@ describe("vehicle and route validation", () => {
     expect(isValidReturn("overnight", "2026-08-10", "20:00", "2026-08-11", "07:00")).toBe(true);
     expect(isValidReturn("overnight", "2026-08-10", "08:00", "2026-08-10", "20:00")).toBe(false);
     expect(isValidReturn("overnight", "2026-08-10", "08:00", "", "")).toBe(false);
+  });
+
+  it("normalizes return fields by trip type", () => {
+    expect(normalizeReturnFields("oneWay", "2026-08-10", "2026-08-11", "09:00")).toEqual({
+      returnDate: "",
+      returnTime: "",
+    });
+    expect(normalizeReturnFields("overday", "2026-08-10", "", "18:00")).toEqual({
+      returnDate: "2026-08-10",
+      returnTime: "18:00",
+    });
+    expect(normalizeReturnFields("overnight", "2026-08-10", "2026-08-10", "18:00")).toEqual({
+      returnDate: "",
+      returnTime: "18:00",
+    });
   });
 });

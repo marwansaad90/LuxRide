@@ -53,6 +53,7 @@ export const PERMIT_FEE = { sedan: 20, mpv: 20, minivan: 30 } as const; // € o
 export const PERMIT_DESTINATIONS = ["Luxor", "Aswan", "Cairo", "Sharm El Sheikh"];
 export const MAX_AIRPORT_WAIT_HOURS = 3;
 export const BOOKING_CUTOFF_HOURS = 3; // standard booking must be ≥ 3h before departure
+export const CLIENT_REVIEW_ENABLE_ALL_VEHICLES = true;
 
 // ─── Fleet ────────────────────────────────────────────────────────────────────
 export type PermitTier = "sedan" | "mpv" | "minivan";
@@ -123,6 +124,12 @@ export const FLEET: Vehicle[] = [
 ];
 
 export const ACTIVE_FLEET = FLEET.filter((v) => v.available);
+export const PRODUCTION_ACTIVE_FLEET = FLEET.filter((v) => v.available);
+export const VEHICLE_SEGMENT_ORDER: VehicleId[] = ["corolla", "xpander", "hiace"];
+export const SELECTABLE_FLEET = VEHICLE_SEGMENT_ORDER
+  .map((id) => FLEET.find((vehicle) => vehicle.id === id))
+  .filter((vehicle): vehicle is Vehicle => Boolean(vehicle))
+  .filter((vehicle) => CLIENT_REVIEW_ENABLE_ALL_VEHICLES || vehicle.available);
 
 // ─── Trip types ───────────────────────────────────────────────────────────────
 export type TripType = "oneWay" | "overday" | "overnight";
@@ -226,8 +233,12 @@ export function isTripType(value: string | null): value is TripType {
   return value != null && TRIP_TYPES.includes(value as TripType);
 }
 
+export function isVehicleSelectable(vehicle: Vehicle): boolean {
+  return CLIENT_REVIEW_ENABLE_ALL_VEHICLES || vehicle.available;
+}
+
 export function availableVehicle(value: string | null): Vehicle {
-  return FLEET.find((vehicle) => vehicle.id === value && vehicle.available) ?? ACTIVE_FLEET[0];
+  return SELECTABLE_FLEET.find((vehicle) => vehicle.id === value) ?? SELECTABLE_FLEET[0] ?? ACTIVE_FLEET[0];
 }
 
 export function clampWholeNumber(value: string | null, min: number, max: number): number {

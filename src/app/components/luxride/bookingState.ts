@@ -19,6 +19,8 @@ export interface InitialBookingState {
   vehicleId: VehicleId;
   pax: string;
   luggage: string;
+  returnDate: string;
+  returnTime: string;
   corrected: boolean;
 }
 
@@ -50,6 +52,11 @@ export function readInitialBookingState(params: URLSearchParams): InitialBooking
   const requestedTime = params.get("time") ?? "";
   const date = DATE_PATTERN.test(requestedDate) ? requestedDate : "";
   const time = TIME_PATTERN.test(requestedTime) ? requestedTime : "";
+  const requestedReturnDate = params.get("returnDate") ?? "";
+  const requestedReturnTime = params.get("returnTime") ?? "";
+  const rawReturnDate = DATE_PATTERN.test(requestedReturnDate) ? requestedReturnDate : "";
+  const rawReturnTime = TIME_PATTERN.test(requestedReturnTime) ? requestedReturnTime : "";
+  const returnFields = normalizeReturnFields(trip, date, rawReturnDate, rawReturnTime);
 
   const corrected =
     (requestedFrom != null && requestedFrom !== from) ||
@@ -59,7 +66,9 @@ export function readInitialBookingState(params: URLSearchParams): InitialBooking
     (params.get("pax") != null && params.get("pax") !== String(pax)) ||
     (params.get("luggage") != null && params.get("luggage") !== String(luggage)) ||
     (requestedDate !== date) ||
-    (requestedTime !== time);
+    (requestedTime !== time) ||
+    (requestedReturnDate !== returnFields.returnDate) ||
+    (requestedReturnTime !== returnFields.returnTime);
 
   return {
     trip,
@@ -70,6 +79,8 @@ export function readInitialBookingState(params: URLSearchParams): InitialBooking
     vehicleId: vehicle.id,
     pax: String(pax),
     luggage: String(luggage),
+    returnDate: returnFields.returnDate,
+    returnTime: returnFields.returnTime,
     corrected,
   };
 }
@@ -98,4 +109,27 @@ export function isValidReturn(
   const departure = new Date(`${departureDate}T${departureTime}`).getTime();
   const returning = new Date(`${returnDate}T${returnTime}`).getTime();
   return Number.isFinite(departure) && Number.isFinite(returning) && returning > departure;
+}
+
+export function addDays(date: string, days: number): string {
+  if (!DATE_PATTERN.test(date)) return "";
+  const value = new Date(`${date}T00:00:00`);
+  value.setDate(value.getDate() + days);
+  return new Date(value.getTime() - value.getTimezoneOffset() * 60_000).toISOString().split("T")[0];
+}
+
+export function normalizeReturnFields(
+  trip: TripType,
+  departureDate: string,
+  returnDate: string,
+  returnTime: string,
+): { returnDate: string; returnTime: string } {
+  if (trip === "oneWay") return { returnDate: "", returnTime: "" };
+  if (trip === "overday") {
+    return { returnDate: departureDate || "", returnTime };
+  }
+  if (!departureDate || !returnDate || returnDate <= departureDate) {
+    return { returnDate: "", returnTime };
+  }
+  return { returnDate, returnTime };
 }

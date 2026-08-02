@@ -51,6 +51,10 @@ This repository is ready to connect to Cloudflare Pages from GitHub.
 
 The included `wrangler.toml` declares `pages_build_output_dir = "./dist"` so Cloudflare Pages and Wrangler use the same production output folder.
 
+## Client Review Mode
+
+All three vehicles are temporarily selectable in the client-review prototype to validate capacity and pricing behavior. Final production availability requires client confirmation; the production fleet state still marks only the Mitsubishi Xpander as available, with the Toyota Corolla and Toyota HiAce retained as Coming Soon.
+
 ## Routes
 
 Customer routes:

@@ -16,6 +16,7 @@ import {
 import {
   BOOKING_CUTOFF_HOURS,
   FLEET,
+  SELECTABLE_FLEET,
   TripType,
   VehicleId,
   computePrice,
@@ -25,8 +26,9 @@ import {
   pickupLocations,
   whatsappLink,
 } from "../components/luxride/data";
-import { formatEur, isValidReturn, readInitialBookingState } from "../components/luxride/bookingState";
+import { addDays, formatEur, isValidReturn, normalizeReturnFields, readInitialBookingState } from "../components/luxride/bookingState";
 import { locationLabel, useLang } from "../components/luxride/i18n";
+import { VehicleSegmentedSelector } from "../components/luxride/VehicleSegmentedSelector";
 
 const PICKUPS = pickupLocations();
 type Step = 1 | 2 | 3;
@@ -46,8 +48,8 @@ export function BookingPage() {
   const [to, setTo] = useState(initial.to);
   const [date, setDate] = useState(initial.date);
   const [time, setTime] = useState(initial.time);
-  const [returnDate, setReturnDate] = useState("");
-  const [returnTime, setReturnTime] = useState("");
+  const [returnDate, setReturnDate] = useState(initial.returnDate);
+  const [returnTime, setReturnTime] = useState(initial.returnTime);
   const [vehicleId, setVehicleId] = useState<VehicleId>(initial.vehicleId);
   const [pax, setPax] = useState(initial.pax);
   const [luggage, setLuggage] = useState(initial.luggage);
@@ -62,9 +64,10 @@ export function BookingPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
+  const [tripNotice, setTripNotice] = useState("");
 
   // ── Derived ─────────────────────────────────────────────────────────────────
-  const vehicle = FLEET.find((v) => v.id === vehicleId) ?? FLEET[0];
+  const vehicle = SELECTABLE_FLEET.find((v) => v.id === vehicleId) ?? SELECTABLE_FLEET[0] ?? FLEET[0];
   const route = findRoute(from, to);
   const breakdown = useMemo(
     () => (route ? computePrice(route, trip, vehicle) : null),
@@ -98,8 +101,8 @@ export function BookingPage() {
   }
 
   function handleVehicleChange(id: VehicleId) {
-    const v = FLEET.find((f) => f.id === id);
-    if (!v || !v.available) return;
+    const v = SELECTABLE_FLEET.find((f) => f.id === id);
+    if (!v) return;
     setVehicleId(id);
     const exceedsCapacity = parseInt(pax) > v.pax || parseInt(luggage) > v.luggage;
     if (parseInt(pax) > v.pax) setPax(String(v.pax));
@@ -110,8 +113,15 @@ export function BookingPage() {
   useEffect(() => {
     if (route && !supportedTrips.includes(trip)) {
       setTrip(supportedTrips[0] ?? "oneWay");
+      setTripNotice(isAR ? "تم تحديث نوع الرحلة حسب المسار المحدد." : "Trip type was updated for the selected route.");
     }
-  }, [route, supportedTrips, trip]);
+  }, [isAR, route, supportedTrips, trip]);
+
+  useEffect(() => {
+    const normalized = normalizeReturnFields(trip, date, returnDate, returnTime);
+    if (normalized.returnDate !== returnDate) setReturnDate(normalized.returnDate);
+    if (normalized.returnTime !== returnTime) setReturnTime(normalized.returnTime);
+  }, [date, returnDate, returnTime, trip]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -123,7 +133,7 @@ export function BookingPage() {
     : (isAR ? "مبيت" : "Overnight");
 
   const hasValidReturn = isValidReturn(trip, date, time, returnDate, returnTime);
-  const step1Valid = !!(from && to && date && time && breakdown && vehicle.available);
+  const step1Valid = !!(from && to && date && time && breakdown);
   const step2Valid =
     hotel.trim().length > 0 &&
     name.trim().length > 0 &&
@@ -243,6 +253,8 @@ export function BookingPage() {
                       key={tt.id}
                       onClick={() => setTrip(tt.id)}
                       disabled={!supportedTrips.includes(tt.id)}
+                      aria-describedby={!supportedTrips.includes(tt.id) ? `booking-trip-${tt.id}-unsupported` : undefined}
+                      title={!supportedTrips.includes(tt.id) ? (isAR ? "غير متاح لهذا المسار" : "Not available for this route") : tt.desc}
                       className={`rounded-xl border-2 p-3 text-center transition-all ${
                         !supportedTrips.includes(tt.id) ? "cursor-not-allowed border-gray-100 bg-gray-50 text-gray-400"
                         : trip === tt.id ? "border-lux-green bg-lux-green/5 text-lux-green" : "border-gray-200 text-gray-600 hover:border-lux-green/40"
@@ -250,9 +262,19 @@ export function BookingPage() {
                     >
                       <div className="font-semibold text-sm" style={{ fontFamily: hFamily }}>{tt.label}</div>
                       <div className="text-xs mt-0.5 opacity-70">{tt.desc}</div>
+                      {!supportedTrips.includes(tt.id) && (
+                        <span id={`booking-trip-${tt.id}-unsupported`} className="sr-only">
+                          {isAR ? "غير متاح لهذا المسار" : "Not available for this route"}
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
+                {tripNotice && (
+                  <p role="status" aria-live="polite" className="mt-3 rounded-lg border border-lux-orange/30 bg-orange-50 px-3 py-2 text-sm text-gray-700">
+                    {tripNotice}
+                  </p>
+                )}
               </div>
 
               {/* Route */}
@@ -282,40 +304,7 @@ export function BookingPage() {
               {/* Vehicle selector */}
               <div className="mt-5">
                 <label className={labelCls}>{isAR ? "السيارة" : "Vehicle"}</label>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  {FLEET.map((v) => (
-                    <button
-                      type="button"
-                      key={v.id}
-                      onClick={() => handleVehicleChange(v.id)}
-                      disabled={!v.available}
-                      className={`relative rounded-xl border-2 p-4 text-start transition-all ${
-                        !v.available ? "border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed"
-                        : vehicleId === v.id ? "border-lux-green bg-lux-green/5"
-                        : "border-gray-200 hover:border-lux-green/40 bg-white"
-                      }`}
-                    >
-                      {!v.available && (
-                        <span className="absolute top-2 end-2 rounded-full bg-gray-200 px-2 py-0.5 text-xs text-gray-500">
-                          {isAR ? "قريباً" : "Soon"}
-                        </span>
-                      )}
-                      {vehicleId === v.id && v.available && (
-                        <span className="absolute top-2 end-2 flex h-5 w-5 items-center justify-center rounded-full bg-lux-green">
-                          <Check className="h-3 w-3 text-white" />
-                        </span>
-                      )}
-                      <img src={v.image} alt="" className="mb-3 h-16 w-full object-contain" style={{ direction: "ltr" }} />
-                      <div className={`text-sm font-semibold ${vehicleId === v.id ? "text-lux-green" : "text-gray-700"}`} style={{ fontFamily: hFamily }}>
-                        {v.name}
-                      </div>
-                      <div className="mt-0.5 text-xs text-gray-500">{isAR ? v.categoryAr : v.category}</div>
-                      <div className="mt-2 flex gap-3 text-xs text-gray-500">
-                        <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {isAR ? v.capacityAr : v.capacityEn}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                <VehicleSegmentedSelector id="booking-vehicle" lang={lang} value={vehicleId} onChange={handleVehicleChange} />
               </div>
 
               {/* Pax + Luggage */}
@@ -407,13 +396,33 @@ export function BookingPage() {
               <div className="space-y-4">
                 {needsReturn && (
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <Field label={isAR ? "تاريخ العودة *" : "Return Date *"} labelCls={labelCls}>
-                      <input type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} className={inputCls} min={date || todayLocal} />
-                    </Field>
+                    {trip === "overday" ? (
+                      <Field
+                        label={isAR ? "تاريخ العودة" : "Return Date"}
+                        labelCls={labelCls}
+                        note={isAR ? "رحلات اليوم تعود في نفس تاريخ المغادرة." : "Overday trips return on the same date as departure."}
+                      >
+                        <input type="date" value={date} readOnly className={`${inputCls} bg-gray-50`} aria-readonly="true" />
+                      </Field>
+                    ) : (
+                      <Field
+                        label={isAR ? "تاريخ العودة *" : "Return Date *"}
+                        labelCls={labelCls}
+                        note={isAR ? "رحلات المبيت تتطلب تاريخ عودة لاحقاً." : "Overnight trips require a later return date."}
+                      >
+                        <input
+                          type="date"
+                          value={returnDate}
+                          onChange={(e) => setReturnDate(e.target.value)}
+                          className={inputCls}
+                          min={date ? addDays(date, 1) : todayLocal}
+                        />
+                      </Field>
+                    )}
                     <Field label={isAR ? "وقت العودة *" : "Return Time *"} labelCls={labelCls}>
                       <input type="time" value={returnTime} onChange={(e) => setReturnTime(e.target.value)} className={inputCls} />
                     </Field>
-                    {returnDate && returnTime && !hasValidReturn && (
+                    {returnTime && !hasValidReturn && (
                       <p role="alert" className="text-sm text-red-600 sm:col-span-2">
                         {isAR
                           ? trip === "overday" ? "يجب أن تكون العودة في اليوم نفسه وبعد المغادرة." : "يجب أن تكون عودة المبيت في يوم لاحق."

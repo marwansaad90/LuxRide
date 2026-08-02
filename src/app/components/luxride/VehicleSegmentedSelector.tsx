@@ -1,0 +1,95 @@
+import { Check, Info } from "lucide-react";
+import { SELECTABLE_FLEET, Vehicle, VehicleId } from "./data";
+import { Lang } from "./i18n";
+
+const LABELS: Record<VehicleId, { en: string; ar: string; model: string }> = {
+  corolla: { en: "Sedan", ar: "سيدان", model: "Toyota Corolla" },
+  xpander: { en: "MPV", ar: "MPV", model: "Mitsubishi Xpander" },
+  hiace: { en: "Mini Van", ar: "ميني فان", model: "Toyota HiAce" },
+};
+
+export function vehicleSegmentLabel(vehicle: Vehicle, lang: Lang): string {
+  const label = LABELS[vehicle.id] ?? { en: vehicle.category, ar: vehicle.categoryAr, model: vehicle.name };
+  return lang === "AR" ? label.ar : label.en;
+}
+
+function modelName(vehicle: Vehicle): string {
+  return LABELS[vehicle.id]?.model ?? vehicle.name;
+}
+
+export function VehicleSegmentedSelector({
+  id,
+  lang,
+  value,
+  onChange,
+}: {
+  id: string;
+  lang: Lang;
+  value: VehicleId;
+  onChange: (value: VehicleId) => void;
+}) {
+  const isAR = lang === "AR";
+  const selectedVehicle = SELECTABLE_FLEET.find((vehicle) => vehicle.id === value) ?? SELECTABLE_FLEET[0];
+  const helperId = `${id}-capacity`;
+
+  return (
+    <div>
+      <div
+        role="radiogroup"
+        aria-describedby={helperId}
+        aria-label={isAR ? "نوع السيارة" : "Vehicle type"}
+        className="grid grid-cols-3 overflow-visible rounded-xl border border-gray-200 bg-gray-100 p-1"
+      >
+        {SELECTABLE_FLEET.map((vehicle) => {
+          const selected = vehicle.id === value;
+          const descId = `${id}-${vehicle.id}-desc`;
+          return (
+            <button
+              key={vehicle.id}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              aria-describedby={`${descId} ${helperId}`}
+              title={`${modelName(vehicle)} · ${isAR ? vehicle.capacityAr : vehicle.capacityEn}`}
+              onClick={() => onChange(vehicle.id)}
+              onKeyDown={(event) => {
+                if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+                event.preventDefault();
+                const current = SELECTABLE_FLEET.findIndex((item) => item.id === value);
+                const step = event.key === "ArrowRight" ? 1 : -1;
+                const next = (current + step + SELECTABLE_FLEET.length) % SELECTABLE_FLEET.length;
+                onChange(SELECTABLE_FLEET[next].id);
+              }}
+              className={`group relative min-h-11 rounded-lg px-2 py-2 text-center text-sm font-semibold transition-all focus-visible:z-10 ${
+                selected
+                  ? "bg-lux-green text-white shadow-sm"
+                  : "text-gray-700 hover:bg-white hover:text-lux-green"
+              }`}
+            >
+              <span className="flex items-center justify-center gap-1">
+                {selected && <Check className="h-3.5 w-3.5" aria-hidden="true" />}
+                {vehicleSegmentLabel(vehicle, lang)}
+              </span>
+              <span id={descId} className="sr-only">
+                {modelName(vehicle)}. {isAR ? vehicle.capacityAr : vehicle.capacityEn}.
+              </span>
+              <span
+                className="pointer-events-none absolute bottom-[calc(100%+0.45rem)] left-1/2 z-30 hidden w-56 -translate-x-1/2 rounded-lg bg-lux-dark px-3 py-2 text-xs font-normal leading-relaxed text-white shadow-xl group-hover:block group-focus-visible:block max-md:hidden"
+                role="tooltip"
+              >
+                <span className="mb-1 flex items-center justify-center gap-1 font-semibold">
+                  <Info className="h-3 w-3" aria-hidden="true" />
+                  {modelName(vehicle)}
+                </span>
+                {isAR ? vehicle.capacityAr : vehicle.capacityEn}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <p id={helperId} className="mt-2 min-h-5 text-xs font-medium text-gray-600" aria-live="polite">
+        {selectedVehicle ? `${modelName(selectedVehicle)} · ${isAR ? selectedVehicle.capacityAr : selectedVehicle.capacityEn}` : ""}
+      </p>
+    </div>
+  );
+}
