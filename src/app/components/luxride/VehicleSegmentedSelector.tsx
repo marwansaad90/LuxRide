@@ -60,7 +60,7 @@ export function VehicleSegmentedSelector({
                 const next = (current + step + SELECTABLE_FLEET.length) % SELECTABLE_FLEET.length;
                 onChange(SELECTABLE_FLEET[next].id);
               }}
-              className={`group relative min-h-11 rounded-lg px-2 py-2 text-center text-sm font-semibold transition-all focus-visible:z-10 ${
+              className={`group relative min-h-9 rounded-lg px-2 py-1.5 text-center text-sm font-semibold transition-all focus-visible:z-10 ${
                 selected
                   ? "bg-lux-green text-white shadow-sm"
                   : "text-gray-700 hover:bg-white hover:text-lux-green"
@@ -87,7 +87,7 @@ export function VehicleSegmentedSelector({
           );
         })}
       </div>
-      <p id={helperId} className="mt-2 min-h-5 text-xs font-medium text-gray-600" aria-live="polite">
+      <p id={helperId} className="mt-1 min-h-4 text-xs font-medium text-gray-600 max-md:mt-1.5" aria-live="polite">
         {selectedVehicle ? `${modelName(selectedVehicle)} · ${isAR ? selectedVehicle.capacityAr : selectedVehicle.capacityEn}` : ""}
       </p>
     </div>

@@ -17,24 +17,23 @@ export function Hero() {
   return (
     <section
       id="home"
-      className="relative isolate overflow-hidden bg-lux-dark bg-cover bg-center pt-24 md:pt-28"
+      className="luxride-hero relative isolate overflow-hidden bg-lux-dark bg-cover pt-20 md:pt-20"
       style={{
-        backgroundImage: `linear-gradient(90deg, rgba(15,22,35,0.62) 0%, rgba(15,22,35,0.34) 42%, rgba(15,22,35,0.12) 100%), url(${hurghadaAlMina})`,
-        backgroundPosition: isAR ? "center center" : "center center",
+        backgroundImage: `linear-gradient(90deg, rgba(15,22,35,0.58) 0%, rgba(15,22,35,0.31) 42%, rgba(15,22,35,0.10) 100%), url(${hurghadaAlMina})`,
       }}
     >
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(15,22,35,0.16)_0%,rgba(15,22,35,0.05)_44%,rgba(15,22,35,0.22)_100%)]" />
-      <div className="mx-auto grid min-h-[calc(100svh-72px)] max-w-7xl items-center gap-8 px-4 py-8 md:px-8 md:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(420px,500px)] lg:gap-12">
+      <div className="mx-auto grid min-h-[calc(100svh-80px)] max-w-7xl items-center gap-6 px-4 py-5 md:px-8 md:py-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,500px)] lg:gap-10 lg:py-0">
         <div className="max-w-2xl text-white">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/16 px-4 py-1.5 text-xs uppercase tracking-[0.18em] text-white shadow-sm backdrop-blur-md">
             {t(lang, "hero_badge")}
           </span>
 
           <h1
-            className="mt-5 text-balance drop-shadow-[0_3px_18px_rgba(0,0,0,0.35)]"
+            className="mt-4 text-balance drop-shadow-[0_3px_18px_rgba(0,0,0,0.35)]"
             style={{
               fontFamily: "var(--font-heading)",
-              fontSize: "clamp(2.6rem, 5vw, 4.9rem)",
+              fontSize: "clamp(2.45rem, 5vw, 4.75rem)",
               fontWeight: 800,
               lineHeight: 0.98,
             }}
@@ -54,11 +53,11 @@ export function Hero() {
             )}
           </h1>
 
-          <p className="mt-5 max-w-xl text-pretty text-base leading-7 text-white/90 drop-shadow md:text-lg">
+          <p className="mt-3 max-w-xl text-pretty text-base leading-7 text-white/90 drop-shadow md:text-lg">
             {t(lang, "hero_sub")}
           </p>
 
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <a
               href="#estimate"
               onClick={focusCalculator}

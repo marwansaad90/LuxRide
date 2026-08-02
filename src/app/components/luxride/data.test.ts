@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   ACTIVE_FLEET,
   AIRPORT_SURCHARGE,
@@ -13,6 +16,12 @@ import {
   findRoute,
 } from "./data";
 import { normalizeReturnFields, isValidReturn, readInitialBookingState } from "./bookingState";
+import {
+  TRIPADVISOR_LOCATION_ID,
+  TRIPADVISOR_PAGE_URL,
+  TRIPADVISOR_WIDGETS,
+  tripadvisorWidgetScriptUrl,
+} from "./tripadvisor";
 
 const xpander = FLEET.find((vehicle) => vehicle.id === "xpander")!;
 const corolla = FLEET.find((vehicle) => vehicle.id === "corolla")!;
@@ -173,5 +182,76 @@ describe("vehicle and route validation", () => {
       returnDate: "",
       returnTime: "18:00",
     });
+  });
+});
+
+function readSource(relativePath: string): string {
+  return readFileSync(new URL(relativePath, import.meta.url), "utf8");
+}
+
+function readActiveAppSources(dir: string): string {
+  return readdirSync(dir)
+    .flatMap((entry) => {
+      const fullPath = join(dir, entry);
+      const stat = statSync(fullPath);
+      if (stat.isDirectory()) return readActiveAppSources(fullPath);
+      if (!/\.(ts|tsx|css)$/.test(entry)) return [];
+      return readFileSync(fullPath, "utf8");
+    })
+    .join("\n");
+}
+
+describe("batch 2 homepage integration", () => {
+  it("keeps the homepage calculator only inside the Hero and removes the homepage Destinations section", () => {
+    const home = readSource("../../pages/Home.tsx");
+    const hero = readSource("./Hero.tsx");
+
+    expect(home).not.toContain("<DestinationSEO");
+    expect(home).not.toContain("EstimateYourTrip");
+    expect(hero).toContain("<EstimateYourTrip />");
+  });
+
+  it("keeps Popular Transfers on the homepage and uses the new last-minute heading", () => {
+    const home = readSource("../../pages/Home.tsx");
+    const sections = readSource("./Sections.tsx");
+
+    expect(home).toContain("<PopularTransfers />");
+    expect(sections).toContain("Need a transfer within 3 hours?");
+    expect(sections).toContain("هل تحتاج إلى توصيلة خلال أقل من 3 ساعات؟");
+  });
+
+  it("uses the latest Tripadvisor widget IDs and real location", () => {
+    expect(TRIPADVISOR_LOCATION_ID).toBe("34457256");
+    expect(TRIPADVISOR_WIDGETS.map((widget) => widget.uniqueId)).toEqual(["470", "935", "782"]);
+    expect(TRIPADVISOR_WIDGETS.map((widget) => widget.widgetType)).toEqual([
+      "cdsratingsonlynarrow",
+      "cdswritereviewnew",
+      "cdsscrollingravenarrow",
+    ]);
+    expect(TRIPADVISOR_WIDGETS.map(tripadvisorWidgetScriptUrl)).toEqual([
+      "https://www.jscache.com/wejs?wtype=cdsratingsonlynarrow&uniq=470&locationId=34457256&lang=en_US&border=true&display_version=2",
+      "https://www.jscache.com/wejs?wtype=cdswritereviewnew&uniq=935&locationId=34457256&lang=en_US&display_version=2",
+      "https://www.jscache.com/wejs?wtype=cdsscrollingravenarrow&uniq=782&locationId=34457256&lang=en_US&border=true&display_version=2",
+    ]);
+  });
+
+  it("uses the official Tripadvisor target link and no fake fallback rating data", () => {
+    const reviews = readSource("./Reviews.tsx");
+
+    expect(TRIPADVISOR_PAGE_URL).toBe(
+      "https://www.tripadvisor.com/Attraction_Review-g297549-d34457256-Reviews-LuxRide_Taxi-Hurghada_Red_Sea_and_Sinai.html",
+    );
+    expect(reviews).not.toContain("Rating pending");
+    expect(reviews).not.toContain("Review count required");
+    expect(reviews).not.toContain("Rated Excellent");
+  });
+
+  it("removes old active Tripadvisor widget IDs and includes mobile sticky CTA visibility logic", () => {
+    const activeCode = readActiveAppSources(fileURLToPath(new URL("../../", import.meta.url)));
+    const rootLayout = readSource("./RootLayout.tsx");
+
+    expect(activeCode).not.toMatch(/uniq=(862|540|178)|uniqueId:\s*"(862|540|178)"/);
+    expect(rootLayout).toContain("showMobileActions");
+    expect(rootLayout).toContain("IntersectionObserver");
   });
 });

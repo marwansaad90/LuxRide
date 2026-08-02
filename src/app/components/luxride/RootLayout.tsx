@@ -18,11 +18,28 @@ function ScrollToTop() {
 
 export function RootLayout() {
   const [lang, setLang] = useState<Lang>("EN");
+  const [showMobileActions, setShowMobileActions] = useState(false);
+  const { pathname } = useLocation();
 
   useEffect(() => {
     document.documentElement.lang = lang === "AR" ? "ar" : "en";
     document.documentElement.dir = lang === "AR" ? "rtl" : "ltr";
   }, [lang]);
+
+  useEffect(() => {
+    const hero = document.getElementById("home");
+    if (!hero) {
+      setShowMobileActions(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowMobileActions(!entry.isIntersecting),
+      { rootMargin: "-80px 0px 0px 0px", threshold: 0 },
+    );
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, [pathname]);
 
   return (
     <LangContext.Provider value={lang}>
@@ -55,7 +72,13 @@ export function RootLayout() {
         </a>
 
         {/* Sticky mobile action bar */}
-        <div className="fixed inset-x-0 bottom-0 z-50 flex gap-3 border-t border-lux-green/20 bg-lux-dark/95 p-3 backdrop-blur-md md:hidden">
+        <div
+          className={`fixed inset-x-0 bottom-0 z-50 flex gap-3 border-t border-lux-green/20 bg-lux-dark/95 p-3 backdrop-blur-md transition-transform duration-300 md:hidden ${
+            showMobileActions ? "translate-y-0" : "translate-y-full"
+          }`}
+          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+          aria-hidden={!showMobileActions}
+        >
           <Link
             to="/booking"
             className="flex-1 rounded-full bg-lux-green py-3 text-center text-sm text-white"

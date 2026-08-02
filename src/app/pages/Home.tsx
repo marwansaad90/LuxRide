@@ -1,6 +1,5 @@
 import { Hero } from "../components/luxride/Hero";
 import {
-  DestinationSEO,
   FinalCTA,
   Fleet,
   HowItWorks,
@@ -26,19 +25,17 @@ export function Home() {
       <ServiceBenefits />
       {/* 6. Popular Transfers */}
       <PopularTransfers />
-      {/* 7. Destinations */}
-      <DestinationSEO />
-      {/* 8. Fleet Preview */}
+      {/* 7. Fleet Preview */}
       <Fleet />
-      {/* 9. Why Choose LuxRide */}
+      {/* 8. Why Choose LuxRide */}
       <WhyChoose />
-      {/* 10. Reviews */}
+      {/* 9. Reviews */}
       <Reviews />
-      {/* 11. FAQ */}
+      {/* 10. FAQ */}
       <FAQ />
-      {/* 12. Final CTA */}
+      {/* 11. Final CTA */}
       <FinalCTA />
-      {/* 13. Footer (in RootLayout) */}
+      {/* 12. Footer (in RootLayout) */}
     </>
   );
 }

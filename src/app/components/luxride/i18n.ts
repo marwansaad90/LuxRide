@@ -121,7 +121,7 @@ const T = {
 
     // Last-minute booking
     lm_title: "Last-minute Booking",
-    lm_text: "Travelling today? If you wish to book a transfer or any other service for today, please contact us directly on WhatsApp to check availability.",
+    lm_text: "Standard online bookings require at least three hours before pickup. For a last-minute request, contact LuxRide directly through WhatsApp to check availability.",
     lm_cta: "Check Last-minute Availability on WhatsApp",
 
     // Popular Transfers
@@ -306,7 +306,7 @@ const T = {
 
     // Last-minute booking
     lm_title: "الحجز اللحظي",
-    lm_text: "هل تسافر اليوم؟ إذا كنت ترغب في حجز رحلة أو أي خدمة أخرى لليوم، يرجى التواصل معنا مباشرةً عبر واتساب للتحقق من التوفر.",
+    lm_text: "تتطلب الحجوزات العادية وجود فاصل زمني لا يقل عن 3 ساعات قبل موعد التحرك. للحجوزات العاجلة، تواصل معنا مباشرة عبر واتساب للتحقق من الإتاحة.",
     lm_cta: "تحقق من التوفر اللحظي عبر واتساب",
 
     // Popular Transfers

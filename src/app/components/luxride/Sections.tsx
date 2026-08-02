@@ -1,12 +1,16 @@
 import {
   ArrowRight,
   BadgeCheck,
+  Calculator,
+  CheckCircle2,
   Clock,
   CreditCard,
   Droplet,
   Headphones,
   MessageCircle,
+  MapPinned,
   PlaneLanding,
+  Send,
   ShieldCheck,
   Snowflake,
   Sparkles,
@@ -131,10 +135,12 @@ export function LastMinute() {
                 fontWeight: 700,
               }}
             >
-              {isAR ? "حجز فوري اليوم؟" : "Need a Transfer Today?"}
+              {isAR ? "هل تحتاج إلى توصيلة خلال أقل من 3 ساعات؟" : "Need a transfer within 3 hours?"}
             </h3>
             <p className="mt-1 max-w-xl text-gray-600 text-sm" style={{ lineHeight: 1.6 }}>
-              {t(lang, "lm_text")}
+              {isAR
+                ? "تتطلب الحجوزات العادية وجود فاصل زمني لا يقل عن 3 ساعات قبل موعد التحرك. للحجوزات العاجلة، تواصل معنا مباشرة عبر واتساب للتحقق من الإتاحة."
+                : "Standard online bookings require at least three hours before pickup. For a last-minute request, contact LuxRide directly through WhatsApp to check availability."}
             </p>
           </div>
           <div className="shrink-0 text-center">
@@ -172,28 +178,29 @@ export function PopularTransfers() {
               key={tr.id}
               className="group overflow-hidden rounded-2xl bg-white shadow-[0_10px_40px_rgba(0,0,0,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)]"
             >
-              <div className="relative h-52 overflow-hidden">
+              <div className="relative h-52 overflow-hidden bg-white">
                 <ImageWithFallback
                   src={tr.image}
                   alt={`${tr.from} to ${tr.to}`}
                   className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/15 to-transparent" />
                 {tr.discountPct && (
                   <span className="absolute left-4 top-4 rounded-full bg-lux-orange px-3 py-1 text-xs text-lux-dark">
                     {tr.discountPct}% OFF
                   </span>
                 )}
-                <span className="absolute right-4 top-4 flex items-center gap-2 rounded-full bg-lux-green px-3 py-1 text-xs text-white">
-                  {tr.oldPrice && <span className="text-white/60 line-through">€{tr.oldPrice}</span>}
-                  from €{tr.fromPrice}
-                </span>
               </div>
               <div className="p-6">
                 <p className="text-xs uppercase tracking-wider text-lux-bronze">{locationLabel(lang, tr.from)}</p>
-                <h3 className="mt-1 flex items-center gap-2 text-lux-charcoal" style={{ fontSize: "1.25rem" }}>
-                  {locationLabel(lang, tr.to)}
-                </h3>
+                <div className="mt-1 flex items-start justify-between gap-4">
+                  <h3 className="flex items-center gap-2 text-lux-charcoal" style={{ fontSize: "1.25rem" }}>
+                    {locationLabel(lang, tr.to)}
+                  </h3>
+                  <div className="shrink-0 text-end">
+                    {tr.oldPrice && <p className="text-xs text-neutral-400 line-through">€{tr.oldPrice}</p>}
+                    <p className="text-sm font-bold text-lux-green">{lang === "AR" ? "من" : "from"} €{tr.fromPrice}</p>
+                  </div>
+                </div>
                 <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-neutral-500">
                   <span className="flex items-center gap-1.5">
                     <Clock className="h-4 w-4 text-lux-green" /> {tr.duration}
@@ -446,27 +453,27 @@ export function HowItWorks() {
   const steps = [
     {
       num: "01",
-      icon: "🗺️",
-      en: { title: "Choose Your Route", desc: "Select pickup location, destination, date, and preferred vehicle." },
-      ar: { title: "اختر مسارك", desc: "حدّد موقع الانطلاق والوجهة والتاريخ والسيارة المفضّلة." },
+      Icon: MapPinned,
+      en: { title: "Choose Your Route", desc: "Select your pickup, destination, trip type, date, and preferred vehicle." },
+      ar: { title: "اختر مسارك", desc: "اختر موقع الانطلاق والوجهة ونوع الرحلة والتاريخ والسيارة المناسبة." },
     },
     {
       num: "02",
-      icon: "💰",
-      en: { title: "Check Your Price", desc: "Review the fixed price with all applicable fees clearly displayed." },
-      ar: { title: "راجع سعرك", desc: "اطّلع على السعر الثابت مع جميع الرسوم المعروضة بوضوح." },
+      Icon: Calculator,
+      en: { title: "Check Your Price", desc: "Review the fixed route price, discounts, and any clearly displayed applicable fees." },
+      ar: { title: "راجع سعرك", desc: "راجع السعر الثابت للمسار والخصومات وأي رسوم مطبقة معروضة بوضوح." },
     },
     {
       num: "03",
-      icon: "📋",
-      en: { title: "Send Your Booking", desc: "Complete your details and send one booking request." },
-      ar: { title: "أرسل حجزك", desc: "أكمل بياناتك وأرسل طلب الحجز بنقرة واحدة." },
+      Icon: Send,
+      en: { title: "Send Your Booking", desc: "Complete your information and send one booking request." },
+      ar: { title: "أرسل طلب الحجز", desc: "أكمل معلوماتك وأرسل طلب حجز واحداً واضحاً." },
     },
     {
       num: "04",
-      icon: "✅",
-      en: { title: "Receive Confirmation", desc: "LuxRide confirms the driver, vehicle, and trip details." },
-      ar: { title: "تلقَّ التأكيد", desc: "LuxRide تؤكد السائق والسيارة وتفاصيل الرحلة." },
+      Icon: CheckCircle2,
+      en: { title: "Receive Confirmation", desc: "LuxRide confirms the vehicle, driver, pickup time, and journey details." },
+      ar: { title: "استلم التأكيد", desc: "تؤكد LuxRide السيارة والسائق ووقت الاستلام وتفاصيل الرحلة." },
     },
   ];
 
@@ -492,27 +499,39 @@ export function HowItWorks() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <ol className="relative grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((s, i) => (
-            <div key={s.num} className="relative">
+            <li key={s.num} className="relative">
               {i < steps.length - 1 && (
                 <div
-                  className="absolute top-10 hidden h-px bg-lux-green/20 lg:block"
+                  aria-hidden="true"
+                  className="absolute top-10 hidden h-px bg-lux-green/25 lg:block"
                   style={{ left: "calc(50% + 2.5rem)", right: "-50%" }}
                 />
               )}
-              <div className="rounded-2xl bg-white p-6 text-center shadow-[0_4px_20px_rgba(0,0,0,0.06)] border border-gray-100 h-full">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-lux-green/10 text-3xl mb-4">
-                  {s.icon}
+              {i < steps.length - 1 && (
+                <div
+                  aria-hidden="true"
+                  className="absolute bottom-[-1.25rem] top-[4.9rem] start-8 w-px bg-lux-green/20 sm:hidden"
+                />
+              )}
+              <div className="relative h-full rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.06)] sm:text-center">
+                <div className="mb-4 flex items-center gap-4 sm:flex-col sm:gap-3">
+                  <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 border-white bg-lux-green/10 shadow-sm">
+                    <s.Icon className="h-7 w-7 text-lux-green" aria-hidden="true" />
+                    <span className="absolute -end-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full bg-lux-orange text-[0.68rem] font-bold text-lux-dark">
+                      {s.num}
+                    </span>
+                  </div>
+                  <span
+                    className="text-lux-green/70"
+                    style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.75rem", letterSpacing: "0.1em" }}
+                  >
+                    {isAR ? `الخطوة ${s.num}` : `STEP ${s.num}`}
+                  </span>
                 </div>
-                <span
-                  className="text-lux-green/40"
-                  style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.75rem", letterSpacing: "0.1em" }}
-                >
-                  STEP {s.num}
-                </span>
                 <h3
-                  className="mt-1 text-lux-charcoal"
+                  className="text-lux-charcoal"
                   style={{
                     fontFamily: isAR ? "Cairo, sans-serif" : "'Barlow Condensed', sans-serif",
                     fontSize: "1.15rem",
@@ -525,9 +544,9 @@ export function HowItWorks() {
                   {isAR ? s.ar.desc : s.en.desc}
                 </p>
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ol>
       </div>
     </section>
   );

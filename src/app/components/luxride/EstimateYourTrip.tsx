@@ -98,25 +98,25 @@ export function EstimateYourTrip() {
   ];
 
   const inputCls =
-    "h-10 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-lux-charcoal transition-all focus:border-lux-green focus:outline-none focus:ring-2 focus:ring-lux-green/25";
-  const labelCls = "mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-gray-700";
+    "h-9 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-lux-charcoal transition-all focus:border-lux-green focus:outline-none focus:ring-2 focus:ring-lux-green/25";
+  const labelCls = "mb-1 flex items-center gap-1.5 text-xs font-semibold text-gray-700";
 
   return (
     <div
       id="estimate"
       tabIndex={-1}
-      className="scroll-mt-24 rounded-2xl border border-white/70 bg-white/95 p-4 shadow-[0_22px_70px_rgba(15,22,35,0.22)] backdrop-blur-md sm:p-5"
+      className="scroll-mt-24 rounded-2xl border border-white/70 bg-white/95 p-3 shadow-[0_22px_70px_rgba(15,22,35,0.22)] backdrop-blur-md sm:p-4"
     >
-      <div className="mb-4">
+      <div className="mb-3">
         <p className="text-xs uppercase tracking-[0.16em] text-lux-green">
           {isAR ? "حاسبة السعر" : "Quick Price Estimate"}
         </p>
-        <h2 className="mt-1 text-lux-charcoal" style={{ fontSize: "1.45rem", fontWeight: 800, lineHeight: 1.1 }}>
+        <h2 className="mt-0.5 text-lux-charcoal" style={{ fontSize: "1.32rem", fontWeight: 800, lineHeight: 1.1 }}>
           {isAR ? "قدّر رحلتك" : "Estimate Your Trip"}
         </h2>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div>
           <span className={labelCls}>{isAR ? "نوع الرحلة" : "Trip type"}</span>
           <div role="radiogroup" aria-label={isAR ? "نوع الرحلة" : "Trip type"} className="grid grid-cols-3 gap-1 rounded-xl bg-gray-100 p-1">
@@ -134,7 +134,7 @@ export function EstimateYourTrip() {
                   title={supported ? tt.desc : disabledReason}
                   disabled={!supported}
                   onClick={() => setTrip(tt.id)}
-                  className={`min-h-11 rounded-lg px-1.5 py-2 text-center text-xs font-semibold transition-all ${
+                  className={`min-h-9 rounded-lg px-1.5 py-1.5 text-center text-xs font-semibold transition-all ${
                     !supported
                       ? "cursor-not-allowed text-gray-400"
                       : selected
@@ -150,7 +150,7 @@ export function EstimateYourTrip() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           <div>
             <label htmlFor="estimate-from" className={labelCls}>
               <MapPin className="h-3.5 w-3.5 text-lux-green" />
@@ -194,7 +194,7 @@ export function EstimateYourTrip() {
           <VehicleSegmentedSelector id="estimate-vehicle" lang={lang} value={vehicleId} onChange={clampForVehicle} />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           <div>
             <label htmlFor="estimate-passengers" className={labelCls}>
               <Users className="h-3.5 w-3.5 text-lux-green" />
@@ -220,21 +220,21 @@ export function EstimateYourTrip() {
         </div>
 
         {notice && (
-          <p role="status" aria-live="polite" className="rounded-lg border border-lux-orange/30 bg-orange-50 px-3 py-2 text-xs text-gray-700">
+          <p role="status" aria-live="polite" className="rounded-lg border border-lux-orange/30 bg-orange-50 px-3 py-1.5 text-xs text-gray-700">
             {notice}
           </p>
         )}
 
-        <div className="rounded-xl bg-gray-50 p-4">
+        <div className="rounded-xl bg-gray-50 p-3">
           {breakdown ? (
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.14em] text-gray-500">
                   {isAR ? "السعر الثابت المقدّر" : "Estimated fixed price"}
                 </p>
                 <div className="mt-1 flex items-baseline gap-2">
                   {breakdown.discount > 0 && <span className="text-sm text-gray-400 line-through">{formatEur(breakdown.base)}</span>}
-                  <span className="text-lux-green" style={{ fontSize: "1.9rem", fontWeight: 800 }}>
+                  <span className="text-lux-green" style={{ fontSize: "1.65rem", fontWeight: 800 }}>
                     {formatEur(breakdown.total)}
                   </span>
                 </div>
@@ -248,7 +248,7 @@ export function EstimateYourTrip() {
                 type="button"
                 onClick={handleContinue}
                 disabled={!date || !time}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-lux-green px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-lux-green/25 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-lux-green px-4 py-2 text-sm font-bold text-white shadow-md shadow-lux-green/25 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isAR ? "المتابعة لتفاصيل الرحلة" : "Continue to Trip Details"}
                 <ArrowRight className="h-4 w-4 rtl:rotate-180" />

@@ -48,6 +48,16 @@
   max-width: 100%;
 }
 
+.luxride-hero {
+  background-position: center center;
+}
+
+@media (max-width: 767px) {
+  .luxride-hero {
+    background-position: center 72%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .luxride-shell *,
   .luxride-shell *::before,
