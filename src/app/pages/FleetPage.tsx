@@ -2,7 +2,7 @@ import { Check, Snowflake, Usb, Users, Wifi, X } from "lucide-react";
 import { Link } from "react-router";
 import { PageShell } from "../components/luxride/PageShell";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import { FLEET } from "../components/luxride/data";
+import { FLEET, isVehicleSelectable } from "../components/luxride/data";
 import { useL } from "../components/luxride/i18n";
 
 export function FleetPage() {
@@ -13,8 +13,8 @@ export function FleetPage() {
       crumb={L("Fleet", "الأسطول")}
       title={L("Our Fleet", "أسطولنا")}
       subtitle={L(
-        "Modern, air-conditioned and immaculately maintained vehicles. Only the Mitsubishi Xpander is currently available for booking — additional vehicles are coming soon.",
-        "سيارات حديثة ومكيفة ومُصانة بعناية. المتاح للحجز حالياً هو ميتسوبيشي إكسباندر فقط — والمزيد من السيارات قريباً.",
+        "Choose the modern, air-conditioned vehicle that best fits your group and luggage.",
+        "اختر السيارة الحديثة والمكيفة التي تناسب مجموعتك وأمتعتك.",
       )}
     >
       <section className="bg-lux-beige py-16 md:py-24">
@@ -23,7 +23,7 @@ export function FleetPage() {
             <div
               key={v.id}
               className={`overflow-hidden rounded-2xl border bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] ${
-                v.available ? "border-lux-green/30" : "border-neutral-200 opacity-70"
+                isVehicleSelectable(v) ? "border-lux-green/30" : "border-neutral-200 opacity-70"
               }`}
             >
               <div className="relative h-52 overflow-hidden bg-white">
@@ -33,8 +33,8 @@ export function FleetPage() {
                   className="h-full w-full object-contain p-4"
                   style={{ direction: "ltr" }}
                 />
-                <span className={`absolute left-4 top-4 rounded-full px-3 py-1 text-xs ${v.available ? "bg-lux-green text-white" : "bg-lux-charcoal/90 text-lux-beige/80"}`}>
-                  {v.available ? L("Available", "متاح") : L("Coming Soon", "قريباً")}
+                <span className={`absolute left-4 top-4 rounded-full px-3 py-1 text-xs ${isVehicleSelectable(v) ? "bg-lux-green text-white" : "bg-lux-charcoal/90 text-lux-beige/80"}`}>
+                  {isVehicleSelectable(v) ? L("Available", "متاح") : L("Coming Soon", "قريباً")}
                 </span>
                 <span className="absolute right-4 top-4 rounded-full bg-black/60 px-3 py-1 text-xs text-lux-gold">{L(v.category, v.categoryAr)}</span>
               </div>
@@ -53,8 +53,8 @@ export function FleetPage() {
                 </ul>
 
                 <div className="mt-6">
-                  {v.available ? (
-                    <Link to="/booking" className="flex w-full items-center justify-center gap-2 rounded-full bg-lux-green py-3 text-sm text-white transition-all hover:brightness-110">
+                  {isVehicleSelectable(v) ? (
+                    <Link to={`/booking?vehicle=${v.id}`} className="flex w-full items-center justify-center gap-2 rounded-full bg-lux-green py-3 text-sm text-white transition-all hover:brightness-110">
                       <Check className="h-4 w-4" /> {L("Book This Vehicle", "احجز هذه السيارة")}
                     </Link>
                   ) : (

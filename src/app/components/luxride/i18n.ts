@@ -169,7 +169,7 @@ const T = {
     about_text: "LuxRide provides reliable, comfortable, and professionally managed private transfers for visitors to Hurghada and Egypt. From airport pickups to long-distance journeys, every trip is arranged with attention to safety, timing, and guest comfort.",
     about_book: "Book a Transfer",
     about_wa: "Chat on WhatsApp",
-    about_stat: "Happy guests transferred",
+    about_stat: "Private transfer service",
 
     // Destination SEO
     dest_eyebrow: "Destinations We Serve",
@@ -344,7 +344,7 @@ const T = {
     about_text: "تقدم LuxRide خدمات نقل خاصة موثوقة ومريحة ومُدارة باحترافية لزوار الغردقة ومصر. من استقبال المطار إلى الرحلات بعيدة المسافة، كل رحلة مُنظمة باهتمام بالسلامة والتوقيت وراحة الضيوف.",
     about_book: "احجز رحلة نقل",
     about_wa: "تحدث معنا على واتساب",
-    about_stat: "ضيف سعيد تم نقله",
+    about_stat: "خدمة نقل خاصة",
 
     // Destination SEO
     dest_eyebrow: "الوجهات التي نخدمها",
@@ -408,7 +408,7 @@ export const FAQS: Record<Lang, FaqItem[]> = {
     { q: "Can I book an Overday or Overnight trip?", a: "Yes, when that route has its own approved fixed price. These trip types are never calculated by doubling One Way." },
     { q: "What happens if my flight is delayed?", a: "We monitor your flight in real time and adjust the pickup automatically — at no extra cost to you." },
     { q: "Can I request a child seat?", a: "This service is currently unavailable and will be provided soon." },
-    { q: "How can I confirm my booking?", a: "Complete the three booking steps and use the single Send Booking Request button. Real WhatsApp and email delivery will be connected during the WordPress phase." },
+    { q: "How can I confirm my booking?", a: "Complete the three booking steps and use the single Send Booking Request button. LuxRide will review the details and contact you to confirm availability." },
     { q: "What is the cancellation policy?", a: "Full refund when cancelled at least 24 hours before the experience start time in the local timezone. No refund for cancellation less than 24 hours before the start time." },
   ],
   AR: [
@@ -417,7 +417,7 @@ export const FAQS: Record<Lang, FaqItem[]> = {
     { q: "هل يمكنني حجز رحلة يوم أو مبيت؟", a: "نعم، عندما يكون للمسار سعر ثابت معتمد لهذا النوع. لا تُحسب هذه الرحلات أبداً بمضاعفة سعر الذهاب." },
     { q: "ماذا يحدث إذا تأخرت رحلتي الجوية؟", a: "نتابع رحلتك في الوقت الفعلي ونعدّل موعد الاستلام تلقائياً — دون أي تكلفة إضافية." },
     { q: "هل يمكنني طلب كرسي أطفال؟", a: "هذه الخدمة غير متاحة حالياً وسيتم توفيرها قريباً." },
-    { q: "كيف يمكنني تأكيد حجزي؟", a: "أكمل خطوات الحجز الثلاث واستخدم زر إرسال طلب الحجز الوحيد. سيتم ربط الإرسال الحقيقي عبر واتساب والبريد في مرحلة ووردبريس." },
+    { q: "كيف يمكنني تأكيد حجزي؟", a: "أكمل خطوات الحجز الثلاث واستخدم زر إرسال طلب الحجز الوحيد. ستراجع LuxRide التفاصيل وتتواصل معك لتأكيد التوفر." },
     { q: "ما سياسة الإلغاء؟", a: "استرداد كامل عند الإلغاء قبل 24 ساعة على الأقل من وقت بدء التجربة بالتوقيت المحلي. لا استرداد عند الإلغاء قبل أقل من 24 ساعة من وقت البدء." },
   ],
 };

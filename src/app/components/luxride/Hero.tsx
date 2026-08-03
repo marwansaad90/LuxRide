@@ -1,6 +1,6 @@
 import { ArrowRight, MessageCircle } from "lucide-react";
 import { EstimateYourTrip } from "./EstimateYourTrip";
-import hurghadaAlMina from "../../../assets/hero/hurghada-al-mina.jpg";
+import hurghadaAlMina from "../../../assets/hero/hurghada-al-mina.webp";
 import { whatsappLink } from "./data";
 import { useLang, t } from "./i18n";
 

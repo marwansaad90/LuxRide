@@ -12,8 +12,8 @@ export function BookingErrorPage() {
       crumb={L("Booking Error", "خطأ في الحجز")}
       title={L("We Could Not Submit the Request", "تعذر إرسال الطلب")}
       subtitle={L(
-        "This prototype error state shows the recovery options that will be connected during the WordPress phase.",
-        "تعرض حالة الخطأ في النموذج خيارات الاستعادة التي سيتم ربطها خلال مرحلة ووردبريس.",
+        "Please try again or contact LuxRide on WhatsApp for help with your request.",
+        "يرجى المحاولة مجدداً أو التواصل مع LuxRide عبر واتساب للمساعدة في طلبك.",
       )}
     >
       <section className="bg-lux-beige py-16 md:py-24">

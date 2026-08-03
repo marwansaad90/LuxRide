@@ -16,6 +16,8 @@ import { AvailabilityAdminPage } from "./pages/AvailabilityAdminPage";
 import { WhatsAppPreviewPage } from "./pages/WhatsAppPreviewPage";
 import { EmailPreviewPage } from "./pages/EmailPreviewPage";
 import { BookingErrorPage } from "./pages/BookingErrorPage";
+import { PrivacyPolicyPage } from "./pages/PrivacyPolicyPage";
+import { TermsPage } from "./pages/TermsPage";
 
 export const router = createBrowserRouter([
   {
@@ -31,6 +33,8 @@ export const router = createBrowserRouter([
       { path: "contact", Component: ContactPage },
       { path: "faq", Component: FAQPage },
       { path: "cancellation-policy", Component: CancellationPolicyPage },
+      { path: "privacy-policy", Component: PrivacyPolicyPage },
+      { path: "terms", Component: TermsPage },
       { path: "booking-success", Component: BookingSuccessPage },
       { path: "booking-error", Component: BookingErrorPage },
       { path: "validation-states", Component: ValidationStatesPage },

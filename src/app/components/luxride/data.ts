@@ -171,7 +171,7 @@ export const ROUTES: Route[] = [
   { id: "c6", from: "Hurghada", to: "Sharm El Naga", prices: { oneWay: 35 }, duration: "half day", image: IMAGES.soma },
 
   // Long-distance & historical (permit required)
-  { id: "l1", from: "Hurghada", to: "Luxor", prices: { oneWay: 75, overday: 90 }, duration: "4 h", image: IMAGES.luxor, permit: true, discountPct: 15 },
+  { id: "l1", from: "Hurghada", to: "Luxor", prices: { oneWay: 75, overday: 90 }, duration: "4 h", image: IMAGES.luxor, permit: true },
   { id: "l2", from: "El Gouna", to: "Luxor", prices: { oneWay: 85, overday: 100 }, duration: "4 h 30 min", image: IMAGES.luxor, permit: true },
   { id: "l3", from: "Hurghada", to: "Aswan", prices: { oneWay: 110 }, duration: "7 h", image: IMAGES.luxor, permit: true },
   { id: "l4", from: "Hurghada", to: "Cairo", prices: { oneWay: 110, overday: 120 }, duration: "5 h 30 min", image: IMAGES.luxor, permit: true },
@@ -264,7 +264,7 @@ export const POPULAR_TRANSFERS: PopularTransfer[] = [
   { id: "p1", from: "Hurghada Airport", to: "El Gouna", image: IMAGES.elGouna, duration: "35 min", fromPrice: 13, airport: true },
   { id: "p2", from: "Hurghada Airport", to: "Makadi Bay", image: IMAGES.makadi, duration: "40 min", fromPrice: 14, airport: true },
   { id: "p3", from: "Hurghada Airport", to: "Marsa Alam", image: IMAGES.marsaAlam, duration: "3 h", fromPrice: 65, airport: true },
-  { id: "p4", from: "Hurghada", to: "Luxor", image: IMAGES.luxor, duration: "4 h", fromPrice: 63.75, oldPrice: 75, discountPct: 15, permit: true },
+  { id: "p4", from: "Hurghada", to: "Luxor", image: IMAGES.luxor, duration: "4 h", fromPrice: 75, permit: true },
   { id: "p5", from: "Hurghada", to: "Cairo", image: IMAGES.luxor, duration: "5 h 30 min", fromPrice: 110, permit: true },
   { id: "p6", from: "Hurghada", to: "Sharm El Sheikh", image: IMAGES.soma, duration: "6 h", fromPrice: 200, permit: true },
 ];

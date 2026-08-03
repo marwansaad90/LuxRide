@@ -1,22 +1,19 @@
-# LuxRide interactive frontend prototype
+# LuxRide client-review application
 
-LuxRide is an existing React and Vite prototype for an Arabic/English private-transfer service in Hurghada and Egypt. It preserves the original React Router architecture and represents the intended booking, notification, and availability-management experience without a backend.
+LuxRide is a bilingual English/Arabic React and Vite application for fixed-price private transfers from Hurghada across the Red Sea coast and Egypt. It includes the homepage calculator, three-step booking flow, route pricing, fleet selection, customer information pages, official Tripadvisor widgets, and direct review screens for future notification and availability workflows.
 
-## Requirements
+## Setup and development
 
-- Node.js 20 or newer
-- npm (the repository uses `package-lock.json`)
-
-## Local development
+Requirements: Node.js 20 or newer and npm.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Vite prints the local URL after startup.
+Open the local URL printed by Vite. The development server uses React Router and the same route structure as the production build.
 
-## Quality checks
+## Verification and production build
 
 ```bash
 npm run lint
@@ -25,75 +22,59 @@ npm test
 npm run build
 ```
 
-Run the complete sequence with:
+`npm run check` runs lint, TypeScript, Vitest, and the Vite production build in sequence. Build output is written to `dist/`.
 
-```bash
-npm run check
-```
+## Cloudflare Pages deployment
 
-## Production preview
+The repository is intentionally isolated at the LuxRide project root. Cloudflare Pages should use:
 
-```bash
-npm run build
-npm run preview
-```
-
-The production output is generated in `dist/` and is intentionally ignored by Git.
-
-## Cloudflare Pages
-
-This repository is ready to connect to Cloudflare Pages from GitHub.
-
-- Framework preset: Vite
+- Production branch: `main`
 - Build command: `npm run build`
 - Build output directory: `dist`
-- Node.js version: 20 or newer
+- SPA fallback: `public/_redirects` publishes `/* /index.html 200`
 
-The included `wrangler.toml` declares `pages_build_output_dir = "./dist"` so Cloudflare Pages and Wrangler use the same production output folder.
+`wrangler.toml` records the same `dist` output. No Content Security Policy is currently defined. If one is added later, Tripadvisor requires the minimum relevant allowances for `https://www.jscache.com`, `https://www.tripadvisor.com`, and `https://static.tacdn.com` in the appropriate script, image, connection, frame, style, and font directives.
 
-## Client Review Mode
+## Vehicle availability configuration
 
-All three vehicles are temporarily selectable in the client-review prototype to validate capacity and pricing behavior. Final production availability requires client confirmation; the production fleet state still marks only the Mitsubishi Xpander as available, with the Toyota Corolla and Toyota HiAce retained as Coming Soon.
+`CLIENT_REVIEW_ENABLE_ALL_VEHICLES` in `src/app/components/luxride/data.ts` is the single client-review switch. It currently allows the calculator, booking flow, homepage fleet, and fleet page to select all three approved vehicles.
+
+To restore the intended production state:
+
+1. Set `CLIENT_REVIEW_ENABLE_ALL_VEHICLES` to `false`.
+2. Keep `available: true` for Mitsubishi Xpander.
+3. Keep `available: false` for Toyota Corolla and Toyota HiAce until the client confirms them.
+4. Run `npm run check` before deployment.
+
+The customer interface does not expose configuration-mode wording.
+
+## Official Tripadvisor widgets
+
+`Reviews.tsx` renders the exact official starter markup and mounts one asynchronous script after each container. `tripadvisor.ts` centralizes the immutable production identifiers and URLs:
+
+- Your Rating: container `TA_cdsratingsonlynarrow470`, unique ID `470`
+- Review Starter: container `TA_cdswritereviewnew935`, unique ID `935`
+- Rave Reviews: container `TA_cdsscrollingravenarrow782`, unique ID `782`
+- Location ID: `34457256`
+
+Each script has a unique DOM ID, uses the official `www.jscache.com/wejs` URL, sets `data-loadtrk` before and after load, avoids duplicate insertion, and is cleaned up after a real route unmount. The external scripts are not loaded globally. Readiness must be verified on the deployed domain because official widget rendering depends on Tripadvisor's live services.
 
 ## Routes
 
 Customer routes:
 
-- `/`
-- `/about`
-- `/fleet`
-- `/destinations`
-- `/transfer-details`
-- `/booking`
-- `/contact`
-- `/faq`
-- `/cancellation-policy`
-- `/booking-success`
-- `/booking-error`
-- `/last-minute`
+- `/`, `/about`, `/fleet`, `/destinations`, `/transfer-details`
+- `/booking`, `/booking-success`, `/contact`, `/faq`
+- `/cancellation-policy`, `/privacy-policy`, `/terms`
 
-Prototype/reference routes:
+Direct review routes are intentionally excluded from normal customer navigation:
 
-- `/validation-states`
 - `/availability-admin`
+- `/validation-states`
 - `/whatsapp-preview`
 - `/email-preview`
+- `/booking-error`
 
-## Static deployment and browser refreshes
+## Future production integration
 
-LuxRide uses `createBrowserRouter`, so the production host must rewrite every unknown frontend path to `/index.html`. The included `public/_redirects` supports hosts that implement the Netlify-style redirects format. For other hosts, configure the equivalent SPA fallback:
-
-- Nginx: `try_files $uri $uri/ /index.html;`
-- Apache: rewrite non-file and non-directory requests to `index.html`
-- Vercel/Cloudflare Pages: configure a catch-all rewrite to `/index.html`
-- GitHub Pages: add a platform-specific SPA fallback or deploy behind a host that supports rewrites
-
-Do not change to hash routing unless the selected host cannot provide an SPA fallback.
-
-## Client-owned placeholders
-
-See [CLIENT_INPUT_REQUIRED.md](./CLIENT_INPUT_REQUIRED.md). Missing production contact data, route rules, final images, exact font confirmation, and Tripadvisor content are not invented in this prototype.
-
-## WordPress phase
-
-This repository does not implement WordPress, a database, real admin persistence, real WhatsApp/email delivery, Tripadvisor scripts, availability locking, vehicle blocking, route/discount management, SSL, hosting, backups, security plugins, or SEO schema. The relevant screens are visual and behavioral prototypes only.
+A production backend, persistent availability management, operational WhatsApp/email delivery, payment processing, final legal approval, and final client-owned content remain outside this React client-review release. Confirmed missing client inputs are tracked in `CLIENT_INPUT_REQUIRED.md`; the application does not invent them.

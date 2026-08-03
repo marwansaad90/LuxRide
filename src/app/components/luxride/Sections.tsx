@@ -27,6 +27,7 @@ import {
   PHONE_DISPLAY,
   POPULAR_TRANSFERS,
   ROUTES,
+  isVehicleSelectable,
   whatsappLink,
 } from "./data";
 import { locationLabel, useLang, t } from "./i18n";
@@ -240,7 +241,7 @@ export function Fleet() {
             <div
               key={v.id}
               className={`overflow-hidden rounded-2xl border bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] transition-all ${
-                v.available ? "border-lux-green/30 hover:border-lux-green/60" : "border-neutral-200 opacity-70"
+                isVehicleSelectable(v) ? "border-lux-green/30 hover:border-lux-green/60" : "border-neutral-200 opacity-70"
               }`}
             >
               <div className="relative h-48 overflow-hidden bg-white">
@@ -252,10 +253,10 @@ export function Fleet() {
                 />
                 <span
                   className={`absolute left-4 top-4 rounded-full px-3 py-1 text-xs ${
-                    v.available ? "bg-lux-green text-white" : "bg-lux-charcoal/90 text-lux-beige/80"
+                    isVehicleSelectable(v) ? "bg-lux-green text-white" : "bg-lux-charcoal/90 text-lux-beige/80"
                   }`}
                 >
-                  {v.available ? t(lang, "fleet_available") : t(lang, "fleet_soon")}
+                  {isVehicleSelectable(v) ? t(lang, "fleet_available") : t(lang, "fleet_soon")}
                 </span>
                 <span className="absolute right-4 top-4 rounded-full bg-black/60 px-3 py-1 text-xs text-lux-gold">
                   {lang === "AR" ? v.categoryAr : v.category}
@@ -280,9 +281,9 @@ export function Fleet() {
                 </div>
                 <div className="mt-5 flex items-center justify-between border-t border-neutral-100 pt-4">
                   <span className="text-sm text-neutral-500">{t(lang, "fleet_price")}</span>
-                  {v.available ? (
+                  {isVehicleSelectable(v) ? (
                     <Link
-                      to="/booking"
+                      to={`/booking?vehicle=${v.id}`}
                       className="rounded-full bg-lux-green px-5 py-2 text-sm text-white transition-all hover:brightness-110"
                     >
                       {t(lang, "fleet_select")}

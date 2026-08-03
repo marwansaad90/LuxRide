@@ -78,16 +78,26 @@ describe("approved LuxRide pricing", () => {
     expect(computePrice(route, "overday", hiace)?.permit).toBe(PERMIT_FEE.minivan);
   });
 
-  it("keeps discount, subtotal, fees, and final total separate", () => {
+  it("removes the unconfirmed Luxor discount while keeping fees separate", () => {
     const result = price("Hurghada", "Luxor", "oneWay")!;
     expect(result).toMatchObject({
       base: 75,
-      discount: 11.25,
-      subtotal: 63.75,
+      discount: 0,
+      subtotal: 75,
       airport: 0,
       permit: 20,
       overnight: 0,
-      total: 83.75,
+      total: 95,
+    });
+  });
+
+  it("retains discount support for a future explicitly configured offer", () => {
+    const configuredRoute = { ...findRoute("Hurghada", "Luxor")!, discountPct: 10 };
+    expect(computePrice(configuredRoute, "oneWay", xpander)).toMatchObject({
+      base: 75,
+      discount: 7.5,
+      subtotal: 67.5,
+      total: 87.5,
     });
   });
 
@@ -201,7 +211,7 @@ function readActiveAppSources(dir: string): string {
     .join("\n");
 }
 
-describe("batch 2 homepage integration", () => {
+describe("final client-review integration", () => {
   it("keeps the homepage calculator only inside the Hero and removes the homepage Destinations section", () => {
     const home = readSource("../../pages/Home.tsx");
     const hero = readSource("./Hero.tsx");
@@ -222,6 +232,14 @@ describe("batch 2 homepage integration", () => {
     expect(sections).toContain("هل تحتاج إلى توصيلة خلال أقل من 3 ساعات؟");
   });
 
+  it("keeps the approved homepage section order", () => {
+    const home = readSource("../../pages/Home.tsx");
+    const components = ["<Hero />", "<LastMinute />", "<HowItWorks />", "<ServiceBenefits />", "<PopularTransfers />", "<Fleet />", "<WhyChoose />", "<Reviews />", "<FAQ />", "<FinalCTA />"];
+    const positions = components.map((component) => home.indexOf(component));
+    expect(positions.every((position) => position >= 0)).toBe(true);
+    expect(positions).toEqual([...positions].sort((a, b) => a - b));
+  });
+
   it("keeps Popular Transfers images at their natural source colors", () => {
     const sections = readSource("./Sections.tsx");
     const popularTransfers = sections
@@ -239,10 +257,20 @@ describe("batch 2 homepage integration", () => {
   it("uses the latest Tripadvisor widget IDs and real location", () => {
     expect(TRIPADVISOR_LOCATION_ID).toBe("34457256");
     expect(TRIPADVISOR_WIDGETS.map((widget) => widget.uniqueId)).toEqual(["470", "935", "782"]);
+    expect(TRIPADVISOR_WIDGETS.map((widget) => widget.containerId)).toEqual([
+      "TA_cdsratingsonlynarrow470",
+      "TA_cdswritereviewnew935",
+      "TA_cdsscrollingravenarrow782",
+    ]);
     expect(TRIPADVISOR_WIDGETS.map((widget) => widget.widgetType)).toEqual([
       "cdsratingsonlynarrow",
       "cdswritereviewnew",
       "cdsscrollingravenarrow",
+    ]);
+    expect(TRIPADVISOR_WIDGETS.map((widget) => widget.scriptId)).toEqual([
+      "tripadvisor-rating-script-470",
+      "tripadvisor-review-starter-script-935",
+      "tripadvisor-rave-reviews-script-782",
     ]);
     expect(TRIPADVISOR_WIDGETS.map(tripadvisorWidgetScriptUrl)).toEqual([
       "https://www.jscache.com/wejs?wtype=cdsratingsonlynarrow&uniq=470&locationId=34457256&lang=en_US&border=true&display_version=2",
@@ -251,9 +279,8 @@ describe("batch 2 homepage integration", () => {
     ]);
   });
 
-  it("uses the official Tripadvisor target link and no fake fallback rating data", () => {
+  it("renders the exact official Tripadvisor starter markup without a local fallback", () => {
     const reviews = readSource("./Reviews.tsx");
-    const officialLogo = readSource("../../../assets/brand/tripadvisor-lockup.svg");
     const activeCode = readActiveAppSources(fileURLToPath(new URL("../../", import.meta.url)));
 
     expect(TRIPADVISOR_PAGE_URL).toBe(
@@ -262,15 +289,20 @@ describe("batch 2 homepage integration", () => {
     expect(reviews).not.toContain("Rating pending");
     expect(reviews).not.toContain("Review count required");
     expect(reviews).not.toContain("Rated Excellent");
-    expect(reviews).toContain("tripadvisor-lockup.svg");
-    expect(reviews).toContain('transform: "none"');
-    expect(officialLogo).toContain('fill="#34E0A1"');
+    expect(reviews).not.toContain("View LuxRide on Tripadvisor");
+    expect(reviews).not.toContain("Write a Review on Tripadvisor");
+    expect(reviews).not.toContain("Read LuxRide Reviews on Tripadvisor");
+    expect(reviews).not.toContain("tripadvisor-lockup.svg");
+    expect(reviews).toContain('id="bx4vQmDEZ" className="TA_links DNOhrQ"');
+    expect(reviews).toContain('id="UAp0qD9lW" className="TA_links 9ACGKVQ5IA"');
+    expect(reviews).toContain('id="LmZYIV0z7lo4" className="TA_links S7dZdrAkw"');
+    expect(reviews).toContain('id="CDSWIDEXCLOGO"');
     expect(activeCode).not.toContain("Client content required");
     expect(activeCode).not.toContain("Based on 120+ reviews");
     expect(activeCode).not.toContain("بناءً على ١٢٠+ تقييم");
   });
 
-  it("uses two primary widgets, one full-width rave widget, and safe script cleanup", () => {
+  it("uses two primary widgets, one full-width rave widget, and StrictMode-safe script lifecycle", () => {
     const reviews = readSource("./Reviews.tsx");
     const primaryRow = reviews
       .split('data-tripadvisor-row="primary"')[1]
@@ -280,8 +312,38 @@ describe("batch 2 homepage integration", () => {
     expect(primaryRow.match(/<TripadvisorWidget /g)).toHaveLength(2);
     expect(raveRow.match(/<TripadvisorWidget /g)).toHaveLength(1);
     expect(reviews).toContain("scriptHost.replaceChildren()");
-    expect(reviews).toContain("script.dataset.tripadvisorWidget = config.uniqueId");
+    expect(reviews).toContain('script.setAttribute("data-loadtrk", "")');
+    expect(reviews).toContain('script?.setAttribute("data-loadtrk", "true")');
+    expect(reviews).toContain("cleanupTimerRef");
+    expect(reviews).toContain('WidgetEmbed-${config.widgetType}');
     expect(reviews).toContain('rel="noopener noreferrer"');
+  });
+
+  it("keeps internal review routes out of customer navigation and provides working legal routes", () => {
+    const header = readSource("./Header.tsx");
+    const footer = readSource("./Footer.tsx");
+    const routes = readSource("../../routes.tsx");
+    const internal = ["availability-admin", "validation-states", "whatsapp-preview", "email-preview", "booking-error"];
+    internal.forEach((path) => expect(header + footer).not.toContain(path));
+    expect(routes).toContain('{ path: "privacy-policy", Component: PrivacyPolicyPage }');
+    expect(routes).toContain('{ path: "terms", Component: TermsPage }');
+  });
+
+  it("keeps both notification previews aligned without physical-capacity wording", () => {
+    const preview = readSource("./notificationPreview.ts");
+    const whatsapp = readSource("../../pages/WhatsAppPreviewPage.tsx");
+    const email = readSource("../../pages/EmailPreviewPage.tsx");
+    ["Customer Name", "Hotel / Exact Destination", "Accommodation", "Final Total", "Notes"].forEach((field) => expect(preview + whatsapp + email).toContain(field));
+    expect(whatsapp).toContain("NOTIFICATION_FIELDS");
+    expect(email).toContain("NOTIFICATION_FIELDS");
+    expect(preview).not.toMatch(/up to \d+ passengers|physical capacity/i);
+  });
+
+  it("keeps exactly one final booking request button", () => {
+    const booking = readSource("../../pages/BookingPage.tsx");
+    expect(booking.match(/onClick=\{handleSubmit\}/g)).toHaveLength(1);
+    expect(booking).toContain('"Send Booking Request"');
+    expect(booking).toContain('"إرسال طلب الحجز"');
   });
 
   it("removes old active Tripadvisor widget IDs and includes mobile sticky CTA visibility logic", () => {

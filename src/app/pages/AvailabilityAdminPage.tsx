@@ -52,8 +52,8 @@ export function AvailabilityAdminPage() {
       crumb={L("Availability Admin (Concept)", "إدارة التوفر (مفهوم)")}
       title={L("Conceptual Availability Admin", "لوحة إدارة التوفر المفاهيمية")}
       subtitle={L(
-        "A visual concept of the WordPress admin used to manage availability. This is a design prototype only — no live backend is connected.",
-        "مفهوم بصري للوحة تحكم ووردبريس لإدارة التوفر. هذا نموذج تصميمي فقط — لا يوجد خادم فعلي متصل.",
+        "A review screen showing the intended controls for managing vehicle and date availability.",
+        "شاشة مراجعة توضّح عناصر التحكم المقترحة لإدارة توفر السيارات والتواريخ.",
       )}
     >
       <section className="bg-lux-beige py-16 md:py-24">

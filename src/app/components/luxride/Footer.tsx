@@ -1,10 +1,7 @@
-import { Facebook, Instagram, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { MapPin, MessageCircle, Phone } from "lucide-react";
 import { Link } from "react-router";
 import { LuxRideLogo } from "./LuxRideLogo";
 import {
-  EMAIL,
-  FACEBOOK_URL,
-  INSTAGRAM_URL,
   PHONE_DISPLAY,
   TRIPADVISOR_URL,
   whatsappLink,
@@ -14,6 +11,8 @@ import type { TKey } from "./i18n";
 
 const QUICK_LINKS: Array<{ key: TKey; to: string }> = [
   { key: "nav_home", to: "/" },
+  { key: "nav_transfers", to: "/#transfers" },
+  { key: "nav_destinations", to: "/destinations" },
   { key: "nav_about", to: "/about" },
   { key: "nav_fleet", to: "/fleet" },
   { key: "nav_booking", to: "/booking" },
@@ -36,24 +35,6 @@ export function Footer() {
             {t(lang, "footer_desc")}
           </p>
           <div className="mt-5 flex gap-3">
-            {INSTAGRAM_URL ? (
-              <a aria-label="Instagram" href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="flex h-10 w-10 items-center justify-center rounded-full border border-lux-gold/30 transition-all hover:bg-lux-gold hover:text-lux-dark">
-                <Instagram className="h-4 w-4" />
-              </a>
-            ) : (
-              <span aria-label="Instagram URL pending" title="Instagram URL pending client input" className="flex h-10 w-10 cursor-not-allowed items-center justify-center rounded-full border border-white/15 text-white/35">
-                <Instagram className="h-4 w-4" />
-              </span>
-            )}
-            {FACEBOOK_URL ? (
-              <a aria-label="Facebook" href={FACEBOOK_URL} target="_blank" rel="noreferrer" className="flex h-10 w-10 items-center justify-center rounded-full border border-lux-gold/30 transition-all hover:bg-lux-gold hover:text-lux-dark">
-                <Facebook className="h-4 w-4" />
-              </a>
-            ) : (
-              <span aria-label="Facebook URL pending" title="Facebook URL pending client input" className="flex h-10 w-10 cursor-not-allowed items-center justify-center rounded-full border border-white/15 text-white/35">
-                <Facebook className="h-4 w-4" />
-              </span>
-            )}
             <a href={TRIPADVISOR_URL} target="_blank" rel="noopener noreferrer" className="flex h-10 items-center gap-2 rounded-full border border-[#00aa6c]/50 px-4 text-xs text-[#00aa6c] transition-all hover:bg-[#00aa6c] hover:text-white">
               Tripadvisor
             </a>
@@ -103,10 +84,6 @@ export function Footer() {
                 {t(lang, "footer_wa")}
               </a>
             </li>
-            <li className="flex items-center gap-3">
-              <Mail className="h-4 w-4 text-lux-gold" />
-              {EMAIL ? <a href={`mailto:${EMAIL}`} className="hover:text-lux-gold">{EMAIL}</a> : <span>{lang === "AR" ? "بانتظار تأكيد العميل" : "Pending client confirmation"}</span>}
-            </li>
           </ul>
         </div>
       </div>
@@ -116,8 +93,8 @@ export function Footer() {
           <p>© {new Date().getFullYear()} {t(lang, "footer_copy")}</p>
           <div className="flex flex-wrap items-center gap-5">
             <Link to="/cancellation-policy" className="hover:text-lux-green">{t(lang, "footer_cancellation")}</Link>
-            <span className="text-lux-beige/50" title="Pending WordPress phase">{t(lang, "footer_privacy")}</span>
-            <span className="text-lux-beige/50" title="Pending WordPress phase">{t(lang, "footer_terms")}</span>
+            <Link to="/privacy-policy" className="hover:text-lux-green">{t(lang, "footer_privacy")}</Link>
+            <Link to="/terms" className="hover:text-lux-green">{t(lang, "footer_terms")}</Link>
             <span className="text-lux-beige/40">EN · AR</span>
           </div>
         </div>

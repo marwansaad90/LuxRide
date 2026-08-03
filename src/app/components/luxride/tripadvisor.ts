@@ -2,23 +2,18 @@ export const TRIPADVISOR_PAGE_URL =
   "https://www.tripadvisor.com/Attraction_Review-g297549-d34457256-Reviews-LuxRide_Taxi-Hurghada_Red_Sea_and_Sinai.html";
 
 export const TRIPADVISOR_LOCATION_ID = "34457256";
-export const TRIPADVISOR_LANGUAGE = "en_US";
-export const TRIPADVISOR_DISPLAY_VERSION = "2";
 
-export type TripadvisorWidgetType =
-  | "cdsratingsonlynarrow"
-  | "cdswritereviewnew"
-  | "cdsscrollingravenarrow";
+export type TripadvisorWidgetKey = "rating" | "reviewStarter" | "raveReviews";
 
 export interface TripadvisorWidgetConfig {
-  key: "rating" | "reviewStarter" | "raveReviews";
-  widgetType: TripadvisorWidgetType;
+  key: TripadvisorWidgetKey;
+  widgetType: "cdsratingsonlynarrow" | "cdswritereviewnew" | "cdsscrollingravenarrow";
   uniqueId: "470" | "935" | "782";
   titleEn: string;
   titleAr: string;
-  fallbackLabelEn: string;
-  fallbackLabelAr: string;
-  border?: boolean;
+  containerId: string;
+  scriptId: string;
+  scriptUrl: string;
 }
 
 export const TRIPADVISOR_WIDGETS: TripadvisorWidgetConfig[] = [
@@ -28,9 +23,10 @@ export const TRIPADVISOR_WIDGETS: TripadvisorWidgetConfig[] = [
     uniqueId: "470",
     titleEn: "Your Rating",
     titleAr: "تقييمك",
-    fallbackLabelEn: "View LuxRide on Tripadvisor",
-    fallbackLabelAr: "عرض LuxRide على Tripadvisor",
-    border: true,
+    containerId: "TA_cdsratingsonlynarrow470",
+    scriptId: "tripadvisor-rating-script-470",
+    scriptUrl:
+      "https://www.jscache.com/wejs?wtype=cdsratingsonlynarrow&uniq=470&locationId=34457256&lang=en_US&border=true&display_version=2",
   },
   {
     key: "reviewStarter",
@@ -38,8 +34,10 @@ export const TRIPADVISOR_WIDGETS: TripadvisorWidgetConfig[] = [
     uniqueId: "935",
     titleEn: "Review Starter",
     titleAr: "ابدأ كتابة مراجعة",
-    fallbackLabelEn: "Write a Review on Tripadvisor",
-    fallbackLabelAr: "اكتب مراجعة على Tripadvisor",
+    containerId: "TA_cdswritereviewnew935",
+    scriptId: "tripadvisor-review-starter-script-935",
+    scriptUrl:
+      "https://www.jscache.com/wejs?wtype=cdswritereviewnew&uniq=935&locationId=34457256&lang=en_US&display_version=2",
   },
   {
     key: "raveReviews",
@@ -47,20 +45,13 @@ export const TRIPADVISOR_WIDGETS: TripadvisorWidgetConfig[] = [
     uniqueId: "782",
     titleEn: "Rave Reviews",
     titleAr: "مراجعات المسافرين",
-    fallbackLabelEn: "Read LuxRide Reviews on Tripadvisor",
-    fallbackLabelAr: "قراءة مراجعات LuxRide على Tripadvisor",
-    border: true,
+    containerId: "TA_cdsscrollingravenarrow782",
+    scriptId: "tripadvisor-rave-reviews-script-782",
+    scriptUrl:
+      "https://www.jscache.com/wejs?wtype=cdsscrollingravenarrow&uniq=782&locationId=34457256&lang=en_US&border=true&display_version=2",
   },
 ];
 
 export function tripadvisorWidgetScriptUrl(config: TripadvisorWidgetConfig): string {
-  const params = new URLSearchParams({
-    wtype: config.widgetType,
-    uniq: config.uniqueId,
-    locationId: TRIPADVISOR_LOCATION_ID,
-    lang: TRIPADVISOR_LANGUAGE,
-  });
-  if (config.border) params.set("border", "true");
-  params.set("display_version", TRIPADVISOR_DISPLAY_VERSION);
-  return `https://www.jscache.com/wejs?${params.toString()}`;
+  return config.scriptUrl;
 }
