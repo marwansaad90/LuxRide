@@ -195,7 +195,7 @@ function readActiveAppSources(dir: string): string {
       const fullPath = join(dir, entry);
       const stat = statSync(fullPath);
       if (stat.isDirectory()) return readActiveAppSources(fullPath);
-      if (!/\.(ts|tsx|css)$/.test(entry)) return [];
+      if (!/\.(ts|tsx|css)$/.test(entry) || /\.test\./.test(entry)) return [];
       return readFileSync(fullPath, "utf8");
     })
     .join("\n");
@@ -205,10 +205,12 @@ describe("batch 2 homepage integration", () => {
   it("keeps the homepage calculator only inside the Hero and removes the homepage Destinations section", () => {
     const home = readSource("../../pages/Home.tsx");
     const hero = readSource("./Hero.tsx");
+    const routes = readSource("../../routes.tsx");
 
     expect(home).not.toContain("<DestinationSEO");
     expect(home).not.toContain("EstimateYourTrip");
     expect(hero).toContain("<EstimateYourTrip />");
+    expect(routes).toContain('{ path: "destinations", Component: DestinationsPage }');
   });
 
   it("keeps Popular Transfers on the homepage and uses the new last-minute heading", () => {
@@ -218,6 +220,20 @@ describe("batch 2 homepage integration", () => {
     expect(home).toContain("<PopularTransfers />");
     expect(sections).toContain("Need a transfer within 3 hours?");
     expect(sections).toContain("هل تحتاج إلى توصيلة خلال أقل من 3 ساعات؟");
+  });
+
+  it("keeps Popular Transfers images at their natural source colors", () => {
+    const sections = readSource("./Sections.tsx");
+    const popularTransfers = sections
+      .split("export function PopularTransfers()")[1]
+      .split("export function Fleet()")[0];
+    const imageMarkup = popularTransfers.match(/<ImageWithFallback[\s\S]*?\/>/)?.[0] ?? "";
+
+    expect(imageMarkup).toContain('className="popular-transfer-image');
+    expect(imageMarkup).toContain('filter: "none"');
+    expect(imageMarkup).toContain("opacity: 1");
+    expect(imageMarkup).toContain('mixBlendMode: "normal"');
+    expect(imageMarkup).not.toMatch(/brightness-|grayscale|bg-black|from-black|to-black/);
   });
 
   it("uses the latest Tripadvisor widget IDs and real location", () => {
@@ -237,6 +253,8 @@ describe("batch 2 homepage integration", () => {
 
   it("uses the official Tripadvisor target link and no fake fallback rating data", () => {
     const reviews = readSource("./Reviews.tsx");
+    const officialLogo = readSource("../../../assets/brand/tripadvisor-lockup.svg");
+    const activeCode = readActiveAppSources(fileURLToPath(new URL("../../", import.meta.url)));
 
     expect(TRIPADVISOR_PAGE_URL).toBe(
       "https://www.tripadvisor.com/Attraction_Review-g297549-d34457256-Reviews-LuxRide_Taxi-Hurghada_Red_Sea_and_Sinai.html",
@@ -244,6 +262,26 @@ describe("batch 2 homepage integration", () => {
     expect(reviews).not.toContain("Rating pending");
     expect(reviews).not.toContain("Review count required");
     expect(reviews).not.toContain("Rated Excellent");
+    expect(reviews).toContain("tripadvisor-lockup.svg");
+    expect(reviews).toContain('transform: "none"');
+    expect(officialLogo).toContain('fill="#34E0A1"');
+    expect(activeCode).not.toContain("Client content required");
+    expect(activeCode).not.toContain("Based on 120+ reviews");
+    expect(activeCode).not.toContain("بناءً على ١٢٠+ تقييم");
+  });
+
+  it("uses two primary widgets, one full-width rave widget, and safe script cleanup", () => {
+    const reviews = readSource("./Reviews.tsx");
+    const primaryRow = reviews
+      .split('data-tripadvisor-row="primary"')[1]
+      .split('data-tripadvisor-row="rave"')[0];
+    const raveRow = reviews.split('data-tripadvisor-row="rave"')[1];
+
+    expect(primaryRow.match(/<TripadvisorWidget /g)).toHaveLength(2);
+    expect(raveRow.match(/<TripadvisorWidget /g)).toHaveLength(1);
+    expect(reviews).toContain("scriptHost.replaceChildren()");
+    expect(reviews).toContain("script.dataset.tripadvisorWidget = config.uniqueId");
+    expect(reviews).toContain('rel="noopener noreferrer"');
   });
 
   it("removes old active Tripadvisor widget IDs and includes mobile sticky CTA visibility logic", () => {

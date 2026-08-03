@@ -102,7 +102,7 @@ export function ContactPage() {
                 <div className="mt-4 flex flex-wrap gap-3">
                   {INSTAGRAM_URL ? <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full border border-lux-charcoal/15 px-4 py-2 text-sm text-lux-charcoal transition-all hover:border-lux-green hover:text-lux-green"><Instagram className="h-4 w-4" /> Instagram</a> : <span className="flex cursor-not-allowed items-center gap-2 rounded-full border border-neutral-200 px-4 py-2 text-sm text-neutral-400"><Instagram className="h-4 w-4" /> Instagram · {L("URL pending", "الرابط قيد الانتظار")}</span>}
                   {FACEBOOK_URL ? <a href={FACEBOOK_URL} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full border border-lux-charcoal/15 px-4 py-2 text-sm text-lux-charcoal transition-all hover:border-lux-green hover:text-lux-green"><Facebook className="h-4 w-4" /> Facebook</a> : <span className="flex cursor-not-allowed items-center gap-2 rounded-full border border-neutral-200 px-4 py-2 text-sm text-neutral-400"><Facebook className="h-4 w-4" /> Facebook · {L("URL pending", "الرابط قيد الانتظار")}</span>}
-                  <a href={TRIPADVISOR_URL} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full border border-[#00aa6c]/50 px-4 py-2 text-sm text-[#00aa6c] transition-all hover:bg-[#00aa6c] hover:text-white">◉ Tripadvisor</a>
+                  <a href={TRIPADVISOR_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-full border border-[#00aa6c]/50 px-4 py-2 text-sm text-[#00aa6c] transition-all hover:bg-[#00aa6c] hover:text-white">Tripadvisor</a>
                 </div>
               </div>
             </div>

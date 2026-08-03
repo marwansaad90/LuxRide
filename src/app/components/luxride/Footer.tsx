@@ -54,8 +54,8 @@ export function Footer() {
                 <Facebook className="h-4 w-4" />
               </span>
             )}
-            <a href={TRIPADVISOR_URL} target="_blank" rel="noreferrer" className="flex h-10 items-center gap-2 rounded-full border border-[#00aa6c]/50 px-4 text-xs text-[#00aa6c] transition-all hover:bg-[#00aa6c] hover:text-white">
-              ◉ Tripadvisor
+            <a href={TRIPADVISOR_URL} target="_blank" rel="noopener noreferrer" className="flex h-10 items-center gap-2 rounded-full border border-[#00aa6c]/50 px-4 text-xs text-[#00aa6c] transition-all hover:bg-[#00aa6c] hover:text-white">
+              Tripadvisor
             </a>
           </div>
         </div>

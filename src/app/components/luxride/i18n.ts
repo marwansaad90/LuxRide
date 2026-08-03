@@ -55,7 +55,6 @@ const T = {
     hero_sub: "Reliable airport transfers, private limousine services, and comfortable journeys across Hurghada and Egypt.",
     hero_cta1: "Book Your Transfer",
     hero_cta2: "View Our Fleet",
-    hero_ta: "Tripadvisor Reviews",
     hero_feat: "Fixed, transparent prices",
 
     // Booking calculator
@@ -190,15 +189,6 @@ const T = {
     cta_calc: "Calculate Your Price",
     cta_wa: "Contact Us on WhatsApp",
 
-    // Reviews
-    rev_eyebrow: "Guest Reviews",
-    rev_title: "Trusted by Travellers Worldwide",
-    rev_ta_name: "Tripadvisor",
-    rev_ta_sub: "Official profile",
-    rev_ta_count: "Based on 120+ reviews",
-    rev_ta_cta: "Read All Reviews",
-    rev_also: "Also featured on Google Reviews · Instagram · Facebook",
-
     // FAQ
     faq_eyebrow: "Good to Know",
     faq_title: "Frequently Asked Questions",
@@ -240,7 +230,6 @@ const T = {
     hero_sub: "تحويلات مطار موثوقة، خدمات ليموزين خاصة، ورحلات مريحة عبر الغردقة ومصر.",
     hero_cta1: "احجز رحلتك",
     hero_cta2: "استعرض أسطولنا",
-    hero_ta: "تقييم ممتاز على Tripadvisor",
     hero_feat: "أسعار ثابتة وشفافة",
 
     // Booking calculator
@@ -374,15 +363,6 @@ const T = {
     cta_sub: "اختر مسارك وسيارتك، راجع السعر، وأرسل طلب حجز واحداً واضحاً.",
     cta_calc: "احسب سعرك",
     cta_wa: "تواصل معنا على واتساب",
-
-    // Reviews
-    rev_eyebrow: "آراء الضيوف",
-    rev_title: "موثوق به من مسافرين حول العالم",
-    rev_ta_name: "تريب أدفايزر",
-    rev_ta_sub: "الملف الرسمي",
-    rev_ta_count: "بناءً على ١٢٠+ تقييم",
-    rev_ta_cta: "اقرأ جميع التقييمات",
-    rev_also: "متميز أيضاً على Google Reviews · إنستغرام · فيسبوك",
 
     // FAQ
     faq_eyebrow: "معلومات مفيدة",

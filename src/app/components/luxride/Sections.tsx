@@ -182,7 +182,8 @@ export function PopularTransfers() {
                 <ImageWithFallback
                   src={tr.image}
                   alt={`${tr.from} to ${tr.to}`}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="popular-transfer-image h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  style={{ filter: "none", opacity: 1, mixBlendMode: "normal" }}
                 />
                 {tr.discountPct && (
                   <span className="absolute left-4 top-4 rounded-full bg-lux-orange px-3 py-1 text-xs text-lux-dark">

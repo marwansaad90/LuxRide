@@ -1,4 +1,4 @@
-// LuxRide shared data — images, routes, pricing, fleet, reviews, fees
+// LuxRide shared data — images, routes, pricing, fleet, and fees
 // All prices in EUR, tax inclusive, fixed per the approved price table.
 
 import xpanderImg from "../../../imports/LuxRide-02.png";
@@ -41,8 +41,7 @@ export const WHATSAPP_NUMBER = "201013554009"; // +20 101 355 4009
 export const PHONE_DISPLAY = "+20 101 355 4009";
 export const EMAIL: string | null = null;
 
-export const TRIPADVISOR_URL =
-  "https://www.tripadvisor.com/Attraction_Review-g297549-d34457256";
+export { TRIPADVISOR_PAGE_URL as TRIPADVISOR_URL } from "./tripadvisor";
 export const INSTAGRAM_URL: string | null = null;
 export const FACEBOOK_URL: string | null = null;
 
@@ -268,22 +267,6 @@ export const POPULAR_TRANSFERS: PopularTransfer[] = [
   { id: "p4", from: "Hurghada", to: "Luxor", image: IMAGES.luxor, duration: "4 h", fromPrice: 63.75, oldPrice: 75, discountPct: 15, permit: true },
   { id: "p5", from: "Hurghada", to: "Cairo", image: IMAGES.luxor, duration: "5 h 30 min", fromPrice: 110, permit: true },
   { id: "p6", from: "Hurghada", to: "Sharm El Sheikh", image: IMAGES.soma, duration: "6 h", fromPrice: 200, permit: true },
-];
-
-// ─── Reviews ──────────────────────────────────────────────────────────────────
-export interface Review {
-  id: string;
-  name: string;
-  country: string;
-  rating: number;
-  text: string;
-  trip: string;
-}
-
-export const REVIEWS: Review[] = [
-  { id: "r1", name: "Tripadvisor review", country: "Client content required", rating: 0, trip: "Airport transfer", text: "Verified Tripadvisor review content will appear here after the client supplies or approves it." },
-  { id: "r2", name: "Tripadvisor review", country: "Client content required", rating: 0, trip: "Red Sea transfer", text: "This visual placeholder does not represent a real customer or published review." },
-  { id: "r3", name: "Tripadvisor review", country: "Client content required", rating: 0, trip: "Long-distance trip", text: "Average rating, review count, and approved review excerpts are still required." },
 ];
 
 export function whatsappLink(message: string): string {
