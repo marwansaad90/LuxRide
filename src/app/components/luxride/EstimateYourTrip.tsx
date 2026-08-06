@@ -3,13 +3,15 @@ import { ArrowRight, CalendarDays, Clock, Luggage, MapPin, Users } from "lucide-
 import { useNavigate } from "react-router";
 import {
   SELECTABLE_FLEET,
-  TripType,
+  PublicTripType,
   VehicleId,
-  availableTripTypes,
+  availablePublicTripTypes,
   computePrice,
   destinationsFor,
   findRoute,
   pickupLocations,
+  resolveTripType,
+  tripRulesFor,
 } from "./data";
 import { formatEur } from "./bookingState";
 import { locationLabel, useLang } from "./i18n";
@@ -22,7 +24,7 @@ export function EstimateYourTrip() {
   const navigate = useNavigate();
   const isAR = lang === "AR";
 
-  const [trip, setTrip] = useState<TripType>("oneWay");
+  const [publicTrip, setPublicTrip] = useState<PublicTripType>("oneWay");
   const [from, setFrom] = useState(PICKUPS[0]);
   const [dests, setDests] = useState(() => destinationsFor(PICKUPS[0]));
   const [to, setTo] = useState(() => destinationsFor(PICKUPS[0])[0]);
@@ -35,9 +37,11 @@ export function EstimateYourTrip() {
 
   const vehicle = SELECTABLE_FLEET.find((v) => v.id === vehicleId) ?? SELECTABLE_FLEET[0];
   const route = findRoute(from, to);
-  const supportedTrips = useMemo(() => availableTripTypes(route), [route]);
+  const supportedTrips = useMemo(() => availablePublicTripTypes(route), [route]);
+  const trip = useMemo(() => resolveTripType(route, publicTrip), [route, publicTrip]);
+  const tripRules = useMemo(() => tripRulesFor(route), [route]);
   const breakdown = useMemo(
-    () => (route && vehicle ? computePrice(route, trip, vehicle) : null),
+    () => (route && vehicle && trip ? computePrice(route, trip, vehicle) : null),
     [route, trip, vehicle],
   );
   const todayLocal = useMemo(() => {
@@ -46,11 +50,11 @@ export function EstimateYourTrip() {
   }, []);
 
   useEffect(() => {
-    if (!route || supportedTrips.includes(trip)) return;
+    if (!route || supportedTrips.includes(publicTrip)) return;
     const nextTrip = supportedTrips[0] ?? "oneWay";
-    setTrip(nextTrip);
-    setNotice(isAR ? "تم تحديث نوع الرحلة حسب المسار المحدد." : "Trip type was updated for the selected route.");
-  }, [isAR, route, supportedTrips, trip]);
+    setPublicTrip(nextTrip);
+    setNotice(isAR ? "تم تحديث اختيار الرحلة حسب المسار المحدد." : "Trip choice was updated for the selected route.");
+  }, [isAR, publicTrip, route, supportedTrips]);
 
   function clampForVehicle(id: VehicleId) {
     const nextVehicle = SELECTABLE_FLEET.find((v) => v.id === id);
@@ -79,7 +83,7 @@ export function EstimateYourTrip() {
   function handleContinue() {
     if (!breakdown || !date || !time || !vehicle) return;
     const params = new URLSearchParams({
-      trip,
+      trip: publicTrip,
       from,
       to,
       date,
@@ -91,11 +95,16 @@ export function EstimateYourTrip() {
     navigate(`/booking?${params.toString()}`);
   }
 
-  const tripTypes: { id: TripType; label: string; desc: string }[] = [
+  const tripTypes: { id: PublicTripType; label: string; desc: string }[] = [
     { id: "oneWay", label: isAR ? "ذهاب فقط" : "One Way", desc: isAR ? "رحلة واحدة" : "Single direction" },
-    { id: "overday", label: isAR ? "يوم كامل" : "Overday", desc: isAR ? "عودة في اليوم نفسه" : "Same-day return" },
-    { id: "overnight", label: isAR ? "مبيت" : "Overnight", desc: isAR ? "عودة في يوم لاحق" : "Later-date return" },
+    { id: "roundTrip", label: isAR ? "ذهاب وعودة" : "Round Trip", desc: isAR ? "عودة حسب تصنيف المسار" : "Return journey by route rule" },
   ];
+  const classificationLabel =
+    tripRules?.roundTripMode === "overday"
+      ? (isAR ? "جولة يوم كامل" : "Overday")
+      : tripRules?.roundTripMode === "overnight"
+      ? (isAR ? "مبيت" : "Overnight")
+      : "";
 
   const inputCls =
     "h-9 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-lux-charcoal transition-all focus:border-lux-green focus:outline-none focus:ring-2 focus:ring-lux-green/25";
@@ -119,10 +128,10 @@ export function EstimateYourTrip() {
       <div className="space-y-3">
         <div>
           <span className={labelCls}>{isAR ? "نوع الرحلة" : "Trip type"}</span>
-          <div role="radiogroup" aria-label={isAR ? "نوع الرحلة" : "Trip type"} className="grid grid-cols-3 gap-1 rounded-xl bg-gray-100 p-1">
+          <div role="radiogroup" aria-label={isAR ? "نوع الرحلة" : "Trip type"} className="grid grid-cols-2 gap-1 rounded-xl bg-gray-100 p-1">
             {tripTypes.map((tt) => {
               const supported = supportedTrips.includes(tt.id);
-              const selected = trip === tt.id;
+              const selected = publicTrip === tt.id;
               const disabledReason = isAR ? "غير متاح لهذا المسار" : "Not available for this route";
               return (
                 <button
@@ -133,7 +142,7 @@ export function EstimateYourTrip() {
                   aria-disabled={!supported}
                   title={supported ? tt.desc : disabledReason}
                   disabled={!supported}
-                  onClick={() => setTrip(tt.id)}
+                  onClick={() => setPublicTrip(tt.id)}
                   className={`min-h-9 rounded-lg px-1.5 py-1.5 text-center text-xs font-semibold transition-all ${
                     !supported
                       ? "cursor-not-allowed text-gray-400"
@@ -148,6 +157,11 @@ export function EstimateYourTrip() {
               );
             })}
           </div>
+          {publicTrip === "roundTrip" && classificationLabel && (
+            <p className="mt-2 rounded-lg border border-lux-green/20 bg-lux-green/5 px-3 py-1.5 text-xs font-medium text-lux-charcoal">
+              {isAR ? `تصنيف الرحلة: ${classificationLabel}` : `Trip classification: ${classificationLabel}`}
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">

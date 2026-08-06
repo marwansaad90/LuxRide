@@ -46,8 +46,8 @@ export function Header({
     >
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 md:px-8">
         {/* Logo */}
-        <Link to="/" aria-label="LuxRide home" className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white p-1 shadow-sm">
-          <LuxRideLogo className="h-14 w-14" />
+        <Link to="/" aria-label="LuxRide home" className="flex h-16 w-16 items-center justify-center">
+          <LuxRideLogo className="h-16 w-16 drop-shadow-[0_2px_10px_rgba(0,0,0,0.18)]" />
         </Link>
 
         {/* Desktop nav */}

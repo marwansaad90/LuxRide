@@ -1,17 +1,23 @@
 import {
   TripType,
+  PublicTripType,
   VehicleId,
-  availableTripTypes,
+  availablePublicTripTypes,
   availableVehicle,
   clampWholeNumber,
+  defaultPublicTrip,
   destinationsFor,
   findRoute,
+  isPublicTripType,
   isTripType,
   pickupLocations,
+  publicTripFromInternal,
+  resolveTripType,
 } from "./data";
 
 export interface InitialBookingState {
   trip: TripType;
+  publicTrip: PublicTripType;
   from: string;
   to: string;
   date: string;
@@ -38,10 +44,13 @@ export function readInitialBookingState(params: URLSearchParams): InitialBooking
   const route = findRoute(from, to);
 
   const requestedTrip = params.get("trip");
-  const trips = availableTripTypes(route);
-  const trip = isTripType(requestedTrip) && trips.includes(requestedTrip)
+  const publicTrips = availablePublicTripTypes(route);
+  const fallbackPublicTrip = defaultPublicTrip(route);
+  const legacyPublicTrip = isTripType(requestedTrip) ? publicTripFromInternal(route, requestedTrip) : null;
+  const publicTrip = isPublicTripType(requestedTrip) && publicTrips.includes(requestedTrip)
     ? requestedTrip
-    : (trips[0] ?? "oneWay");
+    : legacyPublicTrip ?? fallbackPublicTrip;
+  const trip = resolveTripType(route, publicTrip) ?? "oneWay";
 
   const requestedVehicle = params.get("vehicle");
   const vehicle = availableVehicle(requestedVehicle);
@@ -61,7 +70,7 @@ export function readInitialBookingState(params: URLSearchParams): InitialBooking
   const corrected =
     (requestedFrom != null && requestedFrom !== from) ||
     (requestedTo != null && requestedTo !== to) ||
-    (requestedTrip != null && requestedTrip !== trip) ||
+    (requestedTrip != null && requestedTrip !== publicTrip && requestedTrip !== trip) ||
     (requestedVehicle != null && requestedVehicle !== vehicle.id) ||
     (params.get("pax") != null && params.get("pax") !== String(pax)) ||
     (params.get("luggage") != null && params.get("luggage") !== String(luggage)) ||
@@ -72,6 +81,7 @@ export function readInitialBookingState(params: URLSearchParams): InitialBooking
 
   return {
     trip,
+    publicTrip,
     from,
     to,
     date,

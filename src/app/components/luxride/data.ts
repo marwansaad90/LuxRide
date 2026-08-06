@@ -1,9 +1,9 @@
 // LuxRide shared data — images, routes, pricing, fleet, and fees
 // All prices in EUR, tax inclusive, fixed per the approved price table.
 
-import xpanderImg from "../../../imports/LuxRide-02.png";
-import corollaImg from "../../../imports/LuxRide-01.png";
-import hiacaImg from "../../../imports/LuxRide-03.png";
+import xpanderImg from "../../../assets/vehicles/xpander.webp";
+import corollaImg from "../../../assets/vehicles/corolla.webp";
+import hiacaImg from "../../../assets/vehicles/hiace.webp";
 
 export const VEHICLE_IMAGES = {
   xpander: xpanderImg,
@@ -42,8 +42,8 @@ export const PHONE_DISPLAY = "+20 101 355 4009";
 export const EMAIL: string | null = null;
 
 export { TRIPADVISOR_PAGE_URL as TRIPADVISOR_URL } from "./tripadvisor";
-export const INSTAGRAM_URL: string | null = null;
-export const FACEBOOK_URL: string | null = null;
+export const FACEBOOK_URL = "https://www.facebook.com/luxride.eg/";
+export const INSTAGRAM_URL = "https://www.instagram.com/luxride.eg/";
 
 // ─── Fees & rules ─────────────────────────────────────────────────────────────
 export const AIRPORT_SURCHARGE = 2; // €, once per booking on Hurghada Airport routes
@@ -131,7 +131,9 @@ export const SELECTABLE_FLEET = VEHICLE_SEGMENT_ORDER
   .filter((vehicle) => CLIENT_REVIEW_ENABLE_ALL_VEHICLES || vehicle.available);
 
 // ─── Trip types ───────────────────────────────────────────────────────────────
+export type PublicTripType = "oneWay" | "roundTrip";
 export type TripType = "oneWay" | "overday" | "overnight";
+export type RoundTripMode = Exclude<TripType, "oneWay">;
 
 // ─── Routes & fixed price table (EUR) ────────────────────────────────────────
 export interface Route {
@@ -145,6 +147,12 @@ export interface Route {
   permit?: boolean; // out-of-city permit destination
   discountPct?: number; // route-specific promotional discount
   accommodationRequired?: boolean; // only set after client confirms the route rule
+}
+
+export interface RouteTripRule {
+  oneWayPrice?: number;
+  roundTripMode?: RoundTripMode;
+  roundTripPrice?: number;
 }
 
 export const ROUTES: Route[] = [
@@ -181,6 +189,21 @@ export const ROUTES: Route[] = [
   { id: "l7", from: "Hurghada", to: "Alexandria", prices: { overnight: 180 }, duration: "8 h", image: IMAGES.luxor },
   { id: "l8", from: "Hurghada", to: "Sharm El Sheikh", prices: { oneWay: 200, overnight: 250 }, duration: "6 h (via ferry/road)", image: IMAGES.soma, permit: true },
 ];
+
+export function tripRulesFor(route: Route | undefined): RouteTripRule | null {
+  if (!route) return null;
+  const roundTripMode: RoundTripMode | undefined =
+    route.prices.overday != null ? "overday" : route.prices.overnight != null ? "overnight" : undefined;
+  return {
+    oneWayPrice: route.prices.oneWay,
+    roundTripMode,
+    roundTripPrice: roundTripMode ? route.prices[roundTripMode] : undefined,
+  };
+}
+
+export const ROUTE_TRIP_RULES: Record<string, RouteTripRule> = Object.fromEntries(
+  ROUTES.map((route) => [route.id, tripRulesFor(route)!]),
+);
 
 export function pickupLocations(): string[] {
   return Array.from(new Set(ROUTES.map((r) => r.from)));
@@ -222,14 +245,46 @@ export function computePrice(
 }
 
 export const TRIP_TYPES: TripType[] = ["oneWay", "overday", "overnight"];
+export const PUBLIC_TRIP_TYPES: PublicTripType[] = ["oneWay", "roundTrip"];
 
 export function availableTripTypes(route: Route | undefined): TripType[] {
   if (!route) return [];
   return TRIP_TYPES.filter((trip) => route.prices[trip] != null);
 }
 
+export function availablePublicTripTypes(route: Route | undefined): PublicTripType[] {
+  const rules = tripRulesFor(route);
+  if (!rules) return [];
+  return [
+    ...(rules.oneWayPrice != null ? (["oneWay"] as const) : []),
+    ...(rules.roundTripMode && rules.roundTripPrice != null ? (["roundTrip"] as const) : []),
+  ];
+}
+
 export function isTripType(value: string | null): value is TripType {
   return value != null && TRIP_TYPES.includes(value as TripType);
+}
+
+export function isPublicTripType(value: string | null): value is PublicTripType {
+  return value != null && PUBLIC_TRIP_TYPES.includes(value as PublicTripType);
+}
+
+export function resolveTripType(route: Route | undefined, publicTrip: PublicTripType): TripType | null {
+  const rules = tripRulesFor(route);
+  if (!rules) return null;
+  if (publicTrip === "oneWay") return rules.oneWayPrice != null ? "oneWay" : null;
+  return rules.roundTripMode && rules.roundTripPrice != null ? rules.roundTripMode : null;
+}
+
+export function publicTripFromInternal(route: Route | undefined, trip: TripType | null): PublicTripType | null {
+  if (!route || !trip) return null;
+  if (trip === "oneWay") return route.prices.oneWay != null ? "oneWay" : null;
+  const rules = tripRulesFor(route);
+  return rules?.roundTripMode === trip && rules.roundTripPrice != null ? "roundTrip" : null;
+}
+
+export function defaultPublicTrip(route: Route | undefined): PublicTripType {
+  return availablePublicTripTypes(route)[0] ?? "oneWay";
 }
 
 export function isVehicleSelectable(vehicle: Vehicle): boolean {

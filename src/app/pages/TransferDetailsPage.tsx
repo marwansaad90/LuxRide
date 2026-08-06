@@ -2,14 +2,13 @@ import { Check, Clock, MapPin, PlaneLanding, ShieldCheck } from "lucide-react";
 import { Link, useSearchParams } from "react-router";
 import { PageShell } from "../components/luxride/PageShell";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import { FLEET, IMAGES, PERMIT_FEE, availableTripTypes, findRoute } from "../components/luxride/data";
+import { FLEET, IMAGES, PERMIT_FEE, availablePublicTripTypes, findRoute, resolveTripType, tripRulesFor } from "../components/luxride/data";
 import { formatEur } from "../components/luxride/bookingState";
 import { locationLabel, useL, useLang } from "../components/luxride/i18n";
 
 const TRIP_LABELS = {
   oneWay: ["One Way", "ذهاب فقط"],
-  overday: ["Overday", "رحلة يوم"],
-  overnight: ["Overnight", "رحلة مبيت"],
+  roundTrip: ["Round Trip", "ذهاب وعودة"],
 } as const;
 
 export function TransferDetailsPage() {
@@ -20,11 +19,22 @@ export function TransferDetailsPage() {
   const xpander = FLEET[0];
   const fromLabel = locationLabel(lang, route.from);
   const toLabel = locationLabel(lang, route.to);
-  const priceRows = availableTripTypes(route).map((trip) => ({
-    trip,
-    label: L(TRIP_LABELS[trip][0], TRIP_LABELS[trip][1]),
-    base: route.prices[trip]!,
-  }));
+  const routeRules = tripRulesFor(route);
+  const priceRows = availablePublicTripTypes(route).map((publicTrip) => {
+    const trip = resolveTripType(route, publicTrip)!;
+    const classification =
+      publicTrip === "roundTrip" && routeRules?.roundTripMode === "overday"
+        ? L("Trip classification: Overday", "تصنيف الرحلة: جولة يوم كامل")
+        : publicTrip === "roundTrip" && routeRules?.roundTripMode === "overnight"
+        ? L("Trip classification: Overnight", "تصنيف الرحلة: مبيت")
+        : "";
+    return {
+      trip: publicTrip,
+      label: L(TRIP_LABELS[publicTrip][0], TRIP_LABELS[publicTrip][1]),
+      classification,
+      base: route.prices[trip]!,
+    };
+  });
   const startingPrice = Math.min(...priceRows.map((row) => row.base));
   const bookingQuery = new URLSearchParams({ from: route.from, to: route.to, trip: priceRows[0].trip }).toString();
 
@@ -73,6 +83,7 @@ export function TransferDetailsPage() {
                 <div key={row.trip} className={`flex items-center justify-between gap-4 p-5 ${index > 0 ? "border-t border-lux-charcoal/10" : ""}`}>
                   <div>
                     <p className="text-lux-charcoal">{row.label}</p>
+                    {row.classification && <p className="text-sm font-medium text-lux-green">{row.classification}</p>}
                     <p className="text-sm text-neutral-500">{L("Route-specific fixed base price", "سعر أساسي ثابت خاص بالمسار")}</p>
                   </div>
                   <p className="text-lux-green" style={{ fontSize: "1.75rem", fontWeight: 700 }}>{formatEur(row.base)}</p>
@@ -81,7 +92,7 @@ export function TransferDetailsPage() {
               <div className="border-t border-lux-charcoal/10 bg-lux-beige/40 p-5 text-sm text-neutral-500">
                 {route.airport && <>+ {L("Airport operating surcharge", "رسوم تشغيل المطار")} €2 · </>}
                 {route.permit && <>+ {L("Travel permit", "تصريح السفر")} €{PERMIT_FEE.mpv} (MPV) · </>}
-                {L("Overday and Overnight use their own approved prices and are never doubled from One Way.", "رحلة اليوم والمبيت تستخدمان أسعارهما المعتمدة ولا تُضاعفان أبداً من سعر الذهاب.")}
+                {L("Round Trip uses the approved route-specific price and is never doubled from One Way.", "رحلة الذهاب والعودة تستخدم السعر المعتمد للمسار ولا تُضاعف أبداً من سعر الذهاب.")}
               </div>
             </div>
           </div>

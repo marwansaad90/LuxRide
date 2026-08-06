@@ -1,8 +1,9 @@
-import { AlertTriangle, MessageCircle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { Link } from "react-router";
 import { PageShell } from "../components/luxride/PageShell";
 import { whatsappLink } from "../components/luxride/data";
 import { useL } from "../components/luxride/i18n";
+import { WhatsAppIcon } from "../components/luxride/WhatsAppIcon";
 
 export function BookingErrorPage() {
   const L = useL();
@@ -26,7 +27,7 @@ export function BookingErrorPage() {
             <p className="mt-2 text-neutral-600">{L("Return to the booking form and try again, or contact LuxRide on WhatsApp for urgent help.", "عُد إلى نموذج الحجز وحاول مجدداً، أو تواصل مع LuxRide عبر واتساب للمساعدة العاجلة.")}</p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link to="/booking" className="flex flex-1 items-center justify-center rounded-full bg-lux-green py-3 text-sm text-white">{L("Return to Booking", "العودة للحجز")}</Link>
-              <a href={whatsappLink("Hi LuxRide, I need help submitting my booking request.")} target="_blank" rel="noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-full border border-lux-orange/50 py-3 text-sm text-lux-charcoal"><MessageCircle className="h-4 w-4 text-lux-orange" />WhatsApp</a>
+              <a href={whatsappLink("Hi LuxRide, I need help submitting my booking request.")} target="_blank" rel="noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-full border border-lux-orange/50 py-3 text-sm text-lux-charcoal"><WhatsAppIcon className="h-4 w-4 text-lux-orange" />WhatsApp</a>
             </div>
           </div>
         </div>

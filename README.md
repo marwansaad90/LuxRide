@@ -1,6 +1,6 @@
 # LuxRide client-review application
 
-LuxRide is a bilingual English/Arabic React and Vite application for fixed-price private transfers from Hurghada across the Red Sea coast and Egypt. It includes the homepage calculator, three-step booking flow, route pricing, fleet selection, customer information pages, official Tripadvisor widgets, and direct review screens for future notification and availability workflows.
+LuxRide is a bilingual English/Arabic React and Vite application for fixed-price private transfers from Hurghada across the Red Sea coast and Egypt. It includes the homepage calculator, three-step booking flow, route pricing, fleet selection, Featured Journeys, customer information pages, official Tripadvisor widgets, and direct review screens for future notification and availability workflows.
 
 ## Setup and development
 
@@ -48,6 +48,28 @@ To restore the intended production state:
 
 The customer interface does not expose configuration-mode wording.
 
+Vehicle images now use optimized WebP assets generated from the client-supplied 8000 x 4500 PNGs in `images/`:
+
+- `src/assets/vehicles/xpander.webp`
+- `src/assets/vehicles/corolla.webp`
+- `src/assets/vehicles/hiace.webp`
+
+The original client uploads remain in `images/`; the app imports only the optimized delivery assets.
+
+## Trip choice and pricing model
+
+Customers choose only:
+
+- One Way
+- Round Trip
+
+Internally, route rules in `src/app/components/luxride/data.ts` map Round Trip to the approved route classification:
+
+- `overday` for same-day return routes
+- `overnight` for later-date return routes
+
+`ROUTE_TRIP_RULES`, `tripRulesFor`, `availablePublicTripTypes`, and `resolveTripType` keep this data-driven. Routes without a confirmed Round Trip price expose no Round Trip option; no prices are guessed or doubled.
+
 ## Official Tripadvisor widgets
 
 `Reviews.tsx` renders the exact official starter markup and mounts one asynchronous script after each container. `tripadvisor.ts` centralizes the immutable production identifiers and URLs:
@@ -55,6 +77,7 @@ The customer interface does not expose configuration-mode wording.
 - Your Rating: container `TA_cdsratingsonlynarrow470`, unique ID `470`
 - Review Starter: container `TA_cdswritereviewnew935`, unique ID `935`
 - Rave Reviews: container `TA_cdsscrollingravenarrow782`, unique ID `782`
+- Self-Serve Property: container `TA_selfserveprop489`, unique ID `489`
 - Location ID: `34457256`
 
 Each script has a unique DOM ID, uses the official `www.jscache.com/wejs` URL, sets `data-loadtrk` before and after load, avoids duplicate insertion, and is cleaned up after a real route unmount. The external scripts are not loaded globally. Readiness must be verified on the deployed domain because official widget rendering depends on Tripadvisor's live services.
@@ -64,7 +87,7 @@ Each script has a unique DOM ID, uses the official `www.jscache.com/wejs` URL, s
 Customer routes:
 
 - `/`, `/about`, `/fleet`, `/destinations`, `/transfer-details`
-- `/booking`, `/booking-success`, `/contact`, `/faq`
+- `/journeys`, `/booking`, `/booking-success`, `/contact`, `/faq`
 - `/cancellation-policy`, `/privacy-policy`, `/terms`
 
 Direct review routes are intentionally excluded from normal customer navigation:
@@ -78,3 +101,10 @@ Direct review routes are intentionally excluded from normal customer navigation:
 ## Future production integration
 
 A production backend, persistent availability management, operational WhatsApp/email delivery, payment processing, final legal approval, and final client-owned content remain outside this React client-review release. Confirmed missing client inputs are tracked in `CLIENT_INPUT_REQUIRED.md`; the application does not invent them.
+
+For the WordPress phase, Featured Journeys is intended to map to:
+
+- CPT: `Journeys`
+- fields such as `journey_gallery`, `route_type`, `vehicle_type`, `pickup_location`, `dropoff_location`, and `direct_booking_link`
+
+No WordPress backend, CPT, or ACF implementation is included in this React prototype.

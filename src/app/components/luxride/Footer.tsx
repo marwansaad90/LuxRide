@@ -1,13 +1,16 @@
-import { MapPin, MessageCircle, Phone } from "lucide-react";
+import { Facebook, Instagram, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router";
 import { LuxRideLogo } from "./LuxRideLogo";
 import {
+  FACEBOOK_URL,
+  INSTAGRAM_URL,
   PHONE_DISPLAY,
   TRIPADVISOR_URL,
   whatsappLink,
 } from "./data";
 import { useLang, t, POPULAR_DEST_LABELS } from "./i18n";
 import type { TKey } from "./i18n";
+import { WhatsAppIcon } from "./WhatsAppIcon";
 
 const QUICK_LINKS: Array<{ key: TKey; to: string }> = [
   { key: "nav_home", to: "/" },
@@ -37,6 +40,12 @@ export function Footer() {
           <div className="mt-5 flex gap-3">
             <a href={TRIPADVISOR_URL} target="_blank" rel="noopener noreferrer" className="flex h-10 items-center gap-2 rounded-full border border-[#00aa6c]/50 px-4 text-xs text-[#00aa6c] transition-all hover:bg-[#00aa6c] hover:text-white">
               Tripadvisor
+            </a>
+            <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Facebook" className="flex h-10 w-10 items-center justify-center rounded-full border border-lux-beige/20 text-lux-beige transition-all hover:border-[#1877f2] hover:bg-[#1877f2] hover:text-white">
+              <Facebook className="h-4 w-4" />
+            </a>
+            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Instagram" className="flex h-10 w-10 items-center justify-center rounded-full border border-lux-beige/20 text-lux-beige transition-all hover:border-[#e4405f] hover:bg-[#e4405f] hover:text-white">
+              <Instagram className="h-4 w-4" />
             </a>
           </div>
         </div>
@@ -79,7 +88,7 @@ export function Footer() {
               <a href={`tel:${PHONE_DISPLAY.replace(/\s/g, "")}`} className="hover:text-lux-gold">{PHONE_DISPLAY}</a>
             </li>
             <li className="flex items-center gap-3">
-              <MessageCircle className="h-4 w-4 text-lux-gold" />
+              <WhatsAppIcon className="h-4 w-4 text-lux-gold" />
               <a href={whatsappLink("Hello LuxRide!")} target="_blank" rel="noreferrer" className="hover:text-lux-gold">
                 {t(lang, "footer_wa")}
               </a>

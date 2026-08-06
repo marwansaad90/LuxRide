@@ -18,6 +18,7 @@ import { EmailPreviewPage } from "./pages/EmailPreviewPage";
 import { BookingErrorPage } from "./pages/BookingErrorPage";
 import { PrivacyPolicyPage } from "./pages/PrivacyPolicyPage";
 import { TermsPage } from "./pages/TermsPage";
+import { JourneysPage } from "./pages/JourneysPage";
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
       { path: "about", Component: AboutPage },
       { path: "fleet", Component: FleetPage },
       { path: "destinations", Component: DestinationsPage },
+      { path: "journeys", Component: JourneysPage },
       { path: "transfer-details", Component: TransferDetailsPage },
       { path: "booking", Component: BookingPage },
       { path: "contact", Component: ContactPage },

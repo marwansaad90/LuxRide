@@ -1,7 +1,8 @@
-import { Clock, MessageCircle, Zap } from "lucide-react";
+import { Clock, Zap } from "lucide-react";
 import { PageShell } from "../components/luxride/PageShell";
 import { PHONE_DISPLAY, whatsappLink } from "../components/luxride/data";
 import { useL } from "../components/luxride/i18n";
+import { WhatsAppIcon } from "../components/luxride/WhatsAppIcon";
 
 export function LastMinutePage() {
   const L = useL();
@@ -23,14 +24,14 @@ export function LastMinutePage() {
     >
       <section className="bg-lux-beige py-16 md:py-24">
         <div className="mx-auto max-w-3xl px-4 md:px-8">
-          <div className="rounded-3xl border border-lux-orange/40 bg-gradient-to-br from-lux-orange/12 to-transparent p-8 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-lux-orange/20">
-              <Zap className="h-8 w-8 text-lux-orange" />
+          <div className="rounded-3xl border border-[#CC9966]/40 bg-gradient-to-br from-[#CC9966]/15 to-transparent p-8 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#CC9966]/20">
+              <Zap className="h-8 w-8 text-[#A87542]" />
             </div>
             <h2 className="mt-5 text-lux-charcoal" style={{ fontSize: "1.75rem", fontWeight: 700 }}>{L("Need a transfer today?", "تحتاج رحلة اليوم؟")}</h2>
             <p className="mx-auto mt-2 max-w-lg text-neutral-600">{L("If you wish to book a transfer or any other service for today, please contact us directly on WhatsApp to check availability.", "إذا كنت ترغب في حجز رحلة أو أي خدمة أخرى لليوم، يرجى التواصل معنا مباشرةً عبر واتساب للتحقق من التوفر.")}</p>
-            <a href={whatsappLink("Hi LuxRide, I'd like to check last-minute availability for today.")} target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-full bg-lux-orange px-8 py-3.5 text-sm text-lux-dark transition-all hover:brightness-105">
-              <MessageCircle className="h-5 w-5" /> {L("Check Last-minute Availability on WhatsApp", "تحقق من التوفر اللحظي عبر واتساب")}
+            <a href={whatsappLink("Hi LuxRide, I'd like to check last-minute availability for today.")} target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#CC9966] px-8 py-3.5 text-sm text-white transition-all hover:brightness-105">
+              <WhatsAppIcon className="h-5 w-5" /> {L("Check Last-minute Availability on WhatsApp", "تحقق من التوفر اللحظي عبر واتساب")}
             </a>
             <p className="mt-3 font-semibold text-lux-charcoal" dir="ltr">{PHONE_DISPLAY}</p>
           </div>

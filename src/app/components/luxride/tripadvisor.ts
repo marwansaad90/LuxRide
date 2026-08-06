@@ -3,14 +3,12 @@ export const TRIPADVISOR_PAGE_URL =
 
 export const TRIPADVISOR_LOCATION_ID = "34457256";
 
-export type TripadvisorWidgetKey = "rating" | "reviewStarter" | "raveReviews";
+export type TripadvisorWidgetKey = "rating" | "reviewStarter" | "raveReviews" | "selfServe";
 
 export interface TripadvisorWidgetConfig {
   key: TripadvisorWidgetKey;
-  widgetType: "cdsratingsonlynarrow" | "cdswritereviewnew" | "cdsscrollingravenarrow";
-  uniqueId: "470" | "935" | "782";
-  titleEn: string;
-  titleAr: string;
+  widgetType: "cdsratingsonlynarrow" | "cdswritereviewnew" | "cdsscrollingravenarrow" | "selfserveprop";
+  uniqueId: "470" | "935" | "782" | "489";
   containerId: string;
   scriptId: string;
   scriptUrl: string;
@@ -21,8 +19,6 @@ export const TRIPADVISOR_WIDGETS: TripadvisorWidgetConfig[] = [
     key: "rating",
     widgetType: "cdsratingsonlynarrow",
     uniqueId: "470",
-    titleEn: "Your Rating",
-    titleAr: "تقييمك",
     containerId: "TA_cdsratingsonlynarrow470",
     scriptId: "tripadvisor-rating-script-470",
     scriptUrl:
@@ -32,8 +28,6 @@ export const TRIPADVISOR_WIDGETS: TripadvisorWidgetConfig[] = [
     key: "reviewStarter",
     widgetType: "cdswritereviewnew",
     uniqueId: "935",
-    titleEn: "Review Starter",
-    titleAr: "ابدأ كتابة مراجعة",
     containerId: "TA_cdswritereviewnew935",
     scriptId: "tripadvisor-review-starter-script-935",
     scriptUrl:
@@ -43,12 +37,19 @@ export const TRIPADVISOR_WIDGETS: TripadvisorWidgetConfig[] = [
     key: "raveReviews",
     widgetType: "cdsscrollingravenarrow",
     uniqueId: "782",
-    titleEn: "Rave Reviews",
-    titleAr: "مراجعات المسافرين",
     containerId: "TA_cdsscrollingravenarrow782",
     scriptId: "tripadvisor-rave-reviews-script-782",
     scriptUrl:
       "https://www.jscache.com/wejs?wtype=cdsscrollingravenarrow&uniq=782&locationId=34457256&lang=en_US&border=true&display_version=2",
+  },
+  {
+    key: "selfServe",
+    widgetType: "selfserveprop",
+    uniqueId: "489",
+    containerId: "TA_selfserveprop489",
+    scriptId: "tripadvisor-selfserve-script-489",
+    scriptUrl:
+      "https://www.jscache.com/wejs?wtype=selfserveprop&uniq=489&locationId=34457256&lang=en_US&rating=true&nreviews=5&writereviewlink=true&popIdx=true&iswide=false&border=true&display_version=2",
   },
 ];
 

@@ -10,6 +10,7 @@ import {
 } from "../components/luxride/Sections";
 import { Reviews } from "../components/luxride/Reviews";
 import { FAQ } from "../components/luxride/FAQ";
+import { FeaturedJourneys } from "../components/luxride/FeaturedJourneys";
 
 export function Home() {
   return (
@@ -25,17 +26,19 @@ export function Home() {
       <ServiceBenefits />
       {/* 6. Popular Transfers */}
       <PopularTransfers />
-      {/* 7. Fleet Preview */}
+      {/* 7. Featured Journeys */}
+      <FeaturedJourneys />
+      {/* 8. Fleet Preview */}
       <Fleet />
-      {/* 8. Why Choose LuxRide */}
+      {/* 9. Why Choose LuxRide */}
       <WhyChoose />
-      {/* 9. Reviews */}
+      {/* 10. Reviews */}
       <Reviews />
-      {/* 10. FAQ */}
+      {/* 11. FAQ */}
       <FAQ />
-      {/* 11. Final CTA */}
+      {/* 12. Final CTA */}
       <FinalCTA />
-      {/* 12. Footer (in RootLayout) */}
+      {/* 13. Footer (in RootLayout) */}
     </>
   );
 }

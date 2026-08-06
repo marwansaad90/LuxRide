@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
-import { MessageCircle } from "lucide-react";
 import { Link, Outlet, useLocation } from "react-router";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { LangContext, t } from "./i18n";
 import type { Lang } from "./i18n";
 import { whatsappLink } from "./data";
+import { WhatsAppIcon } from "./WhatsAppIcon";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -68,7 +68,7 @@ export function RootLayout() {
           aria-label="Chat on WhatsApp"
           className="fixed bottom-6 z-50 hidden h-14 w-14 items-center justify-center rounded-full bg-lux-green text-white shadow-2xl shadow-lux-green/30 transition-all hover:brightness-110 md:flex ltr:right-6 rtl:left-6"
         >
-          <MessageCircle className="h-7 w-7" />
+          <WhatsAppIcon className="h-7 w-7" />
         </a>
 
         {/* Sticky mobile action bar */}
@@ -91,7 +91,7 @@ export function RootLayout() {
             rel="noreferrer"
             className="flex items-center justify-center gap-2 rounded-full border border-lux-green/40 px-5 py-3 text-sm text-lux-beige"
           >
-            <MessageCircle className="h-5 w-5" /> WhatsApp
+            <WhatsAppIcon className="h-5 w-5" /> WhatsApp
           </a>
         </div>
       </div>

@@ -11,6 +11,7 @@ type TripadvisorWindow = Window & {
   taValidate?: () => void;
   taValList?: Array<() => void>;
   taValIndex?: number;
+  resizeRatingsOnlyWidget?: () => void;
 };
 
 let mountedTripadvisorWidgets = 0;
@@ -68,9 +69,27 @@ function OfficialRaveReviewsMarkup() {
   );
 }
 
+function OfficialSelfServeMarkup() {
+  return (
+    <div id="TA_selfserveprop489" className="TA_selfserveprop">
+      <ul id="f1SxbHPg4yCq" className="TA_links 1SrP6U2R">
+        <li id="rA2BDKvs16" className="vzsW12">
+          <a target="_blank" rel="noopener noreferrer" href={TRIPADVISOR_PAGE_URL}>
+            <img
+              src="https://www.tripadvisor.com/img/cdsi/img2/branding/v2/Tripadvisor_lockup_horizontal_secondary_registered-11900-2.svg"
+              alt="Tripadvisor"
+            />
+          </a>
+        </li>
+      </ul>
+    </div>
+  );
+}
+
 function OfficialWidgetMarkup({ config }: { config: TripadvisorWidgetConfig }) {
   if (config.key === "rating") return <OfficialRatingMarkup />;
   if (config.key === "reviewStarter") return <OfficialReviewStarterMarkup />;
+  if (config.key === "selfServe") return <OfficialSelfServeMarkup />;
   return <OfficialRaveReviewsMarkup />;
 }
 
@@ -96,13 +115,16 @@ const TripadvisorEmbed = memo(function TripadvisorEmbed({
     const container = document.getElementById(config.containerId);
     if (!wrapper || !scriptHost || !container || !wrapper.contains(container)) return;
 
+    const tripadvisorWindow = window as TripadvisorWindow;
+    tripadvisorWindow.resizeRatingsOnlyWidget ??= () => undefined;
+
     if (!registeredRef.current) {
       mountedTripadvisorWidgets += 1;
       registeredRef.current = true;
     }
 
     const runTripadvisorValidators = () => {
-      (window as TripadvisorWindow).taValidate?.();
+      tripadvisorWindow.taValidate?.();
     };
     const attachEmbedLoadListener = (node: Node) => {
       if (!(node instanceof HTMLScriptElement) || !node.src.includes(`WidgetEmbed-${config.widgetType}`)) return;
@@ -156,7 +178,6 @@ const TripadvisorEmbed = memo(function TripadvisorEmbed({
           registeredRef.current = false;
         }
         if (mountedTripadvisorWidgets === 0) {
-          const tripadvisorWindow = window as TripadvisorWindow;
           tripadvisorWindow.taValList = [];
           tripadvisorWindow.taValIndex = 0;
         }
@@ -188,16 +209,7 @@ function TripadvisorWidget({
   isAR: boolean;
 }) {
   return (
-    <article
-      className="min-w-0 rounded-2xl border border-lux-charcoal/10 bg-white p-5 shadow-[0_10px_34px_rgba(15,22,35,0.06)]"
-      data-tripadvisor-widget={config.key}
-    >
-      <div className="mb-4">
-        <p className="text-xs uppercase tracking-[0.18em] text-[#007f51]">Tripadvisor</p>
-        <h3 className="mt-1 text-lux-charcoal" style={{ fontSize: "1.1rem", fontWeight: 800 }}>
-          {isAR ? config.titleAr : config.titleEn}
-        </h3>
-      </div>
+    <article className="min-w-0 rounded-2xl border border-lux-charcoal/10 bg-white p-5 shadow-[0_10px_34px_rgba(15,22,35,0.06)]" data-tripadvisor-widget={config.key} aria-label={isAR ? "محتوى Tripadvisor الرسمي" : "Official Tripadvisor content"}>
       <TripadvisorEmbed config={config} />
     </article>
   );
@@ -206,7 +218,7 @@ function TripadvisorWidget({
 export function Reviews() {
   const lang = useLang();
   const isAR = lang === "AR";
-  const [ratingWidget, reviewStarterWidget, raveReviewsWidget] = TRIPADVISOR_WIDGETS;
+  const [ratingWidget, reviewStarterWidget, raveReviewsWidget, selfServeWidget] = TRIPADVISOR_WIDGETS;
 
   return (
     <section id="reviews" className="bg-white py-20 md:py-28">
@@ -225,8 +237,9 @@ export function Reviews() {
           <TripadvisorWidget config={ratingWidget} isAR={isAR} />
           <TripadvisorWidget config={reviewStarterWidget} isAR={isAR} />
         </div>
-        <div data-tripadvisor-row="rave" className="mt-6">
+        <div data-tripadvisor-row="rave" className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <TripadvisorWidget config={raveReviewsWidget} isAR={isAR} />
+          <TripadvisorWidget config={selfServeWidget} isAR={isAR} />
         </div>
       </div>
     </section>

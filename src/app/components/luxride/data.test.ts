@@ -6,14 +6,20 @@ import {
   ACTIVE_FLEET,
   AIRPORT_SURCHARGE,
   CLIENT_REVIEW_ENABLE_ALL_VEHICLES,
+  FACEBOOK_URL,
   FLEET,
+  INSTAGRAM_URL,
   PERMIT_FEE,
   PRODUCTION_ACTIVE_FLEET,
+  ROUTE_TRIP_RULES,
   SELECTABLE_FLEET,
+  availablePublicTripTypes,
   availableTripTypes,
   computePrice,
   destinationsFor,
   findRoute,
+  resolveTripType,
+  tripRulesFor,
 } from "./data";
 import { normalizeReturnFields, isValidReturn, readInitialBookingState } from "./bookingState";
 import {
@@ -104,6 +110,7 @@ describe("approved LuxRide pricing", () => {
   it("does not guess a price for an unsupported trip type", () => {
     expect(price("Hurghada Airport", "El Gouna", "overday")).toBeNull();
     expect(availableTripTypes(findRoute("Hurghada Airport", "El Gouna"))).toEqual(["oneWay"]);
+    expect(availablePublicTripTypes(findRoute("Hurghada Airport", "El Gouna"))).toEqual(["oneWay"]);
   });
 
   it("does not add driver accommodation without a confirmed route rule", () => {
@@ -112,6 +119,11 @@ describe("approved LuxRide pricing", () => {
 });
 
 describe("vehicle and route validation", () => {
+  it("uses the confirmed official social URLs from centralized client data", () => {
+    expect(FACEBOOK_URL).toBe("https://www.facebook.com/luxride.eg/");
+    expect(INSTAGRAM_URL).toBe("https://www.instagram.com/luxride.eg/");
+  });
+
   it("preserves production availability while enabling all vehicles for client review", () => {
     expect(CLIENT_REVIEW_ENABLE_ALL_VEHICLES).toBe(true);
     expect(PRODUCTION_ACTIVE_FLEET.map((vehicle) => vehicle.id)).toEqual(["xpander"]);
@@ -125,6 +137,27 @@ describe("vehicle and route validation", () => {
       { id: "corolla", pax: 3, luggage: 2, available: false },
       { id: "hiace", pax: 8, luggage: 8, available: false },
     ]);
+  });
+
+  it("uses optimized client vehicle assets from the vehicle asset folder", () => {
+    const data = readSource("./data.ts");
+    expect(data).toContain("../../../assets/vehicles/xpander.webp");
+    expect(data).toContain("../../../assets/vehicles/corolla.webp");
+    expect(data).toContain("../../../assets/vehicles/hiace.webp");
+    expect(hiace.tagline).toBe("Roomy minivan for larger groups and extra luggage");
+  });
+
+  it("maps public Round Trip choices to the approved internal route classifications", () => {
+    const luxor = findRoute("Hurghada", "Luxor");
+    const sharm = findRoute("Hurghada", "Sharm El Sheikh");
+    const alexandria = findRoute("Hurghada", "Alexandria");
+
+    expect(tripRulesFor(luxor)).toMatchObject({ oneWayPrice: 75, roundTripMode: "overday", roundTripPrice: 90 });
+    expect(ROUTE_TRIP_RULES.l1).toMatchObject({ oneWayPrice: 75, roundTripMode: "overday", roundTripPrice: 90 });
+    expect(resolveTripType(luxor, "roundTrip")).toBe("overday");
+    expect(resolveTripType(sharm, "roundTrip")).toBe("overnight");
+    expect(availablePublicTripTypes(alexandria)).toEqual(["roundTrip"]);
+    expect(resolveTripType(alexandria, "oneWay")).toBeNull();
   });
 
   it("uses only approved cascading destinations", () => {
@@ -158,6 +191,7 @@ describe("vehicle and route validation", () => {
       from: "Hurghada Airport",
       to: "Hurghada",
       trip: "oneWay",
+      publicTrip: "oneWay",
       vehicleId: "hiace",
       pax: "8",
       luggage: "8",
@@ -234,10 +268,35 @@ describe("final client-review integration", () => {
 
   it("keeps the approved homepage section order", () => {
     const home = readSource("../../pages/Home.tsx");
-    const components = ["<Hero />", "<LastMinute />", "<HowItWorks />", "<ServiceBenefits />", "<PopularTransfers />", "<Fleet />", "<WhyChoose />", "<Reviews />", "<FAQ />", "<FinalCTA />"];
+    const components = ["<Hero />", "<LastMinute />", "<HowItWorks />", "<ServiceBenefits />", "<PopularTransfers />", "<FeaturedJourneys />", "<Fleet />", "<WhyChoose />", "<Reviews />", "<FAQ />", "<FinalCTA />"];
     const positions = components.map((component) => home.indexOf(component));
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
+  });
+
+  it("only exposes One Way and Round Trip in the calculator and booking selectors", () => {
+    const estimate = readSource("./EstimateYourTrip.tsx");
+    const booking = readSource("../../pages/BookingPage.tsx");
+
+    expect(estimate + booking).toContain('id: "roundTrip"');
+    expect(estimate + booking).toContain("Trip classification:");
+    expect(estimate + booking).not.toContain('id: "overday"');
+    expect(estimate + booking).not.toContain('id: "overnight"');
+  });
+
+  it("adds Featured Journeys and /journeys with valid booking prefill queries", () => {
+    const home = readSource("../../pages/Home.tsx");
+    const routes = readSource("../../routes.tsx");
+    const journeys = readSource("./journeys.ts");
+    const featured = readSource("./FeaturedJourneys.tsx");
+    const page = readSource("../../pages/JourneysPage.tsx");
+
+    expect(home).toContain("<FeaturedJourneys />");
+    expect(routes).toContain('{ path: "journeys", Component: JourneysPage }');
+    expect(journeys).toContain('booking: { from: "Hurghada", to: "Luxor", trip: "roundTrip" }');
+    expect(journeys).toContain('booking: { from: "Hurghada", to: "Sharm El Sheikh", trip: "oneWay" }');
+    expect(featured + page).toContain("Book Similar Trip");
+    expect(featured + page).toContain("Explore All Journeys");
   });
 
   it("keeps Popular Transfers images at their natural source colors", () => {
@@ -256,26 +315,30 @@ describe("final client-review integration", () => {
 
   it("uses the latest Tripadvisor widget IDs and real location", () => {
     expect(TRIPADVISOR_LOCATION_ID).toBe("34457256");
-    expect(TRIPADVISOR_WIDGETS.map((widget) => widget.uniqueId)).toEqual(["470", "935", "782"]);
+    expect(TRIPADVISOR_WIDGETS.map((widget) => widget.uniqueId)).toEqual(["470", "935", "782", "489"]);
     expect(TRIPADVISOR_WIDGETS.map((widget) => widget.containerId)).toEqual([
       "TA_cdsratingsonlynarrow470",
       "TA_cdswritereviewnew935",
       "TA_cdsscrollingravenarrow782",
+      "TA_selfserveprop489",
     ]);
     expect(TRIPADVISOR_WIDGETS.map((widget) => widget.widgetType)).toEqual([
       "cdsratingsonlynarrow",
       "cdswritereviewnew",
       "cdsscrollingravenarrow",
+      "selfserveprop",
     ]);
     expect(TRIPADVISOR_WIDGETS.map((widget) => widget.scriptId)).toEqual([
       "tripadvisor-rating-script-470",
       "tripadvisor-review-starter-script-935",
       "tripadvisor-rave-reviews-script-782",
+      "tripadvisor-selfserve-script-489",
     ]);
     expect(TRIPADVISOR_WIDGETS.map(tripadvisorWidgetScriptUrl)).toEqual([
       "https://www.jscache.com/wejs?wtype=cdsratingsonlynarrow&uniq=470&locationId=34457256&lang=en_US&border=true&display_version=2",
       "https://www.jscache.com/wejs?wtype=cdswritereviewnew&uniq=935&locationId=34457256&lang=en_US&display_version=2",
       "https://www.jscache.com/wejs?wtype=cdsscrollingravenarrow&uniq=782&locationId=34457256&lang=en_US&border=true&display_version=2",
+      "https://www.jscache.com/wejs?wtype=selfserveprop&uniq=489&locationId=34457256&lang=en_US&rating=true&nreviews=5&writereviewlink=true&popIdx=true&iswide=false&border=true&display_version=2",
     ]);
   });
 
@@ -296,13 +359,16 @@ describe("final client-review integration", () => {
     expect(reviews).toContain('id="bx4vQmDEZ" className="TA_links DNOhrQ"');
     expect(reviews).toContain('id="UAp0qD9lW" className="TA_links 9ACGKVQ5IA"');
     expect(reviews).toContain('id="LmZYIV0z7lo4" className="TA_links S7dZdrAkw"');
+    expect(reviews).toContain('id="f1SxbHPg4yCq" className="TA_links 1SrP6U2R"');
     expect(reviews).toContain('id="CDSWIDEXCLOGO"');
+    expect(reviews).not.toContain("config.titleEn");
+    expect(reviews).not.toContain("config.titleAr");
     expect(activeCode).not.toContain("Client content required");
     expect(activeCode).not.toContain("Based on 120+ reviews");
     expect(activeCode).not.toContain("بناءً على ١٢٠+ تقييم");
   });
 
-  it("uses two primary widgets, one full-width rave widget, and StrictMode-safe script lifecycle", () => {
+  it("uses two primary widgets, two secondary widgets, and StrictMode-safe script lifecycle", () => {
     const reviews = readSource("./Reviews.tsx");
     const primaryRow = reviews
       .split('data-tripadvisor-row="primary"')[1]
@@ -310,10 +376,11 @@ describe("final client-review integration", () => {
     const raveRow = reviews.split('data-tripadvisor-row="rave"')[1];
 
     expect(primaryRow.match(/<TripadvisorWidget /g)).toHaveLength(2);
-    expect(raveRow.match(/<TripadvisorWidget /g)).toHaveLength(1);
+    expect(raveRow.match(/<TripadvisorWidget /g)).toHaveLength(2);
     expect(reviews).toContain("scriptHost.replaceChildren()");
     expect(reviews).toContain('script.setAttribute("data-loadtrk", "")');
     expect(reviews).toContain('script?.setAttribute("data-loadtrk", "true")');
+    expect(reviews).toContain("resizeRatingsOnlyWidget");
     expect(reviews).toContain("cleanupTimerRef");
     expect(reviews).toContain('WidgetEmbed-${config.widgetType}');
     expect(reviews).toContain('rel="noopener noreferrer"');
@@ -327,13 +394,26 @@ describe("final client-review integration", () => {
     internal.forEach((path) => expect(header + footer).not.toContain(path));
     expect(routes).toContain('{ path: "privacy-policy", Component: PrivacyPolicyPage }');
     expect(routes).toContain('{ path: "terms", Component: TermsPage }');
+    expect(routes).toContain('{ path: "journeys", Component: JourneysPage }');
+  });
+
+  it("renders confirmed social links in footer and contact with safe external attributes", () => {
+    const footer = readSource("./Footer.tsx");
+    const contact = readSource("../../pages/ContactPage.tsx");
+
+    expect(footer + contact).toContain("FACEBOOK_URL");
+    expect(footer + contact).toContain("INSTAGRAM_URL");
+    expect(footer).toContain('href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer"');
+    expect(footer).toContain('href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer"');
+    expect(contact).toContain('href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer"');
+    expect(contact).toContain('href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer"');
   });
 
   it("keeps both notification previews aligned without physical-capacity wording", () => {
     const preview = readSource("./notificationPreview.ts");
     const whatsapp = readSource("../../pages/WhatsAppPreviewPage.tsx");
     const email = readSource("../../pages/EmailPreviewPage.tsx");
-    ["Customer Name", "Hotel / Exact Destination", "Accommodation", "Final Total", "Notes"].forEach((field) => expect(preview + whatsapp + email).toContain(field));
+    ["Customer Name", "Trip Classification", "Hotel / Exact Destination", "Accommodation", "Final Total", "Notes"].forEach((field) => expect(preview + whatsapp + email).toContain(field));
     expect(whatsapp).toContain("NOTIFICATION_FIELDS");
     expect(email).toContain("NOTIFICATION_FIELDS");
     expect(preview).not.toMatch(/up to \d+ passengers|physical capacity/i);

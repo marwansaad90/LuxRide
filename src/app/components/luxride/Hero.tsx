@@ -1,12 +1,19 @@
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { ArrowRight, BadgeCheck, CarFront, Plane, ShieldCheck } from "lucide-react";
 import { EstimateYourTrip } from "./EstimateYourTrip";
 import hurghadaAlMina from "../../../assets/hero/hurghada-al-mina.webp";
 import { whatsappLink } from "./data";
 import { useLang, t } from "./i18n";
+import { WhatsAppIcon } from "./WhatsAppIcon";
 
 export function Hero() {
   const lang = useLang();
   const isAR = lang === "AR";
+  const trustBadges = [
+    { Icon: BadgeCheck, en: "100% Fixed Rates", ar: "أسعار محددة مسبقاً بدون رسوم خفية" },
+    { Icon: ShieldCheck, en: "Official Compliance", ar: "مرخص ومعتمد كاملاً من وزارة السياحة" },
+    { Icon: Plane, en: "Live Flight Tracking", ar: "متابعة حية لمواعيد الطيران بدون تكلفة انتظار" },
+    { Icon: CarFront, en: "Modern Fleet", ar: "أسطول حديث 2027 بتكييف مزدوج لراحة عائلتك" },
+  ];
 
   function focusCalculator() {
     window.requestAnimationFrame(() => {
@@ -38,24 +45,23 @@ export function Hero() {
               lineHeight: 0.98,
             }}
           >
-            {isAR ? (
-              <>
-                نقل خاص فاخر
-                <br />
-                في الغردقة
-              </>
-            ) : (
-              <>
-                Premium Private Transfers
-                <br />
-                in Hurghada
-              </>
-            )}
+            {isAR ? "ارتقِ بتجربة تنقلك في الغردقة والبحر الأحمر" : "Elevate Your Journey in Hurghada"}
           </h1>
 
           <p className="mt-3 max-w-xl text-pretty text-base leading-7 text-white/90 drop-shadow md:text-lg">
-            {t(lang, "hero_sub")}
+            {isAR
+              ? "خدمة ليموزين ونقل سياحي راقية بأسعار ثابتة 100% وأسطول حديث يُلبي كافة رحلاتك وتوصيلات المطار."
+              : "Premium limousine and tourist transfer services with 100% fixed prices and a modern fleet tailored for your airport transfers and private journeys."}
           </p>
+
+          <div className="mt-4 grid max-w-2xl grid-cols-1 gap-2 sm:grid-cols-2">
+            {trustBadges.map(({ Icon, en, ar }) => (
+              <div key={en} className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/14 px-3 py-2 text-sm text-white shadow-sm backdrop-blur-md">
+                <Icon className="h-4 w-4 shrink-0 text-lux-gold" />
+                <span className="leading-snug">{isAR ? ar : en}</span>
+              </div>
+            ))}
+          </div>
 
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <a
@@ -74,7 +80,7 @@ export function Hero() {
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/55 bg-white/90 px-7 py-3 text-lux-charcoal shadow-lg transition-all hover:bg-white hover:text-lux-green"
               style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "1rem" }}
             >
-              <MessageCircle className="h-5 w-5 text-lux-green" />
+              <WhatsAppIcon className="h-5 w-5 text-lux-green" />
               {isAR ? "تواصل معنا على واتساب" : "Contact Us on WhatsApp"}
             </a>
           </div>

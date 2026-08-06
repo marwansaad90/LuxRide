@@ -81,11 +81,11 @@ const T = {
     calc_confirm: "Your booking request will be reviewed and confirmed shortly.",
 
     // Booking calculator — extended
-    calc_overday: "Overday",
-    calc_overnight: "Overnight",
+    calc_overday: "Round Trip classification",
+    calc_overnight: "Round Trip classification",
     calc_oneway_desc: "Single journey",
-    calc_overday_desc: "Departure & return same day",
-    calc_overnight_desc: "Return next day / overnight stay",
+    calc_overday_desc: "Same-day return",
+    calc_overnight_desc: "Later-date return",
     calc_hotel: "Hotel / Exact Destination",
     calc_hotel_ph: "e.g. Steigenberger Al Dau, El Gouna",
     calc_room: "Room Number (optional)",
@@ -256,11 +256,11 @@ const T = {
     calc_confirm: "سيتم مراجعة طلب حجزك وتأكيده قريباً.",
 
     // Booking calculator — extended
-    calc_overday: "رحلة يوم",
-    calc_overnight: "مبيت",
+    calc_overday: "تصنيف رحلة الذهاب والعودة",
+    calc_overnight: "تصنيف رحلة الذهاب والعودة",
     calc_oneway_desc: "رحلة ذهاب واحدة",
-    calc_overday_desc: "الذهاب والعودة في نفس اليوم",
-    calc_overnight_desc: "العودة في اليوم التالي / مع مبيت",
+    calc_overday_desc: "عودة في نفس اليوم",
+    calc_overnight_desc: "عودة في يوم لاحق",
     calc_hotel: "الفندق / الوجهة الدقيقة",
     calc_hotel_ph: "مثال: شتيجنبرجر الداو، الجونة",
     calc_room: "رقم الغرفة (اختياري)",
@@ -405,7 +405,7 @@ export const FAQS: Record<Lang, FaqItem[]> = {
   EN: [
     { q: "How will I meet my driver at Hurghada Airport?", a: "Your driver will be waiting in the arrivals hall holding a sign with your name. If you can't find them, a quick WhatsApp message connects you instantly." },
     { q: "Is the displayed transfer price final?", a: "Yes. The approved base price and every applicable airport, permit, discount, or accommodation item are shown separately before submission." },
-    { q: "Can I book an Overday or Overnight trip?", a: "Yes, when that route has its own approved fixed price. These trip types are never calculated by doubling One Way." },
+    { q: "Can I book a Round Trip?", a: "Yes, when that route has its own approved fixed price. LuxRide shows the route classification clearly and never calculates Round Trip by doubling One Way." },
     { q: "What happens if my flight is delayed?", a: "We monitor your flight in real time and adjust the pickup automatically — at no extra cost to you." },
     { q: "Can I request a child seat?", a: "This service is currently unavailable and will be provided soon." },
     { q: "How can I confirm my booking?", a: "Complete the three booking steps and use the single Send Booking Request button. LuxRide will review the details and contact you to confirm availability." },
@@ -414,7 +414,7 @@ export const FAQS: Record<Lang, FaqItem[]> = {
   AR: [
     { q: "كيف سألتقي بسائقي في مطار الغردقة؟", a: "سيكون سائقك في انتظارك في صالة الوصول حاملاً لافتة باسمك. إذا لم تجده، رسالة واتساب سريعة تصلك به فوراً." },
     { q: "هل السعر المعروض للنقل نهائي؟", a: "نعم. يُعرض السعر الأساسي المعتمد وكل رسم مطار أو تصريح أو خصم أو مبيت مطبق بشكل منفصل قبل الإرسال." },
-    { q: "هل يمكنني حجز رحلة يوم أو مبيت؟", a: "نعم، عندما يكون للمسار سعر ثابت معتمد لهذا النوع. لا تُحسب هذه الرحلات أبداً بمضاعفة سعر الذهاب." },
+    { q: "هل يمكنني حجز ذهاب وعودة؟", a: "نعم، عندما يكون للمسار سعر ثابت معتمد. تعرض LuxRide تصنيف الرحلة بوضوح ولا تحسب الذهاب والعودة أبداً بمضاعفة سعر الذهاب." },
     { q: "ماذا يحدث إذا تأخرت رحلتي الجوية؟", a: "نتابع رحلتك في الوقت الفعلي ونعدّل موعد الاستلام تلقائياً — دون أي تكلفة إضافية." },
     { q: "هل يمكنني طلب كرسي أطفال؟", a: "هذه الخدمة غير متاحة حالياً وسيتم توفيرها قريباً." },
     { q: "كيف يمكنني تأكيد حجزي؟", a: "أكمل خطوات الحجز الثلاث واستخدم زر إرسال طلب الحجز الوحيد. ستراجع LuxRide التفاصيل وتتواصل معك لتأكيد التوفر." },

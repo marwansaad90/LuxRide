@@ -7,7 +7,6 @@ import {
   CreditCard,
   Droplet,
   Headphones,
-  MessageCircle,
   MapPinned,
   PlaneLanding,
   Send,
@@ -27,10 +26,12 @@ import {
   PHONE_DISPLAY,
   POPULAR_TRANSFERS,
   ROUTES,
+  availablePublicTripTypes,
   isVehicleSelectable,
   whatsappLink,
 } from "./data";
 import { locationLabel, useLang, t } from "./i18n";
+import { WhatsAppIcon } from "./WhatsAppIcon";
 
 export function SectionHeading({
   eyebrow,
@@ -46,7 +47,7 @@ export function SectionHeading({
   return (
     <div className="mx-auto mb-12 max-w-2xl text-center">
       <span
-        className={`inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] ${light ? "text-lux-gold" : "text-lux-green"}`}
+        className={`inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] ${light ? "text-lux-gold" : "text-lux-green"}`}
       >
         <span className={`h-px w-6 ${light ? "bg-lux-gold" : "bg-lux-green"}`} />
         {eyebrow}
@@ -57,7 +58,7 @@ export function SectionHeading({
         style={{
           fontFamily: "'Barlow Condensed', 'Cairo', sans-serif",
           fontSize: "clamp(1.9rem, 4vw, 2.8rem)",
-          fontWeight: 700,
+          fontWeight: 800,
           lineHeight: 1.1,
         }}
       >
@@ -118,12 +119,12 @@ export function LastMinute() {
   const lang = useLang();
   const isAR = lang === "AR";
   return (
-    <section className="bg-[#FFF8F0] py-10 border-y border-lux-orange/20">
+    <section className="border-y border-[#CC9966]/25 bg-[#FBF5EF] py-10">
       <div className="mx-auto max-w-5xl px-4 md:px-8">
-        <div className="flex flex-col items-start gap-5 rounded-2xl border border-lux-orange/30 bg-white px-6 py-7 md:flex-row md:items-center md:justify-between md:px-8 shadow-[0_4px_24px_rgba(255,153,51,0.10)]">
+        <div className="flex flex-col items-start gap-5 rounded-2xl border border-[#CC9966]/35 bg-white px-6 py-7 shadow-[0_4px_24px_rgba(204,153,102,0.16)] md:flex-row md:items-center md:justify-between md:px-8">
           <div>
             <span
-              className="inline-block rounded-full bg-lux-orange px-4 py-1 text-xs uppercase tracking-wider text-white"
+              className="inline-block rounded-full bg-[#CC9966] px-4 py-1 text-xs uppercase tracking-wider text-white"
               style={{ fontFamily: isAR ? "Cairo, sans-serif" : "'Barlow Condensed', sans-serif", fontWeight: 700 }}
             >
               {t(lang, "lm_title")}
@@ -149,10 +150,10 @@ export function LastMinute() {
               href={whatsappLink("Hi LuxRide, I'd like to check last-minute availability for today.")}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-center gap-2 rounded-full bg-lux-orange px-7 py-3.5 font-medium text-white shadow-md shadow-lux-orange/25 transition-all hover:brightness-105"
+              className="flex items-center justify-center gap-2 rounded-full bg-[#CC9966] px-7 py-3.5 font-medium text-white shadow-md shadow-[#CC9966]/25 transition-all hover:brightness-105"
               style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "1rem" }}
             >
-              <MessageCircle className="h-5 w-5" /> {t(lang, "lm_cta")}
+              <WhatsAppIcon className="h-5 w-5" /> {t(lang, "lm_cta")}
             </a>
             <span className="mt-2 block text-sm font-semibold text-lux-charcoal" dir="ltr">{PHONE_DISPLAY}</span>
           </div>
@@ -193,7 +194,7 @@ export function PopularTransfers() {
                 )}
               </div>
               <div className="p-6">
-                <p className="text-xs uppercase tracking-wider text-lux-bronze">{locationLabel(lang, tr.from)}</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-lux-bronze">{locationLabel(lang, tr.from)}</p>
                 <div className="mt-1 flex items-start justify-between gap-4">
                   <h3 className="flex items-center gap-2 text-lux-charcoal" style={{ fontSize: "1.25rem" }}>
                     {locationLabel(lang, tr.to)}
@@ -267,7 +268,7 @@ export function Fleet() {
                   <h3 className="text-lux-charcoal" style={{ fontSize: "1.25rem" }}>{v.name}</h3>
                   <Sparkles className="h-4 w-4 text-lux-gold" />
                 </div>
-                <p className="mt-1 text-sm text-neutral-500">{v.tagline}</p>
+                <p className="mt-1 min-h-10 text-sm text-neutral-500">{v.tagline}</p>
                 <div className="mt-5 grid grid-cols-2 gap-3 text-sm text-neutral-600">
                   <span className="col-span-2 flex items-center gap-2">
                     <Users className="h-4 w-4 text-lux-green" /> {lang === "AR" ? v.capacityAr : v.capacityEn}
@@ -311,7 +312,7 @@ const REASON_KEYS = [
   { icon: Headphones, title: "r5_title" as const, text: "r5_text" as const },
   { icon: Sparkles, title: "r6_title" as const, text: "r6_text" as const },
   { icon: CreditCard, title: "r7_title" as const, text: "r7_text" as const },
-  { icon: MessageCircle, title: "r8_title" as const, text: "r8_text" as const },
+  { icon: WhatsAppIcon, title: "r8_title" as const, text: "r8_text" as const },
 ];
 
 export function WhyChoose() {
@@ -392,7 +393,7 @@ export function About() {
               rel="noreferrer"
               className="flex items-center gap-2 rounded-full border border-lux-beige/25 px-7 py-3 text-lux-beige transition-all hover:border-lux-gold hover:text-lux-gold"
             >
-              <MessageCircle className="h-4 w-4" /> {t(lang, "about_wa")}
+              <WhatsAppIcon className="h-4 w-4" /> {t(lang, "about_wa")}
             </a>
           </div>
         </div>
@@ -415,14 +416,14 @@ export function DestinationSEO() {
         />
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {featuredRoutes.map((route) => {
-            const trip = Object.keys(route.prices)[0];
+            const publicTrip = availablePublicTripTypes(route)[0];
             const startingPrice = Math.min(...Object.values(route.prices).filter((value): value is number => typeof value === "number"));
-            const query = new URLSearchParams({ from: route.from, to: route.to, trip }).toString();
+            const query = new URLSearchParams({ from: route.from, to: route.to, trip: publicTrip }).toString();
             return (
               <article key={route.id} className="overflow-hidden rounded-2xl border border-lux-charcoal/8 bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)]">
                 <ImageWithFallback src={route.image ?? IMAGES.hurghada} alt={locationLabel(lang, route.to)} className="h-44 w-full object-cover" />
                 <div className="p-6">
-                  <p className="text-xs uppercase tracking-wider text-lux-bronze">{locationLabel(lang, route.from)}</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-lux-bronze">{locationLabel(lang, route.from)}</p>
                   <h3 className="mt-1 text-lux-charcoal" style={{ fontSize: "1.25rem" }}>{locationLabel(lang, route.to)}</h3>
                   <div className="mt-3 flex flex-wrap gap-2 text-sm text-neutral-600">
                     <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-lux-green" />{route.duration}</span>
@@ -590,7 +591,7 @@ export function FinalCTA() {
             rel="noreferrer"
             className="flex items-center gap-2 rounded-full border border-lux-beige/30 px-8 py-3.5 text-lux-beige transition-all hover:border-lux-gold hover:text-lux-gold"
           >
-            <MessageCircle className="h-5 w-5" /> {t(lang, "cta_wa")}
+            <WhatsAppIcon className="h-5 w-5" /> {t(lang, "cta_wa")}
           </a>
         </div>
       </div>

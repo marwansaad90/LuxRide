@@ -9,26 +9,28 @@ import {
   Clock,
   Luggage,
   MapPin,
-  MessageCircle,
   Send,
   Users,
 } from "lucide-react";
 import {
   BOOKING_CUTOFF_HOURS,
   FLEET,
+  PublicTripType,
   SELECTABLE_FLEET,
-  TripType,
   VehicleId,
+  availablePublicTripTypes,
   computePrice,
-  availableTripTypes,
   destinationsFor,
   findRoute,
   pickupLocations,
+  resolveTripType,
+  tripRulesFor,
   whatsappLink,
 } from "../components/luxride/data";
 import { addDays, formatEur, isValidReturn, normalizeReturnFields, readInitialBookingState } from "../components/luxride/bookingState";
 import { locationLabel, useLang } from "../components/luxride/i18n";
 import { VehicleSegmentedSelector } from "../components/luxride/VehicleSegmentedSelector";
+import { WhatsAppIcon } from "../components/luxride/WhatsAppIcon";
 
 const PICKUPS = pickupLocations();
 type Step = 1 | 2 | 3;
@@ -42,7 +44,7 @@ export function BookingPage() {
 
   // ── Step 1 state (pre-filled from URL params) ──────────────────────────────
   const [step, setStep] = useState<Step>(1);
-  const [trip, setTrip] = useState<TripType>(initial.trip);
+  const [publicTrip, setPublicTrip] = useState<PublicTripType>(initial.publicTrip);
   const [from, setFrom] = useState(initial.from);
   const [dests, setDests] = useState(() => destinationsFor(initial.from));
   const [to, setTo] = useState(initial.to);
@@ -69,14 +71,16 @@ export function BookingPage() {
   // ── Derived ─────────────────────────────────────────────────────────────────
   const vehicle = SELECTABLE_FLEET.find((v) => v.id === vehicleId) ?? SELECTABLE_FLEET[0] ?? FLEET[0];
   const route = findRoute(from, to);
+  const trip = useMemo(() => resolveTripType(route, publicTrip), [route, publicTrip]);
+  const tripRules = useMemo(() => tripRulesFor(route), [route]);
   const breakdown = useMemo(
-    () => (route ? computePrice(route, trip, vehicle) : null),
+    () => (route && trip ? computePrice(route, trip, vehicle) : null),
     [route, trip, vehicle],
   );
   const isAirportArrival = from === "Hurghada Airport";
   const needsPermit = !!route?.permit;
   const needsReturn = trip === "overday" || trip === "overnight";
-  const supportedTrips = useMemo(() => availableTripTypes(route), [route]);
+  const supportedTrips = useMemo(() => availablePublicTripTypes(route), [route]);
   const todayLocal = useMemo(() => {
     const now = new Date();
     return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().split("T")[0];
@@ -111,14 +115,14 @@ export function BookingPage() {
   }
 
   useEffect(() => {
-    if (route && !supportedTrips.includes(trip)) {
-      setTrip(supportedTrips[0] ?? "oneWay");
-      setTripNotice(isAR ? "تم تحديث نوع الرحلة حسب المسار المحدد." : "Trip type was updated for the selected route.");
+    if (route && !supportedTrips.includes(publicTrip)) {
+      setPublicTrip(supportedTrips[0] ?? "oneWay");
+      setTripNotice(isAR ? "تم تحديث اختيار الرحلة حسب المسار المحدد." : "Trip choice was updated for the selected route.");
     }
-  }, [isAR, route, supportedTrips, trip]);
+  }, [isAR, publicTrip, route, supportedTrips]);
 
   useEffect(() => {
-    const normalized = normalizeReturnFields(trip, date, returnDate, returnTime);
+    const normalized = normalizeReturnFields(trip ?? "oneWay", date, returnDate, returnTime);
     if (normalized.returnDate !== returnDate) setReturnDate(normalized.returnDate);
     if (normalized.returnTime !== returnTime) setReturnTime(normalized.returnTime);
   }, [date, returnDate, returnTime, trip]);
@@ -127,12 +131,15 @@ export function BookingPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [step]);
 
-  const tripLabel =
-    trip === "oneWay" ? (isAR ? "ذهاب فقط" : "One Way")
-    : trip === "overday" ? (isAR ? "يوم كامل" : "Overday")
-    : (isAR ? "مبيت" : "Overnight");
+  const tripLabel = publicTrip === "roundTrip" ? (isAR ? "ذهاب وعودة" : "Round Trip") : (isAR ? "ذهاب فقط" : "One Way");
+  const tripClassification =
+    publicTrip === "roundTrip" && tripRules?.roundTripMode === "overday"
+      ? (isAR ? "جولة يوم كامل" : "Overday")
+      : publicTrip === "roundTrip" && tripRules?.roundTripMode === "overnight"
+      ? (isAR ? "مبيت" : "Overnight")
+      : "";
 
-  const hasValidReturn = isValidReturn(trip, date, time, returnDate, returnTime);
+  const hasValidReturn = trip ? isValidReturn(trip, date, time, returnDate, returnTime) : false;
   const step1Valid = !!(from && to && date && time && breakdown);
   const step2Valid =
     hotel.trim().length > 0 &&
@@ -151,6 +158,7 @@ export function BookingPage() {
     navigate("/booking-success", {
       state: {
         tripLabel,
+        tripClassification,
         route: `${locationLabel(lang, from)} → ${locationLabel(lang, to)}`,
         vehicleName: vehicle.name,
         vehicleCategory: isAR ? vehicle.categoryAr : vehicle.category,
@@ -168,10 +176,9 @@ export function BookingPage() {
     "w-full h-11 rounded-lg border border-gray-200 bg-white px-3 text-gray-800 text-sm focus:border-lux-green focus:outline-none focus:ring-2 focus:ring-lux-green/20 transition-all";
   const labelCls = "block text-sm font-medium text-gray-700 mb-1.5";
 
-  const tripTypes: { id: TripType; label: string; desc: string }[] = [
+  const tripTypes: { id: PublicTripType; label: string; desc: string }[] = [
     { id: "oneWay", label: isAR ? "ذهاب فقط" : "One Way", desc: isAR ? "رحلة واحدة" : "Single direction" },
-    { id: "overday", label: isAR ? "يوم كامل" : "Overday", desc: isAR ? "ذهاب وعودة اليوم ذاته" : "Same-day return" },
-    { id: "overnight", label: isAR ? "مبيت" : "Overnight", desc: isAR ? "عودة اليوم التالي" : "Next-day return" },
+    { id: "roundTrip", label: isAR ? "ذهاب وعودة" : "Round Trip", desc: isAR ? "عودة حسب تصنيف المسار" : "Return journey by route rule" },
   ];
 
   const stepLabels: Record<Step, string> = {
@@ -246,18 +253,18 @@ export function BookingPage() {
               {/* Trip type */}
               <div className="mb-6">
                 <label className={labelCls}>{isAR ? "نوع الرحلة" : "Trip Type"}</label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   {tripTypes.map((tt) => (
                     <button
                       type="button"
                       key={tt.id}
-                      onClick={() => setTrip(tt.id)}
+                      onClick={() => setPublicTrip(tt.id)}
                       disabled={!supportedTrips.includes(tt.id)}
                       aria-describedby={!supportedTrips.includes(tt.id) ? `booking-trip-${tt.id}-unsupported` : undefined}
                       title={!supportedTrips.includes(tt.id) ? (isAR ? "غير متاح لهذا المسار" : "Not available for this route") : tt.desc}
                       className={`rounded-xl border-2 p-3 text-center transition-all ${
                         !supportedTrips.includes(tt.id) ? "cursor-not-allowed border-gray-100 bg-gray-50 text-gray-400"
-                        : trip === tt.id ? "border-lux-green bg-lux-green/5 text-lux-green" : "border-gray-200 text-gray-600 hover:border-lux-green/40"
+                        : publicTrip === tt.id ? "border-lux-green bg-lux-green/5 text-lux-green" : "border-gray-200 text-gray-600 hover:border-lux-green/40"
                       }`}
                     >
                       <div className="font-semibold text-sm" style={{ fontFamily: hFamily }}>{tt.label}</div>
@@ -270,6 +277,11 @@ export function BookingPage() {
                     </button>
                   ))}
                 </div>
+                {publicTrip === "roundTrip" && tripClassification && (
+                  <p className="mt-3 rounded-lg border border-lux-green/20 bg-lux-green/5 px-3 py-2 text-sm font-medium text-lux-charcoal">
+                    {isAR ? `تصنيف الرحلة: ${tripClassification}` : `Trip classification: ${tripClassification}`}
+                  </p>
+                )}
                 {tripNotice && (
                   <p role="status" aria-live="polite" className="mt-3 rounded-lg border border-lux-orange/30 bg-orange-50 px-3 py-2 text-sm text-gray-700">
                     {tripNotice}
@@ -364,7 +376,7 @@ export function BookingPage() {
                     target="_blank" rel="noreferrer"
                     className="mt-2 inline-flex items-center gap-2 rounded-full bg-lux-orange px-5 py-2 text-sm text-white"
                   >
-                    <MessageCircle className="h-4 w-4" />
+                    <WhatsAppIcon className="h-4 w-4" />
                     {isAR ? "تحقق من التوفر" : "Check Availability"}
                   </a>
                 </div>
@@ -400,7 +412,7 @@ export function BookingPage() {
                       <Field
                         label={isAR ? "تاريخ العودة" : "Return Date"}
                         labelCls={labelCls}
-                        note={isAR ? "رحلات اليوم تعود في نفس تاريخ المغادرة." : "Overday trips return on the same date as departure."}
+                        note={isAR ? "هذا المسار يعود في نفس تاريخ المغادرة." : "This route returns on the same date as departure."}
                       >
                         <input type="date" value={date} readOnly className={`${inputCls} bg-gray-50`} aria-readonly="true" />
                       </Field>
@@ -408,7 +420,7 @@ export function BookingPage() {
                       <Field
                         label={isAR ? "تاريخ العودة *" : "Return Date *"}
                         labelCls={labelCls}
-                        note={isAR ? "رحلات المبيت تتطلب تاريخ عودة لاحقاً." : "Overnight trips require a later return date."}
+                        note={isAR ? "هذا المسار يتطلب تاريخ عودة لاحقاً." : "This route requires a later return date."}
                       >
                         <input
                           type="date"
@@ -425,8 +437,8 @@ export function BookingPage() {
                     {returnTime && !hasValidReturn && (
                       <p role="alert" className="text-sm text-red-600 sm:col-span-2">
                         {isAR
-                          ? trip === "overday" ? "يجب أن تكون العودة في اليوم نفسه وبعد المغادرة." : "يجب أن تكون عودة المبيت في يوم لاحق."
-                          : trip === "overday" ? "Overday return must be later on the same day." : "Overnight return must be on a later date."}
+                          ? trip === "overday" ? "يجب أن تكون العودة في اليوم نفسه وبعد المغادرة." : "يجب أن تكون العودة في يوم لاحق."
+                          : trip === "overday" ? "Return must be later on the same day." : "Return must be on a later date."}
                       </p>
                     )}
                   </div>
@@ -489,6 +501,7 @@ export function BookingPage() {
               {/* Trip summary */}
               <ReviewSection title={isAR ? "تفاصيل الرحلة" : "Trip Details"} hFamily={hFamily}>
                 <ReviewRow label={isAR ? "نوع الرحلة" : "Trip Type"} value={tripLabel} />
+                {tripClassification && <ReviewRow label={isAR ? "تصنيف الرحلة" : "Trip classification"} value={tripClassification} />}
                 <ReviewRow label={isAR ? "مسار" : "Route"} value={`${locationLabel(lang, from)} → ${locationLabel(lang, to)}`} />
                 <ReviewRow label={isAR ? "المغادرة" : "Departure"} value={`${date} at ${time}`} />
                 {needsReturn && <ReviewRow label={isAR ? "العودة" : "Return"} value={`${returnDate || "-"} at ${returnTime || "-"}`} />}
