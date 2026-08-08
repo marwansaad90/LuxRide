@@ -31,10 +31,14 @@ export const IMAGES = {
     "https://images.unsplash.com/photo-1755545745583-334a6398c61b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   luxor:
     "https://images.unsplash.com/photo-1629468855534-450d7c4c5f72?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+  aswan:
+    "https://images.unsplash.com/photo-1738580426867-03fa8c8b5288?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   cairo:
     "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+  alexandria:
+    "https://images.unsplash.com/photo-1682090500311-9e57a5a57390?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   sharm:
-    "https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+    "https://commons.wikimedia.org/wiki/Special:FilePath/Naama_Bay_Beach_R01.jpg?width=1080",
   wadiElGemal:
     "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   marsaAlam:
@@ -207,8 +211,10 @@ function routeDuration(row: WorkbookRouteRow): string {
 
 function routeImage(row: WorkbookRouteRow): string {
   const key = `${row.pickup} ${row.destination}`;
-  if (key.includes("Luxor") || key.includes("Aswan")) return IMAGES.luxor;
-  if (key.includes("Cairo") || key.includes("Alexandria") || key.includes("Zaafarana")) return IMAGES.cairo;
+  if (key.includes("Luxor")) return IMAGES.luxor;
+  if (key.includes("Aswan")) return IMAGES.aswan;
+  if (key.includes("Cairo") || key.includes("Zaafarana")) return IMAGES.cairo;
+  if (key.includes("Alexandria")) return IMAGES.alexandria;
   if (key.includes("Sharm El Sheikh")) return IMAGES.sharm;
   if (key.includes("Wadi El Gemal") || key.includes("Sharm El Luli") || key.includes("El Qulaan") || key.includes("Abu Dabbab")) return IMAGES.wadiElGemal;
   if (key.includes("Marsa Alam") || key.includes("Marsa Ghaleb") || key.includes("Hamata") || key.includes("El Quseir")) return IMAGES.marsaAlam;

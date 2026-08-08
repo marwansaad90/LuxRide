@@ -10,6 +10,7 @@ import {
   EMAIL,
   FACEBOOK_URL,
   FLEET,
+  IMAGES,
   INSTAGRAM_URL,
   POPULAR_TRANSFERS,
   PRODUCTION_ACTIVE_FLEET,
@@ -50,6 +51,10 @@ function price(from: string, to: string, publicTrip: "oneWay" | "roundTrip", veh
 
 function readSource(relativePath: string): string {
   return readFileSync(new URL(relativePath, import.meta.url), "utf8");
+}
+
+function assetSize(relativePath: string): number {
+  return statSync(new URL(relativePath, import.meta.url)).size;
 }
 
 function readActiveAppSources(dir: string): string {
@@ -143,12 +148,25 @@ describe("vehicle and booking validation", () => {
     expect(data).toContain("../../../assets/vehicles/xpander.webp");
     expect(data).toContain("../../../assets/vehicles/corolla.webp");
     expect(data).toContain("../../../assets/vehicles/hiace.webp");
+    expect(assetSize("../../../assets/vehicles/xpander.webp")).toBe(47920);
+    expect(assetSize("../../../assets/vehicles/corolla.webp")).toBe(38064);
+    expect(assetSize("../../../assets/vehicles/hiace.webp")).toBe(33820);
   });
 
   it("provides workbook pickup and destination cascades", () => {
     expect(pickupLocations()).toContain("Hurghada Airport");
     expect(destinationsFor("Hurghada Airport")).toEqual(expect.arrayContaining(["Hurghada", "El Gouna", "Village Road", "Al Ahyaa"]));
     expect(destinationsFor("Hurghada")).toEqual(expect.arrayContaining(["Luxor", "Cairo", "Marsa Alam", "Wadi El Gemal"]));
+  });
+
+  it("uses valid, distinct imagery for major long-distance destination cards", () => {
+    expect(findRoute("Hurghada", "Luxor")?.image).toBe(IMAGES.luxor);
+    expect(findRoute("Hurghada", "Aswan")?.image).toBe(IMAGES.aswan);
+    expect(findRoute("Hurghada", "Cairo")?.image).toBe(IMAGES.cairo);
+    expect(findRoute("Hurghada", "Alexandria")?.image).toBe(IMAGES.alexandria);
+    expect(findRoute("Hurghada", "Sharm El Sheikh")?.image).toBe(IMAGES.sharm);
+    expect(IMAGES.sharm).toContain("Naama_Bay_Beach_R01.jpg");
+    expect(new Set([IMAGES.luxor, IMAGES.aswan, IMAGES.cairo, IMAGES.alexandria, IMAGES.sharm]).size).toBe(5);
   });
 
   it("sanitizes disabled vehicles, capacity, route, trip, date, and time URL values", () => {
@@ -219,6 +237,9 @@ describe("latest desktop client-review integration", () => {
     expect(featured + page).toContain("data-featured-transfer-description=\"scrollable\"");
     expect(featured + page).toContain("Book Similar Transfer");
     expect(featured + page).toContain("Explore All Transfers");
+    expect(page).toContain("Explore more transfers");
+    expect(page).not.toContain("Scroll horizontally to see older transfers");
+    expect(page).not.toContain("More featured transfers can be added once final images and content are approved");
     expect(featured).not.toContain("journey.tags");
   });
 
@@ -271,5 +292,17 @@ describe("latest desktop client-review integration", () => {
     expect(activeCode).not.toContain("Book Similar Trip");
     expect(activeCode).not.toContain("never calculates Round Trip by doubling");
     expect(activeCode).not.toContain("لا تحسب الذهاب والعودة أبداً بمضاعفة");
+  });
+
+  it("keeps internal review and prototype wording out of public-facing UI copy", () => {
+    const activeCode = readActiveAppSources(fileURLToPath(new URL("../../", import.meta.url)));
+    const html = readFileSync(new URL("../../../../index.html", import.meta.url), "utf8");
+    expect(activeCode + html).not.toContain("for client testing");
+    expect(activeCode + html).not.toContain("test mode");
+    expect(activeCode + html).not.toContain("review mode");
+    expect(activeCode + html).not.toContain("review screen");
+    expect(activeCode + html).not.toContain("pending client approval");
+    expect(html).not.toContain("prototype");
+    expect(readSource("../../pages/AboutPage.tsx")).toContain("all air-conditioned and matched to the passenger and luggage requirements shown during booking");
   });
 });

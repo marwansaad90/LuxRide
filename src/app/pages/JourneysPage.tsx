@@ -20,7 +20,7 @@ export function JourneysPage() {
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <div className="mb-6 flex items-center justify-between gap-4">
             <p className="text-sm font-semibold text-lux-charcoal">
-              {lang === "AR" ? "اسحب أفقياً لمشاهدة التوصيلات الأقدم" : "Scroll horizontally to see older transfers"}
+              {lang === "AR" ? "استكشف المزيد من التوصيلات" : "Explore more transfers"}
             </p>
             <span className="rounded-full bg-white px-4 py-2 text-xs font-bold text-lux-green shadow-sm">
               {transfers.length} {lang === "AR" ? "توصيلات" : "transfers"}
@@ -33,9 +33,6 @@ export function JourneysPage() {
               </div>
             ))}
           </div>
-          <p className="mt-8 text-center text-sm text-neutral-500">
-            {lang === "AR" ? "يمكن إضافة المزيد من التوصيلات المميزة بعد اعتماد الصور والمحتوى النهائي." : "More featured transfers can be added once final images and content are approved."}
-          </p>
         </div>
       </section>
     </PageShell>

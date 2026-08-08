@@ -49,11 +49,11 @@ export function AvailabilityAdminPage() {
 
   return (
     <PageShell
-      crumb={L("Availability Admin (Concept)", "إدارة التوفر (مفهوم)")}
-      title={L("Conceptual Availability Admin", "لوحة إدارة التوفر المفاهيمية")}
+      crumb={L("Availability Admin", "إدارة التوفر")}
+      title={L("Availability Admin", "لوحة إدارة التوفر")}
       subtitle={L(
-        "A review screen showing the intended controls for managing vehicle and date availability.",
-        "شاشة مراجعة توضّح عناصر التحكم المقترحة لإدارة توفر السيارات والتواريخ.",
+        "Operational controls for managing vehicle and date availability.",
+        "عناصر تشغيلية لإدارة توفر السيارات والتواريخ.",
       )}
     >
       <section className="bg-lux-beige py-16 md:py-24">
