@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { Navigate, createBrowserRouter } from "react-router";
 import { RootLayout } from "./components/luxride/RootLayout";
 import { Home } from "./pages/Home";
 import { AboutPage } from "./pages/AboutPage";
@@ -29,7 +29,8 @@ export const router = createBrowserRouter([
       { path: "about", Component: AboutPage },
       { path: "fleet", Component: FleetPage },
       { path: "destinations", Component: DestinationsPage },
-      { path: "journeys", Component: JourneysPage },
+      { path: "featured-transfers", Component: JourneysPage },
+      { path: "journeys", element: <Navigate to="/featured-transfers" replace /> },
       { path: "transfer-details", Component: TransferDetailsPage },
       { path: "booking", Component: BookingPage },
       { path: "contact", Component: ContactPage },

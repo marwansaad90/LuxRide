@@ -4,6 +4,7 @@
 import xpanderImg from "../../../assets/vehicles/xpander.webp";
 import corollaImg from "../../../assets/vehicles/corolla.webp";
 import hiacaImg from "../../../assets/vehicles/hiace.webp";
+import { WORKBOOK_PRICE_LIST_META, WORKBOOK_PRICE_LIST_ROWS, type WorkbookDraftStatus, type WorkbookRouteRow } from "./workbookRoutes";
 
 export const VEHICLE_IMAGES = {
   xpander: xpanderImg,
@@ -18,6 +19,10 @@ export const IMAGES = {
     "https://images.unsplash.com/photo-1627285886624-5cd637dafb50?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1200",
   hurghada:
     "https://images.unsplash.com/photo-1755545414327-36524febb5b6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+  villageRoad:
+    "https://images.unsplash.com/photo-1518391846015-55a9cc003b25?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+  alAhyaa:
+    "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   elGouna:
     "https://images.unsplash.com/photo-1601816500593-8f1276479ea6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   makadi:
@@ -26,6 +31,12 @@ export const IMAGES = {
     "https://images.unsplash.com/photo-1755545745583-334a6398c61b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   luxor:
     "https://images.unsplash.com/photo-1629468855534-450d7c4c5f72?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+  cairo:
+    "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+  sharm:
+    "https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+  wadiElGemal:
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   marsaAlam:
     "https://images.unsplash.com/photo-1630328639261-4c9e94108671?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   sedan:
@@ -39,7 +50,7 @@ export const IMAGES = {
 // ─── Contact (real business details) ─────────────────────────────────────────
 export const WHATSAPP_NUMBER = "201013554009"; // +20 101 355 4009
 export const PHONE_DISPLAY = "+20 101 355 4009";
-export const EMAIL: string | null = null;
+export const EMAIL = "booking@luxride-eg.com";
 
 export { TRIPADVISOR_PAGE_URL as TRIPADVISOR_URL } from "./tripadvisor";
 export const FACEBOOK_URL = "https://www.facebook.com/luxride.eg/";
@@ -130,7 +141,7 @@ export const SELECTABLE_FLEET = VEHICLE_SEGMENT_ORDER
   .filter((vehicle): vehicle is Vehicle => Boolean(vehicle))
   .filter((vehicle) => CLIENT_REVIEW_ENABLE_ALL_VEHICLES || vehicle.available);
 
-// ─── Trip types ───────────────────────────────────────────────────────────────
+// ─── Transfer types ───────────────────────────────────────────────────────────────
 export type PublicTripType = "oneWay" | "roundTrip";
 export type TripType = "oneWay" | "overday" | "overnight";
 export type RoundTripMode = Exclude<TripType, "oneWay">;
@@ -141,6 +152,14 @@ export interface Route {
   from: string;
   to: string;
   prices: Partial<Record<TripType, number>>;
+  mpvOneWay?: number;
+  sourceRow?: number;
+  draftStatus?: WorkbookDraftStatus;
+  fromAr?: string;
+  toAr?: string;
+  outboundClassification?: string;
+  returnClassification?: string;
+  returnClassificationAr?: string;
   duration: string;
   image?: string;
   airport?: boolean; // Hurghada Airport arrival/departure → €2 surcharge
@@ -155,40 +174,86 @@ export interface RouteTripRule {
   roundTripPrice?: number;
 }
 
-export const ROUTES: Route[] = [
-  // Hurghada Airport transfers
-  { id: "a1", from: "Hurghada Airport", to: "Hurghada", prices: { oneWay: 10 }, duration: "20 min", image: IMAGES.hurghada, airport: true },
-  { id: "a2", from: "Hurghada Airport", to: "El Gouna", prices: { oneWay: 13 }, duration: "35 min", image: IMAGES.elGouna, airport: true },
-  { id: "a3", from: "Hurghada Airport", to: "Sahl Hasheesh", prices: { oneWay: 13 }, duration: "30 min", image: IMAGES.hurghada, airport: true },
-  { id: "a4", from: "Hurghada Airport", to: "Soma Bay", prices: { oneWay: 13 }, duration: "50 min", image: IMAGES.soma, airport: true },
-  { id: "a5", from: "Hurghada Airport", to: "Makadi Bay", prices: { oneWay: 14 }, duration: "40 min", image: IMAGES.makadi, airport: true },
-  { id: "a6", from: "Hurghada Airport", to: "Safaga", prices: { oneWay: 18 }, duration: "1 h", image: IMAGES.soma, airport: true },
-  { id: "a7", from: "Hurghada Airport", to: "Nefertari", prices: { oneWay: 28 }, duration: "1 h 20 min", image: IMAGES.marsaAlam, airport: true },
-  { id: "a8", from: "Hurghada Airport", to: "El Quseir", prices: { oneWay: 38 }, duration: "2 h", image: IMAGES.marsaAlam, airport: true },
-  { id: "a9", from: "Hurghada Airport", to: "Marsa Ghaleb", prices: { oneWay: 58 }, duration: "2 h 30 min", image: IMAGES.marsaAlam, airport: true },
-  { id: "a10", from: "Hurghada Airport", to: "Marsa Alam", prices: { oneWay: 65 }, duration: "3 h", image: IMAGES.marsaAlam, airport: true },
-  { id: "a11", from: "Hurghada Airport", to: "Hamata", prices: { oneWay: 90 }, duration: "4 h", image: IMAGES.marsaAlam, airport: true },
+const OVERNIGHT_RETURN_DESTINATIONS = new Set(["Aswan", "Alexandria", "Sharm El Sheikh"]);
+const CONFIRMED_WORKBOOK_ROWS = WORKBOOK_PRICE_LIST_ROWS.filter((row) => !row.yellowColumns.some((column) => column <= 10));
+export const DRAFT_ROUTE_REFERENCES = WORKBOOK_PRICE_LIST_ROWS.filter((row) => row.draftStatus === "provisional");
+export { WORKBOOK_PRICE_LIST_META };
 
-  // City tours (Alf Leila)
-  { id: "c1", from: "Hurghada", to: "City Tour – Alf Leila", prices: { oneWay: 22 }, duration: "half day", image: IMAGES.hurghada },
-  { id: "c2", from: "El Gouna", to: "City Tour – Alf Leila", prices: { oneWay: 27 }, duration: "half day", image: IMAGES.elGouna },
-  { id: "c3", from: "Sahl Hasheesh", to: "City Tour – Alf Leila", prices: { oneWay: 27 }, duration: "half day", image: IMAGES.hurghada },
-  { id: "c4", from: "Makadi Bay", to: "City Tour – Alf Leila", prices: { oneWay: 28 }, duration: "half day", image: IMAGES.makadi },
-  { id: "c5", from: "Soma Bay", to: "City Tour – Alf Leila", prices: { oneWay: 35 }, duration: "half day", image: IMAGES.soma },
-  { id: "c5b", from: "Safaga", to: "City Tour – Alf Leila", prices: { oneWay: 35 }, duration: "half day", image: IMAGES.soma },
-  { id: "c6", from: "Hurghada", to: "Sharm El Naga", prices: { oneWay: 35 }, duration: "half day", image: IMAGES.soma },
+function workbookReturnMode(row: WorkbookRouteRow): RoundTripMode {
+  const returnName = row.returnTripName.toLowerCase();
+  if (returnName.includes("overnight") || OVERNIGHT_RETURN_DESTINATIONS.has(row.destination)) return "overnight";
+  return "overday";
+}
 
-  // Long-distance & historical (permit required)
-  { id: "l1", from: "Hurghada", to: "Luxor", prices: { oneWay: 75, overday: 90 }, duration: "4 h", image: IMAGES.luxor, permit: true },
-  { id: "l2", from: "El Gouna", to: "Luxor", prices: { oneWay: 85, overday: 100 }, duration: "4 h 30 min", image: IMAGES.luxor, permit: true },
-  { id: "l3", from: "Hurghada", to: "Aswan", prices: { oneWay: 110 }, duration: "7 h", image: IMAGES.luxor, permit: true },
-  { id: "l4", from: "Hurghada", to: "Cairo", prices: { oneWay: 110, overday: 120 }, duration: "5 h 30 min", image: IMAGES.luxor, permit: true },
-  { id: "l5", from: "Makadi Bay", to: "Cairo", prices: { overday: 135 }, duration: "6 h", image: IMAGES.luxor, permit: true },
-  { id: "l5b", from: "Safaga", to: "Cairo", prices: { overday: 135 }, duration: "6 h 30 min", image: IMAGES.luxor, permit: true },
-  { id: "l6", from: "Hurghada", to: "Zaafarana", prices: { overday: 90 }, duration: "3 h", image: IMAGES.hurghada },
-  { id: "l7", from: "Hurghada", to: "Alexandria", prices: { overnight: 180 }, duration: "8 h", image: IMAGES.luxor },
-  { id: "l8", from: "Hurghada", to: "Sharm El Sheikh", prices: { oneWay: 200, overnight: 250 }, duration: "6 h (via ferry/road)", image: IMAGES.soma, permit: true },
-];
+function routeDuration(row: WorkbookRouteRow): string {
+  if (row.pickup === "Hurghada Airport" && row.destination === "Hurghada") return "20 min";
+  if ([row.pickup, row.destination].includes("Luxor")) return "4 h";
+  if ([row.pickup, row.destination].includes("Cairo")) return "5 h 30 min";
+  if ([row.pickup, row.destination].includes("Aswan")) return "7 h";
+  if ([row.pickup, row.destination].includes("Alexandria")) return "8 h";
+  if ([row.pickup, row.destination].includes("Sharm El Sheikh")) return "6 h";
+  if ([row.pickup, row.destination].includes("Marsa Alam")) return "3 h";
+  if ([row.pickup, row.destination].includes("Wadi El Gemal")) return "4 h";
+  if ([row.pickup, row.destination].includes("Hamata")) return "4 h";
+  if ([row.pickup, row.destination].includes("Marsa Ghaleb")) return "2 h 30 min";
+  if ([row.pickup, row.destination].includes("El Quseir")) return "2 h";
+  if ([row.pickup, row.destination].includes("Safaga")) return "1 h";
+  if ([row.pickup, row.destination].includes("Soma Bay")) return "50 min";
+  if ([row.pickup, row.destination].includes("Makadi Bay")) return "40 min";
+  if ([row.pickup, row.destination].includes("El Gouna")) return "35 min";
+  if ([row.pickup, row.destination].includes("Sahl Hasheesh")) return "30 min";
+  return "on request";
+}
+
+function routeImage(row: WorkbookRouteRow): string {
+  const key = `${row.pickup} ${row.destination}`;
+  if (key.includes("Luxor") || key.includes("Aswan")) return IMAGES.luxor;
+  if (key.includes("Cairo") || key.includes("Alexandria") || key.includes("Zaafarana")) return IMAGES.cairo;
+  if (key.includes("Sharm El Sheikh")) return IMAGES.sharm;
+  if (key.includes("Wadi El Gemal") || key.includes("Sharm El Luli") || key.includes("El Qulaan") || key.includes("Abu Dabbab")) return IMAGES.wadiElGemal;
+  if (key.includes("Marsa Alam") || key.includes("Marsa Ghaleb") || key.includes("Hamata") || key.includes("El Quseir")) return IMAGES.marsaAlam;
+  if (key.includes("El Gouna")) return IMAGES.elGouna;
+  if (key.includes("Makadi")) return IMAGES.makadi;
+  if (key.includes("Soma Bay") || key.includes("Safaga")) return IMAGES.soma;
+  if (key.includes("Village Road")) return IMAGES.villageRoad;
+  if (key.includes("Al Ahyaa")) return IMAGES.alAhyaa;
+  return IMAGES.hurghada;
+}
+
+export function workbookOneWayPrice(mpvOneWay: number, vehicle: Vehicle): number {
+  if (vehicle.permitTier === "sedan") return Math.round(mpvOneWay * WORKBOOK_PRICE_LIST_META.sedanRatio);
+  if (vehicle.permitTier === "minivan") return Math.round(mpvOneWay * WORKBOOK_PRICE_LIST_META.miniVanRatio);
+  return Math.round(mpvOneWay);
+}
+
+export function workbookRoundTripPrice(mpvOneWay: number, vehicle: Vehicle): number {
+  return Math.round(workbookOneWayPrice(mpvOneWay, vehicle) * WORKBOOK_PRICE_LIST_META.roundTripRatio);
+}
+
+function routeFromWorkbook(row: WorkbookRouteRow): Route {
+  const roundTripMode = workbookReturnMode(row);
+  const mpvRoundTrip = workbookRoundTripPrice(row.mpvOneWay, FLEET.find((vehicle) => vehicle.id === "xpander")!);
+  return {
+    id: row.id,
+    sourceRow: row.sourceRow,
+    from: row.pickup,
+    to: row.destination,
+    fromAr: row.pickupAr,
+    toAr: row.destinationAr,
+    mpvOneWay: row.mpvOneWay,
+    prices: { oneWay: row.mpvOneWay, [roundTripMode]: mpvRoundTrip },
+    duration: routeDuration(row),
+    image: routeImage(row),
+    airport: row.pickup === "Hurghada Airport",
+    permit: PERMIT_DESTINATIONS.includes(row.pickup) || PERMIT_DESTINATIONS.includes(row.destination),
+    outboundClassification: row.outboundTripName,
+    returnClassification: row.returnTripName,
+    returnClassificationAr: row.returnTripNameAr,
+    draftStatus: row.draftStatus,
+  };
+}
+
+export const ROUTES: Route[] = CONFIRMED_WORKBOOK_ROWS.map(routeFromWorkbook);
 
 export function tripRulesFor(route: Route | undefined): RouteTripRule | null {
   if (!route) return null;
@@ -232,8 +297,12 @@ export function computePrice(
   trip: TripType,
   vehicle: Vehicle,
 ): PriceBreakdown | null {
-  const base = route.prices[trip] ?? null;
-  if (base == null) return null;
+  if (route.prices[trip] == null) return null;
+  const mpvOneWay = route.mpvOneWay ?? route.prices.oneWay ?? route.prices[trip];
+  if (mpvOneWay == null) return null;
+  const base = trip === "oneWay"
+    ? workbookOneWayPrice(mpvOneWay, vehicle)
+    : workbookRoundTripPrice(mpvOneWay, vehicle);
   const discount = route.discountPct
     ? Math.round(base * route.discountPct) / 100
     : 0;
@@ -315,13 +384,36 @@ export interface PopularTransfer {
   permit?: boolean;
 }
 
+function popularTransfer(
+  id: string,
+  from: string,
+  to: string,
+  image: string,
+): PopularTransfer {
+  const route = findRoute(from, to);
+  return {
+    id,
+    from,
+    to,
+    image,
+    duration: route?.duration ?? "on request",
+    fromPrice: route?.prices.oneWay ?? route?.mpvOneWay ?? 0,
+    airport: route?.airport,
+    permit: route?.permit,
+  };
+}
+
 export const POPULAR_TRANSFERS: PopularTransfer[] = [
-  { id: "p1", from: "Hurghada Airport", to: "El Gouna", image: IMAGES.elGouna, duration: "35 min", fromPrice: 13, airport: true },
-  { id: "p2", from: "Hurghada Airport", to: "Makadi Bay", image: IMAGES.makadi, duration: "40 min", fromPrice: 14, airport: true },
-  { id: "p3", from: "Hurghada Airport", to: "Marsa Alam", image: IMAGES.marsaAlam, duration: "3 h", fromPrice: 65, airport: true },
-  { id: "p4", from: "Hurghada", to: "Luxor", image: IMAGES.luxor, duration: "4 h", fromPrice: 75, permit: true },
-  { id: "p5", from: "Hurghada", to: "Cairo", image: IMAGES.luxor, duration: "5 h 30 min", fromPrice: 110, permit: true },
-  { id: "p6", from: "Hurghada", to: "Sharm El Sheikh", image: IMAGES.soma, duration: "6 h", fromPrice: 200, permit: true },
+  popularTransfer("airport-hurghada", "Hurghada Airport", "Hurghada", IMAGES.hurghada),
+  popularTransfer("airport-makadi", "Hurghada Airport", "Makadi Bay", IMAGES.makadi),
+  popularTransfer("airport-gouna", "Hurghada Airport", "El Gouna", IMAGES.elGouna),
+  popularTransfer("airport-sahl", "Hurghada Airport", "Sahl Hasheesh", IMAGES.hurghada),
+  popularTransfer("airport-village", "Hurghada Airport", "Village Road", IMAGES.villageRoad),
+  popularTransfer("airport-ahyaa", "Hurghada Airport", "Al Ahyaa", IMAGES.alAhyaa),
+  popularTransfer("hurghada-luxor", "Hurghada", "Luxor", IMAGES.luxor),
+  popularTransfer("hurghada-cairo", "Hurghada", "Cairo", IMAGES.cairo),
+  popularTransfer("hurghada-marsa-alam", "Hurghada", "Marsa Alam", IMAGES.marsaAlam),
+  popularTransfer("hurghada-wadi-el-gemal", "Hurghada", "Wadi El Gemal", IMAGES.wadiElGemal),
 ];
 
 export function whatsappLink(message: string): string {

@@ -82,7 +82,7 @@ export function ServiceBenefits() {
     { icon: Users, en: "Admission fee information where applicable", ar: "معلومات رسوم الدخول عند الحاجة", den: "Displayed or explained when applicable; not automatically included unless confirmed.", dar: "تُعرض أو تُوضّح عند الحاجة؛ غير مشمولة تلقائياً إلا بالتأكيد." },
     { icon: Snowflake, en: "Air-conditioned vehicle", ar: "سيارة مكيفة", den: "Cool, comfortable cabins in every season.", dar: "مقصورات باردة ومريحة في كل المواسم." },
     { icon: Droplet, en: "Complimentary bottled water", ar: "مياه معبأة مجاناً", den: "Chilled bottled water on board for every guest.", dar: "مياه معبأة باردة على متن السيارة لكل ضيف." },
-    { icon: Wifi, en: "WiFi on board", ar: "واي فاي داخل السيارة", den: "Stay connected throughout your journey.", dar: "ابقَ متصلاً طوال رحلتك." },
+    { icon: Wifi, en: "WiFi on board", ar: "واي فاي داخل السيارة", den: "Stay connected throughout your transfer.", dar: "ابقَ متصلاً طوال توصيلتك." },
     { icon: Usb, en: "USB Type-A/C charging", ar: "شحن USB نوع A/C", den: "Front and rear charging ports for all devices.", dar: "منافذ شحن أمامية وخلفية لكل الأجهزة." },
     { icon: PlaneLanding, en: "Real-time flight monitoring", ar: "متابعة الرحلات الجوية", den: "We track arrivals and adjust pickup for delays.", dar: "نتابع الوصول ونعدّل الاستلام عند التأخير." },
     { icon: Wallet, en: "Fixed transparent prices", ar: "أسعار ثابتة وشفافة", den: "The price you see is the price you pay — no hidden fees.", dar: "السعر الذي تراه هو ما تدفعه — بلا رسوم خفية." },
@@ -95,7 +95,7 @@ export function ServiceBenefits() {
         <SectionHeading
           eyebrow={L("What's Included", "ما هو مشمول")}
           title={L("Premium Comfort, Included", "راحة فاخرة، مشمولة")}
-          subtitle={L("Every LuxRide transfer comes with the details that make the journey effortless.", "كل رحلة من LuxRide تأتي بالتفاصيل التي تجعل رحلتك سلسة.")}
+          subtitle={L("Every LuxRide transfer comes with the details that make the ride effortless.", "كل توصيلة من LuxRide تأتي بالتفاصيل التي تجعل تنقلك سلساً.")}
         />
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {benefits.map((b) => (
@@ -230,7 +230,7 @@ export function Fleet() {
   const lang = useLang();
 
   return (
-    <section id="fleet" className="bg-white py-20 md:py-28">
+    <section id="fleet" className="bg-white py-16 md:py-24">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <SectionHeading
           eyebrow={t(lang, "fleet_eyebrow")}
@@ -259,7 +259,7 @@ export function Fleet() {
                 >
                   {isVehicleSelectable(v) ? t(lang, "fleet_available") : t(lang, "fleet_soon")}
                 </span>
-                <span className="absolute right-4 top-4 rounded-full bg-black/60 px-3 py-1 text-xs text-lux-gold">
+                <span className="absolute right-4 top-4 rounded-full bg-[#F6EFE6] px-3.5 py-1.5 text-xs font-bold text-lux-charcoal shadow-sm ring-1 ring-[#CC9966]/25">
                   {lang === "AR" ? v.categoryAr : v.category}
                 </span>
               </div>
@@ -319,7 +319,7 @@ export function WhyChoose() {
   const lang = useLang();
 
   return (
-    <section className="bg-lux-beige py-20 md:py-28">
+    <section className="bg-lux-beige py-14 md:py-20">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <SectionHeading
           eyebrow={t(lang, "why_eyebrow")}
@@ -433,7 +433,7 @@ export function DestinationSEO() {
                   </div>
                   <div className="mt-5 flex gap-3">
                     <Link to={`/transfer-details?${query}`} className="flex flex-1 items-center justify-center rounded-full border border-lux-charcoal/15 py-2.5 text-sm text-lux-charcoal hover:border-lux-green hover:text-lux-green">
-                      {lang === "AR" ? "عرض الرحلة" : "View Transfer"}
+                      {lang === "AR" ? "عرض التوصيلة" : "View Transfer"}
                     </Link>
                     <Link to={`/booking?${query}`} className="flex flex-1 items-center justify-center rounded-full bg-lux-green py-2.5 text-sm text-white hover:brightness-110">
                       {lang === "AR" ? "احجز الآن" : "Book Now"}
@@ -458,7 +458,7 @@ export function HowItWorks() {
       num: "01",
       Icon: MapPinned,
       en: { title: "Choose Your Route", desc: "Select your pickup, destination, trip type, date, and preferred vehicle." },
-      ar: { title: "اختر مسارك", desc: "اختر موقع الانطلاق والوجهة ونوع الرحلة والتاريخ والسيارة المناسبة." },
+      ar: { title: "اختر مسارك", desc: "اختر موقع الانطلاق والوجهة ونوع التوصيلة والتاريخ والسيارة المناسبة." },
     },
     {
       num: "02",
@@ -475,8 +475,8 @@ export function HowItWorks() {
     {
       num: "04",
       Icon: CheckCircle2,
-      en: { title: "Receive Confirmation", desc: "LuxRide confirms the vehicle, driver, pickup time, and journey details." },
-      ar: { title: "استلم التأكيد", desc: "تؤكد LuxRide السيارة والسائق ووقت الاستلام وتفاصيل الرحلة." },
+      en: { title: "Receive Confirmation", desc: "LuxRide confirms the vehicle, driver, pickup time, and transfer details." },
+      ar: { title: "استلم التأكيد", desc: "تؤكد LuxRide السيارة والسائق ووقت الاستلام وتفاصيل التوصيلة." },
     },
   ];
 
@@ -484,7 +484,7 @@ export function HowItWorks() {
     <section className="bg-lux-beige py-16 md:py-24">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <div className="mb-12 text-center">
-          <span className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-lux-green">
+          <span className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.25em] text-lux-green">
             <span className="h-px w-6 bg-lux-green" />
             {isAR ? "كيف يعمل" : "Simple Process"}
             <span className="h-px w-6 bg-lux-green" />
@@ -509,7 +509,7 @@ export function HowItWorks() {
                 <div
                   aria-hidden="true"
                   className="absolute top-10 hidden h-px bg-lux-green/25 lg:block"
-                  style={{ left: "calc(50% + 2.5rem)", right: "-50%" }}
+                  style={isAR ? { right: "calc(50% + 2.5rem)", left: "-50%" } : { left: "calc(50% + 2.5rem)", right: "-50%" }}
                 />
               )}
               {i < steps.length - 1 && (
@@ -522,7 +522,7 @@ export function HowItWorks() {
                 <div className="mb-4 flex items-center gap-4 sm:flex-col sm:gap-3">
                   <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 border-white bg-lux-green/10 shadow-sm">
                     <s.Icon className="h-7 w-7 text-lux-green" aria-hidden="true" />
-                    <span className="absolute -end-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full bg-lux-orange text-[0.68rem] font-bold text-lux-dark">
+                    <span className="absolute -end-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full bg-[#CC9966] text-[0.68rem] font-bold text-white">
                       {s.num}
                     </span>
                   </div>

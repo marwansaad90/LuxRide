@@ -28,8 +28,8 @@ export function LastMinutePage() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#CC9966]/20">
               <Zap className="h-8 w-8 text-[#A87542]" />
             </div>
-            <h2 className="mt-5 text-lux-charcoal" style={{ fontSize: "1.75rem", fontWeight: 700 }}>{L("Need a transfer today?", "تحتاج رحلة اليوم؟")}</h2>
-            <p className="mx-auto mt-2 max-w-lg text-neutral-600">{L("If you wish to book a transfer or any other service for today, please contact us directly on WhatsApp to check availability.", "إذا كنت ترغب في حجز رحلة أو أي خدمة أخرى لليوم، يرجى التواصل معنا مباشرةً عبر واتساب للتحقق من التوفر.")}</p>
+            <h2 className="mt-5 text-lux-charcoal" style={{ fontSize: "1.75rem", fontWeight: 700 }}>{L("Need a transfer today?", "تحتاج توصيلة اليوم؟")}</h2>
+            <p className="mx-auto mt-2 max-w-lg text-neutral-600">{L("If you wish to book a transfer or any other service for today, please contact us directly on WhatsApp to check availability.", "إذا كنت ترغب في حجز توصيلة أو أي خدمة أخرى لليوم، يرجى التواصل معنا مباشرةً عبر واتساب للتحقق من التوفر.")}</p>
             <a href={whatsappLink("Hi LuxRide, I'd like to check last-minute availability for today.")} target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#CC9966] px-8 py-3.5 text-sm text-white transition-all hover:brightness-105">
               <WhatsAppIcon className="h-5 w-5" /> {L("Check Last-minute Availability on WhatsApp", "تحقق من التوفر اللحظي عبر واتساب")}
             </a>

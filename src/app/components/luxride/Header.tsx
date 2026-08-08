@@ -11,6 +11,7 @@ const NAV: Array<{ key: TKey; to: string }> = [
   { key: "nav_about", to: "/about" },
   { key: "nav_fleet", to: "/fleet" },
   { key: "nav_destinations", to: "/destinations" },
+  { key: "nav_featured", to: "/featured-transfers" },
   { key: "nav_booking", to: "/booking" },
   { key: "nav_faq", to: "/faq" },
   { key: "nav_contact", to: "/contact" },

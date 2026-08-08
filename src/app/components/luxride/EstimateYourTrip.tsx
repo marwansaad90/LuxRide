@@ -53,7 +53,7 @@ export function EstimateYourTrip() {
     if (!route || supportedTrips.includes(publicTrip)) return;
     const nextTrip = supportedTrips[0] ?? "oneWay";
     setPublicTrip(nextTrip);
-    setNotice(isAR ? "تم تحديث اختيار الرحلة حسب المسار المحدد." : "Trip choice was updated for the selected route.");
+    setNotice(isAR ? "تم تحديث اختيار التوصيلة حسب المسار المحدد." : "Transfer choice was updated for the selected route.");
   }, [isAR, publicTrip, route, supportedTrips]);
 
   function clampForVehicle(id: VehicleId) {
@@ -96,8 +96,8 @@ export function EstimateYourTrip() {
   }
 
   const tripTypes: { id: PublicTripType; label: string; desc: string }[] = [
-    { id: "oneWay", label: isAR ? "ذهاب فقط" : "One Way", desc: isAR ? "رحلة واحدة" : "Single direction" },
-    { id: "roundTrip", label: isAR ? "ذهاب وعودة" : "Round Trip", desc: isAR ? "عودة حسب تصنيف المسار" : "Return journey by route rule" },
+    { id: "oneWay", label: isAR ? "ذهاب فقط" : "One Way", desc: isAR ? "توصيلة واحدة" : "Single transfer" },
+    { id: "roundTrip", label: isAR ? "ذهاب وعودة" : "Round Trip", desc: isAR ? "عودة حسب تصنيف المسار" : "Return transfer by route rule" },
   ];
   const classificationLabel =
     tripRules?.roundTripMode === "overday"
@@ -121,14 +121,14 @@ export function EstimateYourTrip() {
           {isAR ? "حاسبة السعر" : "Quick Price Estimate"}
         </p>
         <h2 className="mt-0.5 text-lux-charcoal" style={{ fontSize: "1.32rem", fontWeight: 800, lineHeight: 1.1 }}>
-          {isAR ? "قدّر رحلتك" : "Estimate Your Trip"}
+          {isAR ? "قدّر توصيلتك" : "Estimate Your Trip"}
         </h2>
       </div>
 
       <div className="space-y-3">
         <div>
-          <span className={labelCls}>{isAR ? "نوع الرحلة" : "Trip type"}</span>
-          <div role="radiogroup" aria-label={isAR ? "نوع الرحلة" : "Trip type"} className="grid grid-cols-2 gap-1 rounded-xl bg-gray-100 p-1">
+          <span className={labelCls}>{isAR ? "نوع التوصيلة" : "Transfer type"}</span>
+          <div role="radiogroup" aria-label={isAR ? "نوع التوصيلة" : "Transfer type"} className="grid grid-cols-2 gap-1 rounded-xl bg-gray-100 p-1">
             {tripTypes.map((tt) => {
               const supported = supportedTrips.includes(tt.id);
               const selected = publicTrip === tt.id;
@@ -159,7 +159,7 @@ export function EstimateYourTrip() {
           </div>
           {publicTrip === "roundTrip" && classificationLabel && (
             <p className="mt-2 rounded-lg border border-lux-green/20 bg-lux-green/5 px-3 py-1.5 text-xs font-medium text-lux-charcoal">
-              {isAR ? `تصنيف الرحلة: ${classificationLabel}` : `Trip classification: ${classificationLabel}`}
+              {isAR ? `تصنيف المسار: ${classificationLabel}` : `Route classification: ${classificationLabel}`}
             </p>
           )}
         </div>
@@ -190,7 +190,7 @@ export function EstimateYourTrip() {
           <div>
             <label htmlFor="estimate-date" className={labelCls}>
               <CalendarDays className="h-3.5 w-3.5 text-lux-green" />
-              {isAR ? "تاريخ الرحلة" : "Date"}
+              {isAR ? "تاريخ التوصيلة" : "Date"}
             </label>
             <input id="estimate-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} className={inputCls} min={todayLocal} />
           </div>
@@ -264,7 +264,7 @@ export function EstimateYourTrip() {
                 disabled={!date || !time}
                 className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-lux-green px-4 py-2 text-sm font-bold text-white shadow-md shadow-lux-green/25 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isAR ? "المتابعة لتفاصيل الرحلة" : "Continue to Trip Details"}
+                {isAR ? "المتابعة لتفاصيل التوصيلة" : "Continue to Transfer Details"}
                 <ArrowRight className="h-4 w-4 rtl:rotate-180" />
               </button>
             </div>

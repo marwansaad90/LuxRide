@@ -2,6 +2,7 @@ import { memo, useEffect, useRef } from "react";
 import { SectionHeading } from "./Sections";
 import { useLang } from "./i18n";
 import {
+  SELECTED_TRIPADVISOR_REVIEW_COUNT,
   TRIPADVISOR_PAGE_URL,
   TRIPADVISOR_WIDGETS,
   type TripadvisorWidgetConfig,
@@ -18,13 +19,13 @@ let mountedTripadvisorWidgets = 0;
 
 function OfficialRatingMarkup() {
   return (
-    <div id="TA_cdsratingsonlynarrow470" className="TA_cdsratingsonlynarrow">
-      <ul id="bx4vQmDEZ" className="TA_links DNOhrQ">
-        <li id="dtxM18" className="FHvhKwqM">
+    <div id="TA_cdsratingsonlynarrow411" className="TA_cdsratingsonlynarrow">
+      <ul id="6lnrWKdO4D8" className="TA_links 0w64j5lco8U">
+        <li id="noMPpE3HQTk" className="AdrVwR">
           <a target="_blank" rel="noopener noreferrer" href={TRIPADVISOR_PAGE_URL}>
             <img
               src="https://www.tripadvisor.com/img/cdsi/img2/branding/v2/Tripadvisor_lockup_horizontal_secondary_registered-18034-2.svg"
-              alt="Tripadvisor"
+              alt="TripAdvisor"
             />
           </a>
         </li>
@@ -33,32 +34,15 @@ function OfficialRatingMarkup() {
   );
 }
 
-function OfficialReviewStarterMarkup() {
+function OfficialExcellentMarkup() {
   return (
-    <div id="TA_cdswritereviewnew935" className="TA_cdswritereviewnew">
-      <ul id="UAp0qD9lW" className="TA_links 9ACGKVQ5IA">
-        <li id="nyGdT00m" className="h5K33J8">
-          <a target="_blank" rel="noopener noreferrer" href="https://www.tripadvisor.com/">
-            <img
-              src="https://static.tacdn.com/img2/brand_refresh/Tripadvisor_lockup_horizontal_secondary_registered.svg"
-              alt="Tripadvisor"
-            />
-          </a>
-        </li>
-      </ul>
-    </div>
-  );
-}
-
-function OfficialRaveReviewsMarkup() {
-  return (
-    <div id="TA_cdsscrollingravenarrow782" className="TA_cdsscrollingravenarrow">
-      <ul id="LmZYIV0z7lo4" className="TA_links S7dZdrAkw">
-        <li id="XOjhynYyd" className="k6uNUW6jDv1E">
+    <div id="TA_excellent384" className="TA_excellent">
+      <ul id="1PjMSU" className="TA_links wbxcEDs6AS">
+        <li id="L9nzCG99" className="rFpF7AqG">
           <a target="_blank" rel="noopener noreferrer" href={TRIPADVISOR_PAGE_URL}>
             <img
-              src="https://static.tacdn.com/img2/brand_refresh/Tripadvisor_lockup_vertical.svg"
-              alt="Tripadvisor"
+              src="https://static.tacdn.com/img2/brand_refresh/Tripadvisor_lockup_horizontal_secondary_registered.svg"
+              alt="TripAdvisor"
               className="widEXCIMG"
               id="CDSWIDEXCLOGO"
             />
@@ -71,13 +55,13 @@ function OfficialRaveReviewsMarkup() {
 
 function OfficialSelfServeMarkup() {
   return (
-    <div id="TA_selfserveprop489" className="TA_selfserveprop">
-      <ul id="f1SxbHPg4yCq" className="TA_links 1SrP6U2R">
-        <li id="rA2BDKvs16" className="vzsW12">
+    <div id="TA_selfserveprop491" className="TA_selfserveprop">
+      <ul id="9TrJubwou1V" className="TA_links 3pgQkqHD">
+        <li id="AT1lavT5Wb" className="P7zbJRTqQon">
           <a target="_blank" rel="noopener noreferrer" href={TRIPADVISOR_PAGE_URL}>
             <img
               src="https://www.tripadvisor.com/img/cdsi/img2/branding/v2/Tripadvisor_lockup_horizontal_secondary_registered-11900-2.svg"
-              alt="Tripadvisor"
+              alt="TripAdvisor"
             />
           </a>
         </li>
@@ -88,9 +72,8 @@ function OfficialSelfServeMarkup() {
 
 function OfficialWidgetMarkup({ config }: { config: TripadvisorWidgetConfig }) {
   if (config.key === "rating") return <OfficialRatingMarkup />;
-  if (config.key === "reviewStarter") return <OfficialReviewStarterMarkup />;
-  if (config.key === "selfServe") return <OfficialSelfServeMarkup />;
-  return <OfficialRaveReviewsMarkup />;
+  if (config.key === "excellent") return <OfficialExcellentMarkup />;
+  return <OfficialSelfServeMarkup />;
 }
 
 const TripadvisorEmbed = memo(function TripadvisorEmbed({
@@ -189,7 +172,7 @@ const TripadvisorEmbed = memo(function TripadvisorEmbed({
   return (
     <div
       ref={wrapperRef}
-      className="tripadvisor-embed min-h-32 min-w-0 max-w-full overflow-x-auto pb-2"
+      className="tripadvisor-embed flex min-h-32 min-w-0 max-w-full items-center justify-center overflow-x-auto pb-2 text-center"
       dir="ltr"
     >
       <p ref={loaderRef} className="mb-3 text-sm text-neutral-500" role="status">
@@ -204,12 +187,14 @@ const TripadvisorEmbed = memo(function TripadvisorEmbed({
 function TripadvisorWidget({
   config,
   isAR,
+  large = false,
 }: {
   config: TripadvisorWidgetConfig;
   isAR: boolean;
+  large?: boolean;
 }) {
   return (
-    <article className="min-w-0 rounded-2xl border border-lux-charcoal/10 bg-white p-5 shadow-[0_10px_34px_rgba(15,22,35,0.06)]" data-tripadvisor-widget={config.key} aria-label={isAR ? "محتوى Tripadvisor الرسمي" : "Official Tripadvisor content"}>
+    <article className={`flex min-w-0 items-center justify-center rounded-2xl border border-lux-charcoal/10 bg-white p-5 shadow-[0_10px_34px_rgba(15,22,35,0.06)] ${large ? "min-h-[23rem]" : "min-h-[11rem]"}`} data-tripadvisor-widget={config.key} aria-label={isAR ? "محتوى Tripadvisor الرسمي" : "Official Tripadvisor content"}>
       <TripadvisorEmbed config={config} />
     </article>
   );
@@ -218,7 +203,7 @@ function TripadvisorWidget({
 export function Reviews() {
   const lang = useLang();
   const isAR = lang === "AR";
-  const [ratingWidget, reviewStarterWidget, raveReviewsWidget, selfServeWidget] = TRIPADVISOR_WIDGETS;
+  const [reviewsWidget, ratingWidget, excellentWidget] = TRIPADVISOR_WIDGETS;
 
   return (
     <section id="reviews" className="bg-white py-20 md:py-28">
@@ -233,13 +218,12 @@ export function Reviews() {
           }
         />
 
-        <div data-tripadvisor-row="primary" className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <TripadvisorWidget config={ratingWidget} isAR={isAR} />
-          <TripadvisorWidget config={reviewStarterWidget} isAR={isAR} />
-        </div>
-        <div data-tripadvisor-row="rave" className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <TripadvisorWidget config={raveReviewsWidget} isAR={isAR} />
-          <TripadvisorWidget config={selfServeWidget} isAR={isAR} />
+        <div data-tripadvisor-layout="latest-pdf" data-tripadvisor-selected-reviews={SELECTED_TRIPADVISOR_REVIEW_COUNT} className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(320px,0.85fr)]">
+          <TripadvisorWidget config={reviewsWidget} isAR={isAR} large />
+          <div className="grid gap-6">
+            <TripadvisorWidget config={ratingWidget} isAR={isAR} />
+            <TripadvisorWidget config={excellentWidget} isAR={isAR} />
+          </div>
         </div>
       </div>
     </section>

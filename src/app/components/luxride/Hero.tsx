@@ -9,10 +9,10 @@ export function Hero() {
   const lang = useLang();
   const isAR = lang === "AR";
   const trustBadges = [
-    { Icon: BadgeCheck, en: "100% Fixed Rates", ar: "أسعار محددة مسبقاً بدون رسوم خفية" },
-    { Icon: ShieldCheck, en: "Official Compliance", ar: "مرخص ومعتمد كاملاً من وزارة السياحة" },
-    { Icon: Plane, en: "Live Flight Tracking", ar: "متابعة حية لمواعيد الطيران بدون تكلفة انتظار" },
-    { Icon: CarFront, en: "Modern Fleet", ar: "أسطول حديث 2027 بتكييف مزدوج لراحة عائلتك" },
+    { Icon: BadgeCheck, en: "Fixed Rates", ar: "أسعار ثابتة" },
+    { Icon: ShieldCheck, en: "Official Compliance", ar: "امتثال رسمي" },
+    { Icon: Plane, en: "Live Flight Tracking", ar: "متابعة الطيران" },
+    { Icon: CarFront, en: "Modern Fleet", ar: "أسطول حديث" },
   ];
 
   function focusCalculator() {
@@ -40,24 +40,25 @@ export function Hero() {
             className="mt-4 text-balance drop-shadow-[0_3px_18px_rgba(0,0,0,0.35)]"
             style={{
               fontFamily: "var(--font-heading)",
-              fontSize: "clamp(2.45rem, 5vw, 4.75rem)",
+              fontSize: isAR ? "clamp(2.4rem, 4.4vw, 4.35rem)" : "clamp(2.45rem, 5vw, 4.75rem)",
               fontWeight: 800,
-              lineHeight: 0.98,
+              lineHeight: isAR ? 1.28 : 0.98,
+              maxWidth: isAR ? "14ch" : undefined,
             }}
           >
-            {isAR ? "ارتقِ بتجربة تنقلك في الغردقة والبحر الأحمر" : "Elevate Your Journey in Hurghada"}
+            {isAR ? "ارتقِ بتجربة تنقلك في الغردقة والبحر الأحمر" : "Elevate Your Transfer in Hurghada"}
           </h1>
 
           <p className="mt-3 max-w-xl text-pretty text-base leading-7 text-white/90 drop-shadow md:text-lg">
             {isAR
-              ? "خدمة ليموزين ونقل سياحي راقية بأسعار ثابتة 100% وأسطول حديث يُلبي كافة رحلاتك وتوصيلات المطار."
-              : "Premium limousine and tourist transfer services with 100% fixed prices and a modern fleet tailored for your airport transfers and private journeys."}
+              ? "خدمة ليموزين ونقل سياحي راقية بأسعار ثابتة 100% وأسطول حديث يُلبي كافة توصيلاتك وتوصيلات المطار."
+              : "Premium limousine and tourist transfer services with 100% fixed prices and a modern fleet tailored for your airport transfers and private transfers."}
           </p>
 
           <div className="mt-4 grid max-w-2xl grid-cols-1 gap-2 sm:grid-cols-2">
             {trustBadges.map(({ Icon, en, ar }) => (
-              <div key={en} className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/14 px-3 py-2 text-sm text-white shadow-sm backdrop-blur-md">
-                <Icon className="h-4 w-4 shrink-0 text-lux-gold" />
+              <div key={en} className="flex max-w-[17rem] items-center gap-2 rounded-xl border border-white/18 bg-white/10 px-3 py-2 text-sm text-white shadow-sm backdrop-blur-md">
+                <Icon className="h-4 w-4 shrink-0 text-[#F3D8B6]" />
                 <span className="leading-snug">{isAR ? ar : en}</span>
               </div>
             ))}

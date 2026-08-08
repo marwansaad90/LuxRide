@@ -2,15 +2,65 @@ import { ArrowRight, Clock } from "lucide-react";
 import { Link } from "react-router";
 import { PageShell } from "../components/luxride/PageShell";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import { ROUTES, availablePublicTripTypes, resolveTripType, tripRulesFor, type Route } from "../components/luxride/data";
+import { IMAGES, availablePublicTripTypes, findRoute, resolveTripType, tripRulesFor, type Route } from "../components/luxride/data";
 import { locationLabel, useLang, useL } from "../components/luxride/i18n";
 
-function groupRoutes(routes: Route[]) {
-  return [
-    { en: "Hurghada Airport transfers", ar: "تحويلات مطار الغردقة", routes: routes.filter((route) => route.id.startsWith("a")) },
-    { en: "City tours and nearby journeys", ar: "جولات المدينة والرحلات القريبة", routes: routes.filter((route) => route.id.startsWith("c")) },
-    { en: "Long-distance and historical journeys", ar: "الرحلات بعيدة المسافة والتاريخية", routes: routes.filter((route) => route.id.startsWith("l")) },
+interface DestinationGroup {
+  en: string;
+  ar: string;
+  routes: Route[];
+}
+
+function route(from: string, to: string): Route | null {
+  return findRoute(from, to) ?? null;
+}
+
+function destinationGroups(): DestinationGroup[] {
+  const groups: Array<{ en: string; ar: string; pairs: Array<[string, string]> }> = [
+    {
+      en: "Airport transfers",
+      ar: "توصيلات المطار",
+      pairs: [
+        ["Hurghada Airport", "Hurghada"],
+        ["Hurghada Airport", "Makadi Bay"],
+        ["Hurghada Airport", "El Gouna"],
+        ["Hurghada Airport", "Sahl Hasheesh"],
+        ["Hurghada Airport", "Village Road"],
+        ["Hurghada Airport", "Al Ahyaa"],
+      ],
+    },
+    {
+      en: "Hurghada area transfers",
+      ar: "توصيلات منطقة الغردقة",
+      pairs: [
+        ["Hurghada", "Village Road"],
+        ["Hurghada", "Makadi Bay"],
+        ["Hurghada", "El Gouna"],
+        ["Hurghada", "Sahl Hasheesh"],
+        ["Hurghada", "Soma Bay"],
+        ["Hurghada", "Al Ahyaa"],
+      ],
+    },
+    {
+      en: "City and long-distance transfers",
+      ar: "توصيلات المدن والمسافات الطويلة",
+      pairs: [
+        ["Hurghada", "Luxor"],
+        ["Hurghada", "Cairo"],
+        ["Hurghada", "Sharm El Sheikh"],
+        ["Hurghada", "Aswan"],
+        ["Hurghada", "Alexandria"],
+        ["Hurghada", "Marsa Alam"],
+        ["Hurghada", "Wadi El Gemal"],
+      ],
+    },
   ];
+
+  return groups.map((group) => ({
+    en: group.en,
+    ar: group.ar,
+    routes: group.pairs.map(([from, to]) => route(from, to)).filter((item): item is Route => Boolean(item)),
+  }));
 }
 
 export function DestinationsPage() {
@@ -20,40 +70,41 @@ export function DestinationsPage() {
   return (
     <PageShell
       crumb={L("Destinations", "الوجهات")}
-      title={L("Private Transfers Across Egypt", "رحلات خاصة عبر مصر")}
-      subtitle={L("Browse every currently priced LuxRide route. Applicable airport and travel-permit fees are shown before a booking request is sent.", "تصفّح جميع مسارات LuxRide المسعّرة حالياً. تُعرض رسوم المطار وتصريح السفر المطبقة قبل إرسال طلب الحجز.")}
+      title={L("Private Transfers Across Egypt", "توصيلات خاصة عبر مصر")}
+      subtitle={L("Browse a concise presentation of the most useful LuxRide transfer categories. The calculator still supports the confirmed workbook route map.", "تصفّح عرضاً مختصراً لأهم فئات توصيلات LuxRide. ما زالت الحاسبة تدعم خريطة المسارات المؤكدة من ملف الأسعار.")}
+      tone="brand"
     >
       <section className="bg-lux-beige py-16 md:py-24">
         <div className="mx-auto max-w-7xl space-y-14 px-4 md:px-8">
-          {groupRoutes(ROUTES).map((group) => (
+          {destinationGroups().map((group) => (
             <div key={group.en}>
-              <h2 className="mb-6 flex items-center gap-3 text-lux-charcoal" style={{ fontSize: "1.75rem", fontWeight: 700 }}><span className="h-px w-8 bg-lux-green" /> {L(group.en, group.ar)}</h2>
+              <h2 className="mb-6 flex items-center gap-3 text-lux-charcoal" style={{ fontSize: "1.75rem", fontWeight: 800 }}><span className="h-px w-8 bg-lux-green" /> {L(group.en, group.ar)}</h2>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {group.routes.map((route) => {
-                  const publicTrip = availablePublicTripTypes(route)[0];
-                  const trip = resolveTripType(route, publicTrip);
-                  const price = trip ? route.prices[trip] : undefined;
-                  const classification = tripRulesFor(route)?.roundTripMode;
-                  const classificationLabel = classification === "overday" ? L("Overday", "جولة يوم كامل") : classification === "overnight" ? L("Overnight", "مبيت") : "";
-                  const query = new URLSearchParams({ from: route.from, to: route.to, trip: publicTrip }).toString();
+                {group.routes.map((routeItem) => {
+                  const publicTrip = availablePublicTripTypes(routeItem)[0];
+                  const trip = resolveTripType(routeItem, publicTrip);
+                  const price = trip ? routeItem.prices[trip] : undefined;
+                  const classification = tripRulesFor(routeItem)?.roundTripMode;
+                  const classificationLabel = classification === "overday" ? L("Same-day return", "عودة في نفس اليوم") : classification === "overnight" ? L("Overnight", "مبيت") : "";
+                  const query = new URLSearchParams({ from: routeItem.from, to: routeItem.to, trip: publicTrip }).toString();
                   return (
-                    <article key={route.id} className="group overflow-hidden rounded-2xl bg-white shadow-[0_10px_40px_rgba(0,0,0,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)]">
-                      <div className="relative h-44 overflow-hidden">
-                        <ImageWithFallback loading="lazy" src={route.image} alt={`${locationLabel(lang, route.from)} — ${locationLabel(lang, route.to)}`} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <article key={routeItem.id} className="group overflow-hidden rounded-2xl bg-white shadow-[0_10px_40px_rgba(0,0,0,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)]">
+                      <div className="relative h-44 overflow-hidden bg-white">
+                        <ImageWithFallback loading="lazy" src={routeItem.image ?? IMAGES.hurghada} alt={`${locationLabel(lang, routeItem.from)} — ${locationLabel(lang, routeItem.to)}`} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                         <span className="absolute right-4 top-4 rounded-full bg-lux-green px-3 py-1 text-xs text-white">{L("from", "من")} €{price}</span>
                       </div>
                       <div className="p-6">
-                        <p className="text-xs uppercase tracking-wider text-lux-bronze">{locationLabel(lang, route.from)}</p>
-                        <h3 className="mt-1 text-lux-charcoal" style={{ fontSize: "1.2rem" }}>{locationLabel(lang, route.to)}</h3>
+                        <p className="text-xs uppercase tracking-wider text-lux-bronze">{locationLabel(lang, routeItem.from)}</p>
+                        <h3 className="mt-1 text-lux-charcoal" style={{ fontSize: "1.2rem", fontWeight: 800 }}>{locationLabel(lang, routeItem.to)}</h3>
                         <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-neutral-500">
-                          <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-lux-green" /> {route.duration}</span>
-                          {route.airport && <span className="rounded-full bg-lux-green/10 px-2 py-0.5 text-xs text-lux-green">+€2 {L("airport fee", "رسوم مطار")}</span>}
-                          {route.permit && <span className="rounded-full bg-[#CC9966]/15 px-2 py-0.5 text-xs text-[#8A5F36]">+ {L("travel permit", "تصريح سفر")}</span>}
-                          {publicTrip === "roundTrip" && classificationLabel && <span className="rounded-full bg-lux-green/10 px-2 py-0.5 text-xs font-medium text-lux-green">{L("Round Trip", "ذهاب وعودة")} · {classificationLabel}</span>}
+                          <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-lux-green" /> {routeItem.duration}</span>
+                          {routeItem.airport && <span className="rounded-full bg-lux-green/10 px-2 py-0.5 text-xs text-lux-green">+€2 {L("airport fee", "رسوم مطار")}</span>}
+                          {routeItem.permit && <span className="rounded-full bg-[#CC9966]/15 px-2 py-0.5 text-xs text-[#8A5F36]">+ {L("travel permit", "تصريح سفر")}</span>}
+                          {classificationLabel && <span className="rounded-full bg-lux-green/10 px-2 py-0.5 text-xs font-medium text-lux-green">{L("Round Trip", "ذهاب وعودة")} · {classificationLabel}</span>}
                         </div>
                         <div className="mt-5 flex gap-3">
                           <Link to={`/booking?${query}`} className="flex flex-1 items-center justify-center rounded-full bg-lux-green py-2.5 text-sm text-white transition-all hover:brightness-110">{L("Book Now", "احجز الآن")}</Link>
-                          <Link to={`/transfer-details?${query}`} className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-lux-charcoal/15 py-2.5 text-sm text-lux-charcoal transition-all hover:border-lux-green hover:text-lux-green">{L("View Transfer", "عرض الرحلة")} <ArrowRight className="h-4 w-4 rtl:rotate-180" /></Link>
+                          <Link to={`/transfer-details?${query}`} className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-lux-charcoal/15 py-2.5 text-sm text-lux-charcoal transition-all hover:border-lux-green hover:text-lux-green">{L("View Transfer", "عرض التوصيلة")} <ArrowRight className="h-4 w-4 rtl:rotate-180" /></Link>
                         </div>
                       </div>
                     </article>

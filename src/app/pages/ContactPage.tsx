@@ -1,12 +1,13 @@
 import { useState, type FormEvent } from "react";
-import { Facebook, Instagram, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { PageShell } from "../components/luxride/PageShell";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
-import { FACEBOOK_URL, INSTAGRAM_URL, PHONE_DISPLAY, TRIPADVISOR_URL, whatsappLink } from "../components/luxride/data";
+import { EMAIL, FACEBOOK_URL, INSTAGRAM_URL, PHONE_DISPLAY, TRIPADVISOR_URL, whatsappLink } from "../components/luxride/data";
 import { useL } from "../components/luxride/i18n";
 import { WhatsAppIcon } from "../components/luxride/WhatsAppIcon";
+import { SOCIAL_LOGOS, SocialLogoCircle, TripadvisorLogoCircle } from "../components/luxride/SocialBrandIcons";
 
 export function ContactPage() {
   const L = useL();
@@ -36,26 +37,31 @@ export function ContactPage() {
       title={L("Get in Touch", "تواصل معنا")}
       subtitle={L(
         "Plan your transfer with LuxRide by phone or WhatsApp.",
-        "خطّط لرحلتك مع LuxRide عبر الهاتف أو واتساب.",
+        "خطّط لتوصيلتك مع LuxRide عبر الهاتف أو واتساب.",
       )}
+      tone="brand"
     >
       <section className="bg-lux-beige py-16 md:py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
             <a href={`tel:${PHONE_DISPLAY.replace(/\s/g, "")}`} className="flex items-center gap-4 rounded-2xl border border-lux-charcoal/8 bg-white p-6 transition-all hover:border-lux-green hover:shadow-lg">
               <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-lux-green/12"><Phone className="h-6 w-6 text-lux-green" /></span>
               <span><span className="block text-sm text-neutral-500">{L("Phone", "الهاتف")}</span><span className="text-lux-charcoal" dir="ltr">{PHONE_DISPLAY}</span></span>
             </a>
-            <a href={whatsappLink("Hello LuxRide!")} target="_blank" rel="noreferrer" className="flex items-center gap-4 rounded-2xl border border-lux-charcoal/8 bg-white p-6 transition-all hover:border-lux-green hover:shadow-lg">
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-lux-green/12"><WhatsAppIcon className="h-6 w-6 text-lux-green" /></span>
+            <a href={`mailto:${EMAIL}`} className="flex items-center gap-4 rounded-2xl border border-lux-charcoal/8 bg-white p-6 transition-all hover:border-lux-green hover:shadow-lg">
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-lux-green/10"><Mail className="h-6 w-6 text-lux-green" /></span>
+              <span><span className="block text-sm text-neutral-500">{L("Email", "البريد الإلكتروني")}</span><span className="text-lux-charcoal" dir="ltr">{EMAIL}</span></span>
+            </a>
+            <a href={whatsappLink("Hello LuxRide!")} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 rounded-2xl border border-lux-charcoal/8 bg-white p-6 transition-all hover:border-lux-green hover:shadow-lg">
+              <SocialLogoCircle src={SOCIAL_LOGOS.whatsapp} alt="WhatsApp" />
               <span><span className="block text-sm text-neutral-500">WhatsApp</span><span className="text-lux-charcoal" dir="ltr">{PHONE_DISPLAY}</span></span>
             </a>
             <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 rounded-2xl border border-lux-charcoal/8 bg-white p-6 transition-all hover:border-[#1877f2] hover:shadow-lg" aria-label="LuxRide on Facebook">
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1877f2]/10"><Facebook className="h-5 w-5 text-[#1877f2]" /></span>
+              <SocialLogoCircle src={SOCIAL_LOGOS.facebook} alt="Facebook" />
               <span><span className="block text-sm text-neutral-500">Facebook</span><span className="text-lux-charcoal">luxride.eg</span></span>
             </a>
             <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 rounded-2xl border border-lux-charcoal/8 bg-white p-6 transition-all hover:border-[#e4405f] hover:shadow-lg" aria-label="LuxRide on Instagram">
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#e4405f]/10"><Instagram className="h-5 w-5 text-[#e4405f]" /></span>
+              <SocialLogoCircle src={SOCIAL_LOGOS.instagram} alt="Instagram" />
               <span><span className="block text-sm text-neutral-500">Instagram</span><span className="text-lux-charcoal">luxride.eg</span></span>
             </a>
           </div>
@@ -91,7 +97,9 @@ export function ContactPage() {
               <div className="rounded-2xl border border-lux-charcoal/8 bg-white p-7">
                 <h3 className="text-lux-charcoal" style={{ fontSize: "1.15rem" }}>Tripadvisor</h3>
                 <p className="mt-2 text-sm text-neutral-500">{L("View LuxRide's official Tripadvisor page.", "اطّلع على صفحة LuxRide الرسمية على Tripadvisor.")}</p>
-                <a href={TRIPADVISOR_URL} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex rounded-full border border-[#00aa6c]/50 px-5 py-2.5 text-sm text-[#007f51] transition-all hover:bg-[#00aa6c] hover:text-white">Tripadvisor</a>
+                <a href={TRIPADVISOR_URL} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-3 rounded-full bg-lux-beige px-4 py-2.5 text-sm text-lux-charcoal transition-all hover:bg-white">
+                  <TripadvisorLogoCircle /> Tripadvisor
+                </a>
               </div>
             </div>
           </div>

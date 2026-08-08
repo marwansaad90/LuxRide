@@ -1,8 +1,9 @@
-import { Facebook, Instagram, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router";
 import { LuxRideLogo } from "./LuxRideLogo";
 import {
   FACEBOOK_URL,
+  EMAIL,
   INSTAGRAM_URL,
   PHONE_DISPLAY,
   TRIPADVISOR_URL,
@@ -11,11 +12,13 @@ import {
 import { useLang, t, POPULAR_DEST_LABELS } from "./i18n";
 import type { TKey } from "./i18n";
 import { WhatsAppIcon } from "./WhatsAppIcon";
+import { SOCIAL_LOGOS, SocialLogoCircle, TripadvisorLogoCircle } from "./SocialBrandIcons";
 
 const QUICK_LINKS: Array<{ key: TKey; to: string }> = [
   { key: "nav_home", to: "/" },
   { key: "nav_transfers", to: "/#transfers" },
   { key: "nav_destinations", to: "/destinations" },
+  { key: "nav_featured", to: "/featured-transfers" },
   { key: "nav_about", to: "/about" },
   { key: "nav_fleet", to: "/fleet" },
   { key: "nav_booking", to: "/booking" },
@@ -38,14 +41,14 @@ export function Footer() {
             {t(lang, "footer_desc")}
           </p>
           <div className="mt-5 flex gap-3">
-            <a href={TRIPADVISOR_URL} target="_blank" rel="noopener noreferrer" className="flex h-10 items-center gap-2 rounded-full border border-[#00aa6c]/50 px-4 text-xs text-[#00aa6c] transition-all hover:bg-[#00aa6c] hover:text-white">
-              Tripadvisor
+            <a href={TRIPADVISOR_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Tripadvisor" className="transition-transform hover:-translate-y-0.5">
+              <TripadvisorLogoCircle />
             </a>
-            <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Facebook" className="flex h-10 w-10 items-center justify-center rounded-full border border-lux-beige/20 text-lux-beige transition-all hover:border-[#1877f2] hover:bg-[#1877f2] hover:text-white">
-              <Facebook className="h-4 w-4" />
+            <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Facebook" className="transition-transform hover:-translate-y-0.5">
+              <SocialLogoCircle src={SOCIAL_LOGOS.facebook} alt="Facebook" />
             </a>
-            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Instagram" className="flex h-10 w-10 items-center justify-center rounded-full border border-lux-beige/20 text-lux-beige transition-all hover:border-[#e4405f] hover:bg-[#e4405f] hover:text-white">
-              <Instagram className="h-4 w-4" />
+            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Instagram" className="transition-transform hover:-translate-y-0.5">
+              <SocialLogoCircle src={SOCIAL_LOGOS.instagram} alt="Instagram" />
             </a>
           </div>
         </div>
@@ -82,6 +85,10 @@ export function Footer() {
           <ul className="mt-4 space-y-3 text-sm">
             <li className="flex items-start gap-3">
               <MapPin className="mt-0.5 h-4 w-4 text-lux-gold" /> {t(lang, "footer_addr")}
+            </li>
+            <li className="flex items-center gap-3">
+              <Mail className="h-4 w-4 text-lux-gold" />
+              <a href={`mailto:${EMAIL}`} className="hover:text-lux-gold">{EMAIL}</a>
             </li>
             <li className="flex items-center gap-3">
               <Phone className="h-4 w-4 text-lux-gold" />

@@ -8,35 +8,38 @@ export function PageShell({
   subtitle,
   crumb,
   children,
+  tone = "dark",
 }: {
   title: string;
   subtitle?: string;
   crumb: string;
   children: ReactNode;
+  tone?: "dark" | "brand";
 }) {
   const lang = useLang();
+  const isBrand = tone === "brand";
 
   return (
     <>
       {/* Page hero band — clears the fixed header */}
-      <section className="relative overflow-hidden bg-lux-dark pt-28 pb-14 md:pt-32 md:pb-16">
-        <div className="absolute inset-0 bg-gradient-to-b from-lux-green/10 to-transparent" />
+      <section className={`relative overflow-hidden pt-28 pb-14 md:pt-32 md:pb-16 ${isBrand ? "bg-[#F6EFE6]" : "bg-lux-dark"}`}>
+        <div className={`absolute inset-0 ${isBrand ? "bg-[radial-gradient(circle_at_top_left,rgba(204,153,102,0.24),transparent_38%),linear-gradient(180deg,rgba(0,107,92,0.08),transparent)]" : "bg-gradient-to-b from-lux-green/10 to-transparent"}`} />
         <div className="relative mx-auto max-w-7xl px-4 md:px-8">
-          <nav className="flex items-center gap-1.5 text-xs text-lux-beige/60">
+          <nav className={`flex items-center gap-1.5 text-xs ${isBrand ? "text-lux-charcoal/60" : "text-lux-beige/60"}`}>
             <Link to="/" className="flex items-center gap-1 transition-colors hover:text-lux-green">
               <Home className="h-3.5 w-3.5" /> {lang === "AR" ? "الرئيسية" : "Home"}
             </Link>
             <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
-            <span className="text-lux-beige/85">{crumb}</span>
+            <span className={isBrand ? "text-lux-charcoal/85" : "text-lux-beige/85"}>{crumb}</span>
           </nav>
           <h1
-            className="mt-4 text-lux-beige"
+            className={`mt-4 ${isBrand ? "text-lux-charcoal" : "text-lux-beige"}`}
             style={{ fontSize: "clamp(2rem, 5vw, 3.25rem)", fontWeight: 700, lineHeight: 1.1 }}
           >
             {title}
           </h1>
           {subtitle && (
-            <p className="mt-4 max-w-2xl text-lux-beige/75" style={{ lineHeight: 1.6 }}>
+            <p className={`mt-4 max-w-2xl ${isBrand ? "text-lux-charcoal/75" : "text-lux-beige/75"}`} style={{ lineHeight: 1.6 }}>
               {subtitle}
             </p>
           )}

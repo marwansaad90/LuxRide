@@ -117,7 +117,7 @@ export function BookingPage() {
   useEffect(() => {
     if (route && !supportedTrips.includes(publicTrip)) {
       setPublicTrip(supportedTrips[0] ?? "oneWay");
-      setTripNotice(isAR ? "تم تحديث اختيار الرحلة حسب المسار المحدد." : "Trip choice was updated for the selected route.");
+      setTripNotice(isAR ? "تم تحديث اختيار التوصيلة حسب المسار المحدد." : "Transfer choice was updated for the selected route.");
     }
   }, [isAR, publicTrip, route, supportedTrips]);
 
@@ -177,12 +177,12 @@ export function BookingPage() {
   const labelCls = "block text-sm font-medium text-gray-700 mb-1.5";
 
   const tripTypes: { id: PublicTripType; label: string; desc: string }[] = [
-    { id: "oneWay", label: isAR ? "ذهاب فقط" : "One Way", desc: isAR ? "رحلة واحدة" : "Single direction" },
-    { id: "roundTrip", label: isAR ? "ذهاب وعودة" : "Round Trip", desc: isAR ? "عودة حسب تصنيف المسار" : "Return journey by route rule" },
+    { id: "oneWay", label: isAR ? "ذهاب فقط" : "One Way", desc: isAR ? "توصيلة واحدة" : "Single transfer" },
+    { id: "roundTrip", label: isAR ? "ذهاب وعودة" : "Round Trip", desc: isAR ? "عودة حسب تصنيف المسار" : "Return transfer by route rule" },
   ];
 
   const stepLabels: Record<Step, string> = {
-    1: isAR ? "قدّر رحلتك" : "Estimate Your Trip",
+    1: isAR ? "قدّر توصيلتك" : "Estimate Your Trip",
     2: isAR ? "بياناتك" : "Your Details",
     3: isAR ? "المراجعة والإرسال" : "Review & Send",
   };
@@ -196,7 +196,7 @@ export function BookingPage() {
             className="text-white"
             style={{ fontFamily: hFamily, fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800 }}
           >
-            {isAR ? "احجز رحلتك" : "Book Your Transfer"}
+            {isAR ? "احجز توصيلة" : "Book Your Transfer"}
           </h1>
           <p className="mt-2 text-white/80">
             {isAR ? "أسعار ثابتة · بدون رسوم خفية" : "Fixed prices · No hidden fees"}
@@ -247,12 +247,12 @@ export function BookingPage() {
           <div className="space-y-6">
             <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100 md:p-8">
               <h2 className="text-lux-charcoal mb-6" style={{ fontFamily: hFamily, fontSize: "1.4rem", fontWeight: 700 }}>
-                {isAR ? "قدّر رحلتك" : "Estimate Your Trip"}
+                {isAR ? "قدّر توصيلتك" : "Estimate Your Trip"}
               </h2>
 
-              {/* Trip type */}
+              {/* Transfer type */}
               <div className="mb-6">
-                <label className={labelCls}>{isAR ? "نوع الرحلة" : "Trip Type"}</label>
+                <label className={labelCls}>{isAR ? "نوع التوصيلة" : "Transfer Type"}</label>
                 <div className="grid grid-cols-2 gap-3">
                   {tripTypes.map((tt) => (
                     <button
@@ -279,7 +279,7 @@ export function BookingPage() {
                 </div>
                 {publicTrip === "roundTrip" && tripClassification && (
                   <p className="mt-3 rounded-lg border border-lux-green/20 bg-lux-green/5 px-3 py-2 text-sm font-medium text-lux-charcoal">
-                    {isAR ? `تصنيف الرحلة: ${tripClassification}` : `Trip classification: ${tripClassification}`}
+                    {isAR ? `تصنيف المسار: ${tripClassification}` : `Route classification: ${tripClassification}`}
                   </p>
                 )}
                 {tripNotice && (
@@ -499,9 +499,9 @@ export function BookingPage() {
               </h2>
 
               {/* Trip summary */}
-              <ReviewSection title={isAR ? "تفاصيل الرحلة" : "Trip Details"} hFamily={hFamily}>
-                <ReviewRow label={isAR ? "نوع الرحلة" : "Trip Type"} value={tripLabel} />
-                {tripClassification && <ReviewRow label={isAR ? "تصنيف الرحلة" : "Trip classification"} value={tripClassification} />}
+              <ReviewSection title={isAR ? "تفاصيل التوصيلة" : "Transfer Details"} hFamily={hFamily}>
+                <ReviewRow label={isAR ? "نوع التوصيلة" : "Transfer Type"} value={tripLabel} />
+                {tripClassification && <ReviewRow label={isAR ? "تصنيف المسار" : "Route classification"} value={tripClassification} />}
                 <ReviewRow label={isAR ? "مسار" : "Route"} value={`${locationLabel(lang, from)} → ${locationLabel(lang, to)}`} />
                 <ReviewRow label={isAR ? "المغادرة" : "Departure"} value={`${date} at ${time}`} />
                 {needsReturn && <ReviewRow label={isAR ? "العودة" : "Return"} value={`${returnDate || "-"} at ${returnTime || "-"}`} />}

@@ -32,8 +32,8 @@ export function BookingSuccessPage() {
   }
 
   const summary = [
-    { k: L("Trip type", "نوع الرحلة"), v: booking.tripLabel },
-    ...(booking.tripClassification ? [{ k: L("Trip classification", "تصنيف الرحلة"), v: booking.tripClassification }] : []),
+    { k: L("Transfer type", "نوع التوصيلة"), v: booking.tripLabel },
+    ...(booking.tripClassification ? [{ k: L("Route classification", "تصنيف المسار"), v: booking.tripClassification }] : []),
     { k: L("Route", "المسار"), v: booking.route },
     { k: L("Vehicle", "السيارة"), v: `${booking.vehicleName} (${booking.vehicleCategory})` },
     { k: L("Departure", "المغادرة"), v: booking.departure },

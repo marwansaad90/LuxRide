@@ -24,9 +24,9 @@ export function TransferDetailsPage() {
     const trip = resolveTripType(route, publicTrip)!;
     const classification =
       publicTrip === "roundTrip" && routeRules?.roundTripMode === "overday"
-        ? L("Trip classification: Overday", "تصنيف الرحلة: جولة يوم كامل")
+        ? L("Route classification: Overday", "تصنيف المسار: جولة يوم كامل")
         : publicTrip === "roundTrip" && routeRules?.roundTripMode === "overnight"
-        ? L("Trip classification: Overnight", "تصنيف الرحلة: مبيت")
+        ? L("Route classification: Overnight", "تصنيف المسار: مبيت")
         : "";
     return {
       trip: publicTrip,
@@ -40,11 +40,11 @@ export function TransferDetailsPage() {
 
   return (
     <PageShell
-      crumb={L("Transfer Details", "تفاصيل الرحلة")}
-      title={L(`${route.from} → ${route.to} Private Transfer`, `رحلة خاصة: ${fromLabel} ← ${toLabel}`)}
+      crumb={L("Transfer Details", "تفاصيل التوصيلة")}
+      title={L(`${route.from} → ${route.to} Private Transfer`, `توصيلة خاصة: ${fromLabel} ← ${toLabel}`)}
       subtitle={L(
         `A comfortable private transfer from ${route.from} to ${route.to}, with every applicable fee shown before you send the request.`,
-        `رحلة خاصة مريحة من ${fromLabel} إلى ${toLabel}، مع عرض كل الرسوم المطبقة قبل إرسال الطلب.`,
+        `توصيلة خاصة مريحة من ${fromLabel} إلى ${toLabel}، مع عرض كل الرسوم المطبقة قبل إرسال الطلب.`,
       )}
     >
       <section className="bg-lux-beige py-16 md:py-24">
@@ -59,11 +59,11 @@ export function TransferDetailsPage() {
               <span className="flex items-center gap-2"><MapPin className="h-4 w-4 text-lux-green" /> {fromLabel} — {toLabel}</span>
             </div>
 
-            <h2 className="mt-8 text-lux-charcoal" style={{ fontSize: "1.6rem", fontWeight: 700 }}>{L("About this transfer", "عن هذه الرحلة")}</h2>
+            <h2 className="mt-8 text-lux-charcoal" style={{ fontSize: "1.6rem", fontWeight: 700 }}>{L("About this transfer", "عن هذه التوصيلة")}</h2>
             <p className="mt-3 text-neutral-600" style={{ lineHeight: 1.7 }}>
               {L(
                 `Travel in a private, air-conditioned ${xpander.name} with a professional English-speaking driver. Bottled water, WiFi, and front and rear USB Type-A/C charging are included.`,
-                `سافر في سيارة ${xpander.name} خاصة ومكيفة مع سائق محترف يتحدث الإنجليزية. تشمل الرحلة مياه معبأة وواي فاي وشحن USB نوع A/C أمامياً وخلفياً.`,
+                `تنقّل في سيارة ${xpander.name} خاصة ومكيفة مع سائق محترف يتحدث الإنجليزية. تشمل التوصيلة مياه معبأة وواي فاي وشحن USB نوع A/C أمامياً وخلفياً.`,
               )}
             </p>
 
@@ -71,8 +71,8 @@ export function TransferDetailsPage() {
               <div className="mt-6 flex items-start gap-2 rounded-xl border border-lux-orange/40 bg-lux-orange/10 p-4 text-sm text-lux-charcoal">
                 <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-lux-orange" />
                 <span>{L(
-                  "This journey requires an official tourism and security travel permit. A permit fee applies once per booking: €20 for Sedan/MPV, €30 for Minivan.",
-                  "تتطلب هذه الرحلة تصريح سفر سياحي وأمني رسمي. تُطبّق رسوم تصريح مرة واحدة لكل حجز: €20 للسيدان/MPV و€30 للميني فان.",
+                  "This transfer requires an official tourism and security travel permit. A permit fee applies once per booking: €20 for Sedan/MPV, €30 for Minivan.",
+                  "تتطلب هذه التوصيلة تصريح سفر سياحي وأمني رسمي. تُطبّق رسوم تصريح مرة واحدة لكل حجز: €20 للسيدان/MPV و€30 للميني فان.",
                 )}</span>
               </div>
             )}
@@ -92,7 +92,7 @@ export function TransferDetailsPage() {
               <div className="border-t border-lux-charcoal/10 bg-lux-beige/40 p-5 text-sm text-neutral-500">
                 {route.airport && <>+ {L("Airport operating surcharge", "رسوم تشغيل المطار")} €2 · </>}
                 {route.permit && <>+ {L("Travel permit", "تصريح السفر")} €{PERMIT_FEE.mpv} (MPV) · </>}
-                {L("Round Trip uses the approved route-specific price and is never doubled from One Way.", "رحلة الذهاب والعودة تستخدم السعر المعتمد للمسار ولا تُضاعف أبداً من سعر الذهاب.")}
+                {L("Round Trip uses the approved fixed route price shown before booking.", "تستخدم الذهاب والعودة السعر الثابت المعتمد للمسار والمعروض قبل الحجز.")}
               </div>
             </div>
           </div>
@@ -109,7 +109,7 @@ export function TransferDetailsPage() {
                 ))}
               </ul>
               <Link to={`/booking?${bookingQuery}`} className="mt-6 flex w-full items-center justify-center rounded-full bg-lux-green py-3 text-sm text-white transition-all hover:brightness-110">
-                {L("Book This Transfer", "احجز هذه الرحلة")}
+                {L("Book This Transfer", "احجز هذه التوصيلة")}
               </Link>
               {route.airport && <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-neutral-500"><PlaneLanding className="h-3.5 w-3.5 text-lux-green" /> {L("Airport arrivals include flight monitoring", "وصول المطار يشمل متابعة الرحلة")}</p>}
             </div>
