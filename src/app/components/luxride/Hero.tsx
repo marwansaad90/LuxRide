@@ -46,7 +46,7 @@ export function Hero() {
               maxWidth: isAR ? "14ch" : undefined,
             }}
           >
-            {isAR ? "ارتقِ بتجربة تنقلك في الغردقة والبحر الأحمر" : "Elevate Your Transfer in Hurghada"}
+            {isAR ? "ارتقِ بتجربة تنقلك في الغردقة والبحر الأحمر" : "Elevate Your Journey in Hurghada"}
           </h1>
 
           <p className="mt-3 max-w-xl text-pretty text-base leading-7 text-white/90 drop-shadow md:text-lg">
