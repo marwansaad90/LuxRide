@@ -16,7 +16,6 @@ import elGounaImg from "../../../assets/destinations/el-gouna-transfer.webp";
 import makadiBayImg from "../../../assets/destinations/makadi-bay-transfer.webp";
 import aswanImg from "../../../assets/destinations/aswan-private-transfer.webp";
 import somaBayImg from "../../../assets/destinations/soma-bay-transfer.webp";
-import sharmElSheikhImg from "../../../assets/destinations/sharm-el-sheikh-transfer.webp";
 import { WORKBOOK_PRICE_LIST_META, WORKBOOK_PRICE_LIST_ROWS, type WorkbookDraftStatus, type WorkbookRouteRow } from "./workbookRoutes";
 
 export const VEHICLE_IMAGES = {
@@ -46,7 +45,8 @@ export const IMAGES = {
   cairo: cairoPyramidsImg,
   alexandria:
     "https://images.unsplash.com/photo-1682090500311-9e57a5a57390?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  sharm: sharmElSheikhImg,
+  sharm:
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Sharm_El_Sheikh._Naama_Bay..jpg/1280px-Sharm_El_Sheikh._Naama_Bay..jpg",
   wadiElGemal:
     "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   marsaAlam: marsaAlamImg,
@@ -58,6 +58,33 @@ export const IMAGES = {
   minivan:
     "https://images.unsplash.com/photo-1770749431157-f1f4b74945fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
 } as const;
+
+export const ABOUT_IMAGE_SOURCE_FILE = "LuxRide.gif" as const;
+
+export const DESTINATION_IMAGE_SOURCE_FILES = {
+  airport: "images.jpg",
+  makadi: "Makadi-Bay.jpg",
+  villageRoad: "Village-Road.jpg",
+  elGouna: "Elguna.jpg",
+  soma: "Soma-Bay.jpg",
+  marsaAlam: "Marsa-Allam.jpg",
+  marsaAlamSecondary: "Marsa-Allam2.jpg",
+  cairo: "Pyramids.jpg",
+  aswan: "Aswan2.jpg",
+  luxor: "Luxor.jpg",
+  luxorSecondary: "Luxor2.jpg",
+  sharm: "Wikimedia Commons: Sharm_El_Sheikh._Naama_Bay..jpg",
+  wadiElGemal: "Existing external fallback; final client-approved image still required",
+} as const;
+
+export const SUPERSEDED_SOURCE_IMAGE_FILES = [
+  "04-Robin-Utrecht-1.jpg",
+  "507879331.jpg",
+  "images-1.jpg",
+  "images-2.jpg",
+  "pic-panorama-bungalows-resort-el-gouna-hurghada-55.jpg",
+  "LuxRide.jpg",
+] as const;
 
 // ─── Contact (real business details) ─────────────────────────────────────────
 export const WHATSAPP_NUMBER = "201013554009"; // +20 101 355 4009

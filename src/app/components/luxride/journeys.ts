@@ -30,7 +30,7 @@ export const FEATURED_TRANSFERS: FeaturedTransfer[] = [
   {
     id: "hurghada-luxor-unforgettable-day-trip",
     createdAt: "2026-08-09",
-    images: [luxorDayTrip1, luxorDayTrip2, luxorDayTrip3, luxorDayTrip4, luxorDayTrip5],
+    images: [luxorDayTrip3, luxorDayTrip1, luxorDayTrip5, luxorDayTrip2, luxorDayTrip4],
     routeType: { EN: "Round Trip Transfer", AR: "توصيلة ذهاب وعودة" },
     title: {
       EN: "A Featured Journey: An Unforgettable Day Trip to Luxor",

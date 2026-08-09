@@ -34,8 +34,8 @@ export function AboutPage() {
     >
       <section className="bg-lux-beige py-16 md:py-24" aria-labelledby="about-introduction">
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-4 md:px-8 lg:grid-cols-2">
-          <div className="overflow-hidden rounded-3xl border border-white/70 bg-white p-2 shadow-[0_20px_60px_rgba(15,22,35,0.10)]">
-            <ImageWithFallback loading="lazy" src={IMAGES.aboutTransfer} alt={L("LuxRide private transfer pickup at a Hurghada hotel", "استلام توصيلة LuxRide خاصة عند فندق في الغردقة")} className="h-[420px] w-full rounded-2xl object-cover" />
+          <div className="aspect-[4/3] overflow-hidden rounded-3xl border border-white/70 bg-white p-2 shadow-[0_20px_60px_rgba(15,22,35,0.10)]">
+            <ImageWithFallback loading="lazy" src={IMAGES.aboutTransfer} alt={L("LuxRide private transfer pickup at a Hurghada hotel", "استلام توصيلة LuxRide خاصة عند فندق في الغردقة")} className="h-full w-full rounded-2xl object-cover object-center" />
           </div>
           <div>
             <h2 id="about-introduction" className="text-lux-charcoal" style={{ fontSize: "clamp(1.75rem,3vw,2.5rem)", fontWeight: 800, lineHeight: 1.12 }}>{L("Premium private transportation", "نقل خاص متميز")}</h2>

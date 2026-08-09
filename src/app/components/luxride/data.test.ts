@@ -5,7 +5,9 @@ import { fileURLToPath } from "node:url";
 import {
   ACTIVE_FLEET,
   AIRPORT_SURCHARGE,
+  ABOUT_IMAGE_SOURCE_FILE,
   CLIENT_REVIEW_ENABLE_ALL_VEHICLES,
+  DESTINATION_IMAGE_SOURCE_FILES,
   DRAFT_ROUTE_REFERENCES,
   EMAIL,
   FACEBOOK_URL,
@@ -16,6 +18,7 @@ import {
   PRODUCTION_ACTIVE_FLEET,
   ROUTES,
   SELECTABLE_FLEET,
+  SUPERSEDED_SOURCE_IMAGE_FILES,
   WORKBOOK_PRICE_LIST_META,
   availablePublicTripTypes,
   computePrice,
@@ -184,7 +187,7 @@ describe("vehicle and booking validation", () => {
     expect(IMAGES.luxor).toContain("luxor-private-transfer.webp");
     expect(IMAGES.aswan).toContain("aswan-private-transfer.webp");
     expect(IMAGES.cairo).toContain("cairo-pyramids-transfer.webp");
-    expect(IMAGES.sharm).toContain("sharm-el-sheikh-transfer.webp");
+    expect(IMAGES.sharm).toContain("Sharm_El_Sheikh._Naama_Bay..jpg");
     expect(new Set([IMAGES.luxor, IMAGES.aswan, IMAGES.cairo, IMAGES.alexandria, IMAGES.sharm]).size).toBe(5);
   });
 
@@ -265,12 +268,49 @@ describe("latest desktop client-review integration", () => {
 
   it("keeps Luxor as the first experience with the five supplied LuxRide gallery images", () => {
     const [first] = newestFeaturedTransfers();
+    const journeySource = readSource("./journeys.ts");
     expect(first.id).toBe("hurghada-luxor-unforgettable-day-trip");
     expect(first.title.EN).toBe("A Featured Journey: An Unforgettable Day Trip to Luxor");
     expect(first.booking).toEqual({ from: "Hurghada", to: "Luxor", trip: "roundTrip" });
     expect(first.images).toHaveLength(5);
-    expect(first.images.every((image) => image.includes("luxor-day-trip-"))).toBe(true);
+    expect(first.images.map((image) => image.match(/luxor-day-trip-\d/)?.[0])).toEqual([
+      "luxor-day-trip-3",
+      "luxor-day-trip-1",
+      "luxor-day-trip-5",
+      "luxor-day-trip-2",
+      "luxor-day-trip-4",
+    ]);
+    expect(first.images).not.toContain(IMAGES.luxor);
+    expect(first.images).not.toContain(IMAGES.luxorDetail);
+    expect(journeySource).toContain("luxorDayTrip3, luxorDayTrip1, luxorDayTrip5, luxorDayTrip2, luxorDayTrip4");
     expect(first.description.EN).toContain("We’d love to share the story of a recent trip");
+  });
+
+  it("keeps the client-corrected image source mapping auditable", () => {
+    expect(ABOUT_IMAGE_SOURCE_FILE).toBe("LuxRide.gif");
+    expect(IMAGES.aboutTransfer).toContain("luxride-about-transfer.webp");
+    expect(DESTINATION_IMAGE_SOURCE_FILES).toMatchObject({
+      airport: "images.jpg",
+      makadi: "Makadi-Bay.jpg",
+      villageRoad: "Village-Road.jpg",
+      elGouna: "Elguna.jpg",
+      soma: "Soma-Bay.jpg",
+      marsaAlam: "Marsa-Allam.jpg",
+      marsaAlamSecondary: "Marsa-Allam2.jpg",
+      cairo: "Pyramids.jpg",
+      aswan: "Aswan2.jpg",
+      luxor: "Luxor.jpg",
+      luxorSecondary: "Luxor2.jpg",
+    });
+    const [firstTransfer] = POPULAR_TRANSFERS;
+    expect(firstTransfer.from).toBe("Hurghada");
+    expect(firstTransfer.to).toBe("Hurghada Airport");
+    expect(firstTransfer.displayFrom?.EN).toBe("Hurghada City");
+    expect(firstTransfer.image).toBe(IMAGES.airport);
+    const activeMapping = JSON.stringify({ IMAGES, DESTINATION_IMAGE_SOURCE_FILES });
+    for (const filename of SUPERSEDED_SOURCE_IMAGE_FILES) {
+      expect(activeMapping).not.toContain(filename);
+    }
   });
 
   it("uses the latest Tripadvisor widget IDs and selected 5-review reader option", () => {
