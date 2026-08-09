@@ -16,6 +16,7 @@ export function FleetPage() {
         "Choose the modern, air-conditioned vehicle that best fits your group and luggage.",
         "اختر السيارة الحديثة والمكيفة التي تناسب مجموعتك وأمتعتك.",
       )}
+      tone="brand"
     >
       <section className="bg-lux-beige py-16 md:py-24">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 md:px-8 lg:grid-cols-3">

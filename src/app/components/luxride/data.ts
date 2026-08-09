@@ -7,11 +7,11 @@ import hiacaImg from "../../../assets/vehicles/hiace.webp";
 import aboutTransferImg from "../../../assets/about/luxride-about-transfer.webp";
 import airportImg from "../../../assets/destinations/hurghada-airport-transfer.webp";
 import cityAirportTransferImg from "../../../assets/destinations/hurghada-city-airport-transfer.webp";
-import villageRoadImg from "../../../assets/destinations/village-road-client-transfer.webp";
-import cairoPyramidsImg from "../../../assets/destinations/cairo-client-destination.webp";
+import villageRoadImg from "../../../assets/destinations/village-road-transfer.webp";
+import cairoPyramidsImg from "../../../assets/destinations/cairo-pyramids-transfer.webp";
 import marsaAlamImg from "../../../assets/destinations/marsa-alam-transfer.webp";
 import marsaAlamBeachImg from "../../../assets/destinations/marsa-alam-beach-transfer.webp";
-import luxorImg from "../../../assets/destinations/luxor-client-destination.webp";
+import luxorImg from "../../../assets/destinations/luxor-private-transfer.webp";
 import luxorStatueImg from "../../../assets/destinations/luxor-statue-transfer.webp";
 import elGounaImg from "../../../assets/destinations/el-gouna-transfer.webp";
 import makadiBayImg from "../../../assets/destinations/makadi-bay-transfer.webp";
@@ -67,14 +67,14 @@ export const DESTINATION_IMAGE_SOURCE_FILES = {
   airport: "images.jpg",
   hurghadaCityAirportTransfer: "Airport.jpg",
   makadi: "Makadi-Bay.jpg",
-  villageRoad: "LuxRide.jpg",
+  villageRoad: "Village-Road.jpg",
   elGouna: "Elguna.jpg",
   soma: "Soma-Bay.jpg",
   marsaAlam: "Marsa-Allam.jpg",
   marsaAlamSecondary: "Marsa-Allam2.jpg",
-  cairo: "images-1.jpg",
+  cairo: "Pyramids.jpg",
   aswan: "Aswan2.jpg",
-  luxor: "images-2.jpg",
+  luxor: "Luxor.jpg",
   luxorSecondary: "Luxor2.jpg",
   sharm: "Wikimedia Commons: Sharm_El_Sheikh._Naama_Bay..jpg",
   wadiElGemal: "04-Robin-Utrecht-1.jpg",
@@ -82,7 +82,10 @@ export const DESTINATION_IMAGE_SOURCE_FILES = {
 
 export const SUPERSEDED_SOURCE_IMAGE_FILES = [
   "507879331.jpg",
+  "images-1.jpg",
+  "images-2.jpg",
   "pic-panorama-bungalows-resort-el-gouna-hurghada-55.jpg",
+  "LuxRide.jpg",
 ] as const;
 
 // ─── Contact (real business details) ─────────────────────────────────────────

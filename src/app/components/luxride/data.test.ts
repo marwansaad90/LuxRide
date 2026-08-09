@@ -185,10 +185,10 @@ describe("vehicle and booking validation", () => {
     expect(findRoute("Hurghada", "Sharm El Sheikh")?.image).toBe(IMAGES.sharm);
     expect(IMAGES.airport).toContain("hurghada-airport-transfer.webp");
     expect(IMAGES.cityAirportTransfer).toContain("hurghada-city-airport-transfer.webp");
-    expect(IMAGES.luxor).toContain("luxor-client-destination.webp");
+    expect(IMAGES.luxor).toContain("luxor-private-transfer.webp");
     expect(IMAGES.aswan).toContain("aswan-private-transfer.webp");
-    expect(IMAGES.cairo).toContain("cairo-client-destination.webp");
-    expect(IMAGES.villageRoad).toContain("village-road-client-transfer.webp");
+    expect(IMAGES.cairo).toContain("cairo-pyramids-transfer.webp");
+    expect(IMAGES.villageRoad).toContain("village-road-transfer.webp");
     expect(IMAGES.wadiElGemal).toContain("wadi-el-gemal-transfer.webp");
     expect(IMAGES.sharm).toContain("Sharm_El_Sheikh._Naama_Bay..jpg");
     expect(new Set([IMAGES.luxor, IMAGES.aswan, IMAGES.cairo, IMAGES.alexandria, IMAGES.sharm]).size).toBe(5);
@@ -234,6 +234,16 @@ describe("latest desktop client-review integration", () => {
     expect(routes).toContain('{ path: "experiences", Component: JourneysPage }');
     expect(routes).toContain('{ path: "featured-transfers", element: <Navigate to="/experiences" replace /> }');
     expect(routes).toContain('{ path: "journeys", element: <Navigate to="/experiences" replace /> }');
+  });
+
+  it("uses the shared branded inner-page header on client-requested pages", () => {
+    expect(readSource("../../pages/AboutPage.tsx")).toContain('tone="brand"');
+    expect(readSource("../../pages/FAQPage.tsx")).toContain('tone="brand"');
+    expect(readSource("../../pages/FleetPage.tsx")).toContain('tone="brand"');
+    expect(readSource("../../pages/BookingPage.tsx")).toContain('tone="brand"');
+    const pageShell = readSource("./PageShell.tsx");
+    expect(pageShell).toContain("bg-[#F6EFE6]");
+    expect(pageShell).toContain("radial-gradient(circle_at_top_left");
   });
 
   it("keeps homepage sections in the approved order with Unforgettable Experiences in place", () => {
@@ -296,14 +306,14 @@ describe("latest desktop client-review integration", () => {
       airport: "images.jpg",
       hurghadaCityAirportTransfer: "Airport.jpg",
       makadi: "Makadi-Bay.jpg",
-      villageRoad: "LuxRide.jpg",
+      villageRoad: "Village-Road.jpg",
       elGouna: "Elguna.jpg",
       soma: "Soma-Bay.jpg",
       marsaAlam: "Marsa-Allam.jpg",
       marsaAlamSecondary: "Marsa-Allam2.jpg",
-      cairo: "images-1.jpg",
+      cairo: "Pyramids.jpg",
       aswan: "Aswan2.jpg",
-      luxor: "images-2.jpg",
+      luxor: "Luxor.jpg",
       luxorSecondary: "Luxor2.jpg",
       wadiElGemal: "04-Robin-Utrecht-1.jpg",
     });

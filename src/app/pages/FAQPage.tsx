@@ -19,6 +19,7 @@ export function FAQPage() {
       crumb={L("FAQ", "الأسئلة الشائعة")}
       title={L("Frequently Asked Questions", "الأسئلة الشائعة")}
       subtitle={L("Everything you need to know about booking, pricing, permits and travelling with LuxRide.", "كل ما تحتاج معرفته عن الحجز والأسعار والتصاريح والسفر مع LuxRide.")}
+      tone="brand"
     >
       <section className="bg-lux-beige py-16 md:py-24">
         <div className="mx-auto max-w-3xl px-4 md:px-8">

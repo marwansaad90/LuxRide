@@ -29,6 +29,7 @@ import {
 } from "../components/luxride/data";
 import { addDays, formatEur, isValidReturn, normalizeReturnFields, readInitialBookingState } from "../components/luxride/bookingState";
 import { locationLabel, useLang } from "../components/luxride/i18n";
+import { PageShell } from "../components/luxride/PageShell";
 import { VehicleSegmentedSelector } from "../components/luxride/VehicleSegmentedSelector";
 import { WhatsAppIcon } from "../components/luxride/WhatsAppIcon";
 
@@ -188,22 +189,13 @@ export function BookingPage() {
   };
 
   return (
+    <PageShell
+      crumb={isAR ? "الحجز" : "Booking"}
+      title={isAR ? "احجز توصيلة" : "Book Your Transfer"}
+      subtitle={isAR ? "أسعار ثابتة · بدون رسوم خفية" : "Fixed prices · No hidden fees"}
+      tone="brand"
+    >
     <div className="min-h-screen bg-gray-50 pb-24">
-      {/* Page header */}
-      <div className="bg-lux-green py-10 pt-28 md:pt-32">
-        <div className="mx-auto max-w-3xl px-4 text-center md:px-8">
-          <h1
-            className="text-white"
-            style={{ fontFamily: hFamily, fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800 }}
-          >
-            {isAR ? "احجز توصيلة" : "Book Your Transfer"}
-          </h1>
-          <p className="mt-2 text-white/80">
-            {isAR ? "أسعار ثابتة · بدون رسوم خفية" : "Fixed prices · No hidden fees"}
-          </p>
-        </div>
-      </div>
-
       {/* Stepper */}
       <div className="bg-white border-b border-gray-100 shadow-sm sticky top-[calc(var(--header-h,72px))] z-20">
         <div className="mx-auto flex max-w-3xl px-4 md:px-8">
@@ -565,6 +557,7 @@ export function BookingPage() {
         )}
       </div>
     </div>
+    </PageShell>
   );
 }
 
