@@ -11,7 +11,6 @@ import {
 } from "./data";
 import { useLang, t, POPULAR_DEST_LABELS } from "./i18n";
 import type { TKey } from "./i18n";
-import { WhatsAppIcon } from "./WhatsAppIcon";
 import { SOCIAL_LOGOS, SocialLogoCircle, TripadvisorLogoCircle } from "./SocialBrandIcons";
 
 const QUICK_LINKS: Array<{ key: TKey; to: string }> = [
@@ -42,13 +41,13 @@ export function Footer() {
           </p>
           <div className="mt-5 flex gap-3">
             <a href={TRIPADVISOR_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Tripadvisor" className="transition-transform hover:-translate-y-0.5">
-              <TripadvisorLogoCircle />
+              <TripadvisorLogoCircle className="h-10 min-w-[8.5rem]" imgClassName="h-6 max-w-[7.75rem]" />
             </a>
             <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Facebook" className="transition-transform hover:-translate-y-0.5">
-              <SocialLogoCircle src={SOCIAL_LOGOS.facebook} alt="Facebook" />
+              <SocialLogoCircle src={SOCIAL_LOGOS.facebook} alt="Facebook" className="h-10 w-10 bg-transparent" />
             </a>
             <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Instagram" className="transition-transform hover:-translate-y-0.5">
-              <SocialLogoCircle src={SOCIAL_LOGOS.instagram} alt="Instagram" />
+              <SocialLogoCircle src={SOCIAL_LOGOS.instagram} alt="Instagram" className="h-10 w-10 bg-transparent" />
             </a>
           </div>
         </div>
@@ -95,7 +94,7 @@ export function Footer() {
               <a href={`tel:${PHONE_DISPLAY.replace(/\s/g, "")}`} className="hover:text-lux-gold">{PHONE_DISPLAY}</a>
             </li>
             <li className="flex items-center gap-3">
-              <WhatsAppIcon className="h-4 w-4 text-lux-gold" />
+              <img src={SOCIAL_LOGOS.whatsapp} alt="" className="h-4 w-4" loading="lazy" />
               <a href={whatsappLink("Hello LuxRide!")} target="_blank" rel="noreferrer" className="hover:text-lux-gold">
                 {t(lang, "footer_wa")}
               </a>

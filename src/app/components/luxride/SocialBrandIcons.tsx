@@ -21,16 +21,22 @@ export function SocialLogoCircle({
   className?: string;
 }) {
   return (
-    <span className={`flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-black/5 ${className}`}>
-      <img src={src} alt={alt} className="max-h-6 max-w-6 object-contain" loading="lazy" />
+    <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-transparent ${className}`}>
+      <img src={src} alt={alt} className="max-h-7 max-w-7 object-contain" loading="lazy" />
     </span>
   );
 }
 
-export function TripadvisorLogoCircle() {
+export function TripadvisorLogoCircle({
+  className = "",
+  imgClassName = "",
+}: {
+  className?: string;
+  imgClassName?: string;
+}) {
   return (
-    <span className="flex h-11 min-w-11 items-center justify-center rounded-full bg-white px-3 shadow-sm ring-1 ring-black/5">
-      <img src={SOCIAL_LOGOS.tripadvisor} alt="Tripadvisor" className="h-5 w-auto max-w-28 object-contain" loading="lazy" />
+    <span className={`inline-flex h-12 min-w-[9rem] shrink-0 items-center justify-center rounded-xl bg-transparent ${className}`}>
+      <img src={SOCIAL_LOGOS.tripadvisor} alt="Tripadvisor" className={`h-7 w-auto max-w-[8rem] object-contain ${imgClassName}`} loading="lazy" />
     </span>
   );
 }

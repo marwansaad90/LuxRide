@@ -319,7 +319,7 @@ export function WhyChoose() {
   const lang = useLang();
 
   return (
-    <section className="bg-lux-beige py-14 md:py-20">
+    <section className="bg-lux-beige pt-6 pb-14 md:pt-8 md:pb-20">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <SectionHeading
           eyebrow={t(lang, "why_eyebrow")}
