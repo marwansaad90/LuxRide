@@ -6,16 +6,18 @@ import corollaImg from "../../../assets/vehicles/corolla.webp";
 import hiacaImg from "../../../assets/vehicles/hiace.webp";
 import aboutTransferImg from "../../../assets/about/luxride-about-transfer.webp";
 import airportImg from "../../../assets/destinations/hurghada-airport-transfer.webp";
-import villageRoadImg from "../../../assets/destinations/village-road-transfer.webp";
-import cairoPyramidsImg from "../../../assets/destinations/cairo-pyramids-transfer.webp";
+import cityAirportTransferImg from "../../../assets/destinations/hurghada-city-airport-transfer.webp";
+import villageRoadImg from "../../../assets/destinations/village-road-client-transfer.webp";
+import cairoPyramidsImg from "../../../assets/destinations/cairo-client-destination.webp";
 import marsaAlamImg from "../../../assets/destinations/marsa-alam-transfer.webp";
 import marsaAlamBeachImg from "../../../assets/destinations/marsa-alam-beach-transfer.webp";
-import luxorImg from "../../../assets/destinations/luxor-private-transfer.webp";
+import luxorImg from "../../../assets/destinations/luxor-client-destination.webp";
 import luxorStatueImg from "../../../assets/destinations/luxor-statue-transfer.webp";
 import elGounaImg from "../../../assets/destinations/el-gouna-transfer.webp";
 import makadiBayImg from "../../../assets/destinations/makadi-bay-transfer.webp";
 import aswanImg from "../../../assets/destinations/aswan-private-transfer.webp";
 import somaBayImg from "../../../assets/destinations/soma-bay-transfer.webp";
+import wadiElGemalImg from "../../../assets/destinations/wadi-el-gemal-transfer.webp";
 import { WORKBOOK_PRICE_LIST_META, WORKBOOK_PRICE_LIST_ROWS, type WorkbookDraftStatus, type WorkbookRouteRow } from "./workbookRoutes";
 
 export const VEHICLE_IMAGES = {
@@ -27,6 +29,7 @@ export const VEHICLE_IMAGES = {
 export const IMAGES = {
   aboutTransfer: aboutTransferImg,
   airport: airportImg,
+  cityAirportTransfer: cityAirportTransferImg,
   heroCar:
     "https://images.unsplash.com/photo-1564890379653-0eb3a6b4eaad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1600",
   driver:
@@ -47,8 +50,7 @@ export const IMAGES = {
     "https://images.unsplash.com/photo-1682090500311-9e57a5a57390?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   sharm:
     "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Sharm_El_Sheikh._Naama_Bay..jpg/1280px-Sharm_El_Sheikh._Naama_Bay..jpg",
-  wadiElGemal:
-    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+  wadiElGemal: wadiElGemalImg,
   marsaAlam: marsaAlamImg,
   marsaAlamBeach: marsaAlamBeachImg,
   sedan:
@@ -63,27 +65,24 @@ export const ABOUT_IMAGE_SOURCE_FILE = "LuxRide.gif" as const;
 
 export const DESTINATION_IMAGE_SOURCE_FILES = {
   airport: "images.jpg",
+  hurghadaCityAirportTransfer: "Airport.jpg",
   makadi: "Makadi-Bay.jpg",
-  villageRoad: "Village-Road.jpg",
+  villageRoad: "LuxRide.jpg",
   elGouna: "Elguna.jpg",
   soma: "Soma-Bay.jpg",
   marsaAlam: "Marsa-Allam.jpg",
   marsaAlamSecondary: "Marsa-Allam2.jpg",
-  cairo: "Pyramids.jpg",
+  cairo: "images-1.jpg",
   aswan: "Aswan2.jpg",
-  luxor: "Luxor.jpg",
+  luxor: "images-2.jpg",
   luxorSecondary: "Luxor2.jpg",
   sharm: "Wikimedia Commons: Sharm_El_Sheikh._Naama_Bay..jpg",
-  wadiElGemal: "Existing external fallback; final client-approved image still required",
+  wadiElGemal: "04-Robin-Utrecht-1.jpg",
 } as const;
 
 export const SUPERSEDED_SOURCE_IMAGE_FILES = [
-  "04-Robin-Utrecht-1.jpg",
   "507879331.jpg",
-  "images-1.jpg",
-  "images-2.jpg",
   "pic-panorama-bungalows-resort-el-gouna-hurghada-55.jpg",
-  "LuxRide.jpg",
 ] as const;
 
 // ─── Contact (real business details) ─────────────────────────────────────────
@@ -451,7 +450,7 @@ function popularTransfer(
 }
 
 export const POPULAR_TRANSFERS: PopularTransfer[] = [
-  popularTransfer("hurghada-city-airport", "Hurghada", "Hurghada Airport", IMAGES.airport, {
+  popularTransfer("hurghada-city-airport", "Hurghada", "Hurghada Airport", IMAGES.cityAirportTransfer, {
     displayFrom: { EN: "Hurghada City", AR: "مدينة الغردقة" },
   }),
   popularTransfer("airport-hurghada", "Hurghada Airport", "Hurghada", IMAGES.airport),

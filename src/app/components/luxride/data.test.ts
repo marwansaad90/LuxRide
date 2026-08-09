@@ -184,9 +184,12 @@ describe("vehicle and booking validation", () => {
     expect(findRoute("Hurghada", "Alexandria")?.image).toBe(IMAGES.alexandria);
     expect(findRoute("Hurghada", "Sharm El Sheikh")?.image).toBe(IMAGES.sharm);
     expect(IMAGES.airport).toContain("hurghada-airport-transfer.webp");
-    expect(IMAGES.luxor).toContain("luxor-private-transfer.webp");
+    expect(IMAGES.cityAirportTransfer).toContain("hurghada-city-airport-transfer.webp");
+    expect(IMAGES.luxor).toContain("luxor-client-destination.webp");
     expect(IMAGES.aswan).toContain("aswan-private-transfer.webp");
-    expect(IMAGES.cairo).toContain("cairo-pyramids-transfer.webp");
+    expect(IMAGES.cairo).toContain("cairo-client-destination.webp");
+    expect(IMAGES.villageRoad).toContain("village-road-client-transfer.webp");
+    expect(IMAGES.wadiElGemal).toContain("wadi-el-gemal-transfer.webp");
     expect(IMAGES.sharm).toContain("Sharm_El_Sheikh._Naama_Bay..jpg");
     expect(new Set([IMAGES.luxor, IMAGES.aswan, IMAGES.cairo, IMAGES.alexandria, IMAGES.sharm]).size).toBe(5);
   });
@@ -291,22 +294,25 @@ describe("latest desktop client-review integration", () => {
     expect(IMAGES.aboutTransfer).toContain("luxride-about-transfer.webp");
     expect(DESTINATION_IMAGE_SOURCE_FILES).toMatchObject({
       airport: "images.jpg",
+      hurghadaCityAirportTransfer: "Airport.jpg",
       makadi: "Makadi-Bay.jpg",
-      villageRoad: "Village-Road.jpg",
+      villageRoad: "LuxRide.jpg",
       elGouna: "Elguna.jpg",
       soma: "Soma-Bay.jpg",
       marsaAlam: "Marsa-Allam.jpg",
       marsaAlamSecondary: "Marsa-Allam2.jpg",
-      cairo: "Pyramids.jpg",
+      cairo: "images-1.jpg",
       aswan: "Aswan2.jpg",
-      luxor: "Luxor.jpg",
+      luxor: "images-2.jpg",
       luxorSecondary: "Luxor2.jpg",
+      wadiElGemal: "04-Robin-Utrecht-1.jpg",
     });
     const [firstTransfer] = POPULAR_TRANSFERS;
     expect(firstTransfer.from).toBe("Hurghada");
     expect(firstTransfer.to).toBe("Hurghada Airport");
     expect(firstTransfer.displayFrom?.EN).toBe("Hurghada City");
-    expect(firstTransfer.image).toBe(IMAGES.airport);
+    expect(firstTransfer.image).toBe(IMAGES.cityAirportTransfer);
+    expect(firstTransfer.image).not.toBe(IMAGES.airport);
     const activeMapping = JSON.stringify({ IMAGES, DESTINATION_IMAGE_SOURCE_FILES });
     for (const filename of SUPERSEDED_SOURCE_IMAGE_FILES) {
       expect(activeMapping).not.toContain(filename);
