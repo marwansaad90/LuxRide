@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /availability-admin
+Disallow: /validation-states
+Disallow: /whatsapp-preview
+Disallow: /email-preview
+Disallow: /booking-error
+Disallow: /booking-success
+Disallow: /last-minute
+
+Sitemap: https://luxdure.pages.dev/sitemap.xml

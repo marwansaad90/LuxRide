@@ -6,26 +6,13 @@ import {
   AccordionTrigger,
 } from "../components/ui/accordion";
 import { PageShell } from "../components/luxride/PageShell";
-import { useL } from "../components/luxride/i18n";
+import { FAQ_PAGE_ITEMS } from "../components/luxride/faqPageData";
+import { useL, useLang } from "../components/luxride/i18n";
 
 export function FAQPage() {
   const L = useL();
-
-  const faqs: { q: string; a: string }[] = [
-    { q: L("Is the displayed transfer price final?", "هل السعر المعروض للنقل نهائي؟"), a: L("Yes. The price displayed in the calculator is fixed and inclusive, with no hidden fees. Airport operating fees and mandatory tourism travel permits are displayed separately and clearly before the booking is submitted.", "نعم. السعر المعروض في الحاسبة ثابت وشامل، بدون رسوم خفية. تُعرض رسوم تشغيل المطار وتصاريح السفر السياحي الإلزامية بشكل منفصل وواضح قبل إرسال الحجز.") },
-    { q: L("Can I request a child seat?", "هل يمكنني طلب كرسي أطفال؟"), a: L("This service is currently unavailable and will be provided soon.", "هذه الخدمة غير متاحة حالياً وسيتم توفيرها قريباً.") },
-    { q: L("How can I confirm my booking?", "كيف يمكنني تأكيد حجزي؟"), a: L("Complete the three booking steps and select the single Send Booking Request button. LuxRide will review the details and contact you to confirm availability.", "أكمل خطوات الحجز الثلاث ثم اختر زر إرسال طلب الحجز الوحيد. ستراجع LuxRide التفاصيل وتتواصل معك لتأكيد التوفر.") },
-    { q: L("Can I make a booking for today?", "هل يمكنني الحجز لليوم؟"), a: L("Standard online bookings must be submitted at least three hours before departure. For last-minute or same-day bookings, contact LuxRide directly through WhatsApp to check availability.", "يجب تقديم الحجوزات القياسية عبر الإنترنت قبل ثلاث ساعات على الأقل من المغادرة. للحجوزات اللحظية أو في نفس اليوم، تواصل مع LuxRide مباشرةً عبر واتساب للتحقق من التوفر.") },
-    { q: L("What happens if my flight is delayed?", "ماذا يحدث إذا تأخرت رحلتي الجوية؟"), a: L("LuxRide monitors the flight status in real time and adjusts the airport pickup time accordingly.", "تتابع LuxRide حالة الرحلة في الوقت الفعلي وتعدّل موعد استلام المطار وفقاً لذلك.") },
-    { q: L("How long will the driver wait at the airport?", "كم سينتظر السائق في المطار؟"), a: L("The maximum waiting time for airport arrivals is three hours.", "الحد الأقصى لوقت الانتظار لوصول المطار هو ثلاث ساعات.") },
-    { q: L("Do long-distance transfers require travel permits?", "هل تتطلب التوصيلات بعيدة المسافة تصاريح سفر؟"), a: L("Yes. Transfers to Luxor, Aswan, Cairo, and Sharm El Sheikh require an official tourism and security permit. The applicable permit fee is displayed clearly in the final booking price.", "نعم. تتطلب التوصيلات إلى الأقصر وأسوان والقاهرة وشرم الشيخ تصريحاً سياحياً وأمنياً رسمياً. تُعرض رسوم التصريح المطبقة بوضوح في السعر النهائي للحجز.") },
-    { q: L("Can I book a Round Trip?", "هل يمكنني حجز ذهاب وعودة؟"), a: L("Yes, when the selected route has an approved round-trip price. LuxRide shows the route classification clearly and shows the approved Round Trip price clearly before submission.", "نعم، عندما يكون للمسار المختار سعر ذهاب وعودة معتمد. تعرض LuxRide تصنيف المسار بوضوح وتعرض سعر الذهاب والعودة المعتمد بوضوح قبل الإرسال.") },
-    { q: L("Are taxes included?", "هل الضرائب مشمولة؟"), a: L("Yes. All prices are shown in EUR and are tax inclusive.", "نعم. جميع الأسعار معروضة باليورو وشاملة الضريبة.") },
-    { q: L("Can I change my booking?", "هل يمكنني تعديل حجزي؟"), a: L("Yes. Contact us on WhatsApp with your booking details and we will do our best to accommodate changes based on availability.", "نعم. تواصل معنا عبر واتساب مع تفاصيل حجزك وسنبذل قصارى جهدنا لاستيعاب التغييرات حسب التوفر.") },
-    { q: L("What is the cancellation policy?", "ما هي سياسة الإلغاء؟"), a: L("Full refund when cancelled at least 24 hours before the experience start time in the local timezone. No refund for cancellation less than 24 hours before the start time.", "استرداد كامل عند الإلغاء قبل ٢٤ ساعة على الأقل من وقت بدء التجربة بالتوقيت المحلي. لا استرداد عند الإلغاء قبل أقل من ٢٤ ساعة من وقت البدء.") },
-    { q: L("How do I meet the driver?", "كيف أقابل السائق؟"), a: L("For airport arrivals, your driver waits in the arrivals hall holding a sign with your name. For hotel pickups, the driver meets you at reception at the agreed time.", "لوصول المطار، ينتظرك السائق في صالة الوصول حاملاً لافتة باسمك. لاستلام الفنادق، يقابلك السائق في الاستقبال في الوقت المتفق عليه.") },
-    { q: L("Can additional destinations be added?", "هل يمكن إضافة وجهات إضافية؟"), a: L("Yes. Mention any additional stops in your booking notes or on WhatsApp and we will provide an updated fixed price.", "نعم. اذكر أي محطات إضافية في ملاحظات حجزك أو عبر واتساب وسنوفّر سعراً ثابتاً محدّثاً.") },
-  ];
+  const lang = useLang();
+  const faqs = FAQ_PAGE_ITEMS[lang];
 
   return (
     <PageShell

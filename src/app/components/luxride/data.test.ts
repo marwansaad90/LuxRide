@@ -29,6 +29,7 @@ import {
 } from "./data";
 import { normalizeReturnFields, isValidReturn, readInitialBookingState } from "./bookingState";
 import { newestFeaturedTransfers } from "./journeys";
+import { PUBLIC_SEO_ROUTES } from "./seo";
 import {
   SELECTED_TRIPADVISOR_REVIEW_COUNT,
   TRIPADVISOR_LOCATION_ID,
@@ -75,9 +76,11 @@ describe("workbook-derived route and pricing model", () => {
     expect(WORKBOOK_PRICE_LIST_META.baseVehicle).toBe("MPV One Way");
     expect(WORKBOOK_PRICE_LIST_META).toMatchObject({ sedanRatio: 0.8, miniVanRatio: 1.75, roundTripRatio: 1.8 });
     expect(WORKBOOK_PRICE_LIST_META.sourceRows).toBe(302);
+    expect(WORKBOOK_PRICE_LIST_META.confirmedRows).toBe(302);
+    expect(WORKBOOK_PRICE_LIST_META.provisionalRows).toBe(0);
     expect(DRAFT_ROUTE_REFERENCES.length).toBe(WORKBOOK_PRICE_LIST_META.provisionalRows);
-    expect(ROUTES.some((route) => route.draftStatus === "provisional")).toBe(true);
-    expect(findRoute("Hurghada", "Village Road")?.draftStatus).toBe("provisional");
+    expect(ROUTES.some((route) => route.draftStatus === "provisional")).toBe(false);
+    expect(findRoute("Hurghada", "Village Road")?.draftStatus).toBe("confirmed");
   });
 
   it("uses workbook MPV One Way as the base and derives vehicle prices with the workbook ratios", () => {
@@ -93,13 +96,14 @@ describe("workbook-derived route and pricing model", () => {
 
   it("computes clean whole-Euro customer prices including unchanged airport and permit fees", () => {
     expect(price("Hurghada Airport", "El Gouna", "oneWay", xpander)).toMatchObject({ base: 21, airport: AIRPORT_SURCHARGE, total: 23 });
+    expect(price("Hurghada", "Hurghada Airport", "oneWay", xpander)).toMatchObject({ base: 13, airport: AIRPORT_SURCHARGE, total: 15 });
     expect(price("Hurghada Airport", "El Gouna", "roundTrip", corolla)).toMatchObject({ base: 31, airport: AIRPORT_SURCHARGE, total: 33 });
     expect(price("Hurghada", "Luxor", "oneWay", xpander)).toMatchObject({ base: 75, permit: 20, total: 95 });
     expect(price("Hurghada", "Luxor", "roundTrip", hiace)).toMatchObject({ base: 236, permit: 30, total: 266 });
   });
 
   it("supports One Way and Round Trip for every public workbook transfer while keeping Overday/Overnight internal", () => {
-    expect(ROUTES.length).toBeGreaterThan(150);
+    expect(ROUTES.length).toBe(302);
     for (const route of ROUTES) {
       expect(availablePublicTripTypes(route)).toEqual(["oneWay", "roundTrip"]);
       expect(resolveTripType(route, "oneWay")).toBe("oneWay");
@@ -116,6 +120,7 @@ describe("workbook-derived route and pricing model", () => {
 
   it("keeps the requested important homepage transfer list concise", () => {
     expect(POPULAR_TRANSFERS.map((transfer) => `${transfer.from} -> ${transfer.to}`)).toEqual([
+      "Hurghada -> Hurghada Airport",
       "Hurghada Airport -> Hurghada",
       "Hurghada Airport -> Makadi Bay",
       "Hurghada Airport -> El Gouna",
@@ -127,6 +132,13 @@ describe("workbook-derived route and pricing model", () => {
       "Hurghada -> Marsa Alam",
       "Hurghada -> Wadi El Gemal",
     ]);
+    expect(POPULAR_TRANSFERS[0]).toMatchObject({
+      id: "hurghada-city-airport",
+      from: "Hurghada",
+      to: "Hurghada Airport",
+      fromPrice: 13,
+      airport: true,
+    });
   });
 });
 
@@ -144,6 +156,9 @@ describe("vehicle and booking validation", () => {
       { id: "corolla", pax: 3, luggage: 2, available: false },
       { id: "hiace", pax: 8, luggage: 8, available: false },
     ]);
+    expect(corolla.name).toBe("Toyota Corolla");
+    expect(hiace.name).toBe("Toyota HiAce");
+    expect(xpander.name).toBe("Mitsubishi Xpander 2027");
     const data = readSource("./data.ts");
     expect(data).toContain("../../../assets/vehicles/xpander.webp");
     expect(data).toContain("../../../assets/vehicles/corolla.webp");
@@ -165,7 +180,11 @@ describe("vehicle and booking validation", () => {
     expect(findRoute("Hurghada", "Cairo")?.image).toBe(IMAGES.cairo);
     expect(findRoute("Hurghada", "Alexandria")?.image).toBe(IMAGES.alexandria);
     expect(findRoute("Hurghada", "Sharm El Sheikh")?.image).toBe(IMAGES.sharm);
-    expect(IMAGES.sharm).toContain("Naama_Bay_Beach_R01.jpg");
+    expect(IMAGES.airport).toContain("hurghada-airport-transfer.webp");
+    expect(IMAGES.luxor).toContain("luxor-private-transfer.webp");
+    expect(IMAGES.aswan).toContain("aswan-private-transfer.webp");
+    expect(IMAGES.cairo).toContain("cairo-pyramids-transfer.webp");
+    expect(IMAGES.sharm).toContain("sharm-el-sheikh-transfer.webp");
     expect(new Set([IMAGES.luxor, IMAGES.aswan, IMAGES.cairo, IMAGES.alexandria, IMAGES.sharm]).size).toBe(5);
   });
 
@@ -182,7 +201,7 @@ describe("vehicle and booking validation", () => {
     });
     expect(readInitialBookingState(params)).toMatchObject({
       from: "Hurghada Airport",
-      to: "Hurghada",
+      to: "Cairo",
       trip: "oneWay",
       publicTrip: "oneWay",
       vehicleId: "hiace",
@@ -204,13 +223,14 @@ describe("vehicle and booking validation", () => {
 });
 
 describe("latest desktop client-review integration", () => {
-  it("routes Featured Transfers at /featured-transfers and redirects /journeys", () => {
+  it("routes Unforgettable Experiences at /experiences and redirects legacy URLs", () => {
     const routes = readSource("../../routes.tsx");
-    expect(routes).toContain('{ path: "featured-transfers", Component: JourneysPage }');
-    expect(routes).toContain('{ path: "journeys", element: <Navigate to="/featured-transfers" replace /> }');
+    expect(routes).toContain('{ path: "experiences", Component: JourneysPage }');
+    expect(routes).toContain('{ path: "featured-transfers", element: <Navigate to="/experiences" replace /> }');
+    expect(routes).toContain('{ path: "journeys", element: <Navigate to="/experiences" replace /> }');
   });
 
-  it("keeps homepage sections in the approved order with Featured Transfers in place", () => {
+  it("keeps homepage sections in the approved order with Unforgettable Experiences in place", () => {
     const home = readSource("../../pages/Home.tsx");
     const components = ["<Hero />", "<LastMinute />", "<HowItWorks />", "<ServiceBenefits />", "<PopularTransfers />", "<FeaturedJourneys />", "<Fleet />", "<WhyChoose />", "<Reviews />", "<FAQ />", "<FinalCTA />"];
     const positions = components.map((component) => home.indexOf(component));
@@ -227,20 +247,30 @@ describe("latest desktop client-review integration", () => {
     expect(estimate + booking).not.toContain('id: "overnight"');
   });
 
-  it("renders Featured Transfers as a newest-first horizontal feed with card galleries and hidden visible tags", () => {
+  it("renders Unforgettable Experiences as a newest-first horizontal feed with card galleries and hidden visible tags", () => {
     const transfers = newestFeaturedTransfers();
     const featured = readSource("./FeaturedJourneys.tsx");
     const page = readSource("../../pages/JourneysPage.tsx");
     expect(transfers.map((transfer) => transfer.createdAt)).toEqual([...transfers.map((transfer) => transfer.createdAt)].sort().reverse());
-    expect(featured + page).toContain("data-featured-transfers-feed=\"horizontal\"");
+    expect(featured + page).toContain("data-experiences-feed=\"horizontal\"");
     expect(featured + page).toContain("data-featured-transfer-gallery=\"true\"");
-    expect(featured + page).toContain("data-featured-transfer-description=\"scrollable\"");
+    expect(featured + page).toContain("data-experience-description=\"scrollable\"");
     expect(featured + page).toContain("Book Similar Transfer");
-    expect(featured + page).toContain("Explore All Transfers");
-    expect(page).toContain("Explore more transfers");
+    expect(featured + page).toContain("Explore All Experiences");
+    expect(page).toContain("Explore more experiences");
     expect(page).not.toContain("Scroll horizontally to see older transfers");
     expect(page).not.toContain("More featured transfers can be added once final images and content are approved");
     expect(featured).not.toContain("journey.tags");
+  });
+
+  it("keeps Luxor as the first experience with the five supplied LuxRide gallery images", () => {
+    const [first] = newestFeaturedTransfers();
+    expect(first.id).toBe("hurghada-luxor-unforgettable-day-trip");
+    expect(first.title.EN).toBe("A Featured Journey: An Unforgettable Day Trip to Luxor");
+    expect(first.booking).toEqual({ from: "Hurghada", to: "Luxor", trip: "roundTrip" });
+    expect(first.images).toHaveLength(5);
+    expect(first.images.every((image) => image.includes("luxor-day-trip-"))).toBe(true);
+    expect(first.description.EN).toContain("We’d love to share the story of a recent trip");
   });
 
   it("uses the latest Tripadvisor widget IDs and selected 5-review reader option", () => {
@@ -290,6 +320,9 @@ describe("latest desktop client-review integration", () => {
     expect(activeCode).not.toContain("تحويلات");
     expect(activeCode).not.toContain("Explore All Journeys");
     expect(activeCode).not.toContain("Book Similar Trip");
+    expect(activeCode).not.toContain("Featured Transfers");
+    expect(activeCode).toContain("Unforgettable Experiences");
+    expect(activeCode).toContain("تجارب لا تُنسى");
     expect(activeCode).not.toContain("never calculates Round Trip by doubling");
     expect(activeCode).not.toContain("لا تحسب الذهاب والعودة أبداً بمضاعفة");
   });
@@ -302,7 +335,33 @@ describe("latest desktop client-review integration", () => {
     expect(activeCode + html).not.toContain("review mode");
     expect(activeCode + html).not.toContain("review screen");
     expect(activeCode + html).not.toContain("pending client approval");
+    expect(activeCode).not.toContain("workbook-derived");
+    expect(activeCode).not.toContain("Workbook-derived");
     expect(html).not.toContain("prototype");
     expect(readSource("../../pages/AboutPage.tsx")).toContain("all air-conditioned and matched to the passenger and luggage requirements shown during booking");
+  });
+
+  it("publishes sitemap and robots for public routes only", () => {
+    const sitemap = readFileSync(new URL("../../../../public/sitemap.xml", import.meta.url), "utf8");
+    const robots = readFileSync(new URL("../../../../public/robots.txt", import.meta.url), "utf8");
+    expect(sitemap).toContain("https://luxdure.pages.dev/experiences");
+    expect(sitemap).not.toContain("availability-admin");
+    expect(sitemap).not.toContain("validation-states");
+    expect(sitemap).not.toContain("featured-transfers");
+    expect(sitemap).not.toContain("journeys");
+    expect(robots).toContain("Sitemap: https://luxdure.pages.dev/sitemap.xml");
+    expect(robots).toContain("Disallow: /availability-admin");
+  });
+
+  it("defines unique SEO titles, canonical handling, and structured data support", () => {
+    const titles = PUBLIC_SEO_ROUTES.map((route) => route.title);
+    expect(new Set(titles).size).toBe(titles.length);
+    expect(titles).toContain("Unforgettable Transfer Experiences | LuxRide Taxi");
+    const seoSource = readSource("./seo.ts");
+    expect(seoSource).toContain('"/featured-transfers": "/experiences"');
+    expect(seoSource).toContain('"/journeys": "/experiences"');
+    expect(seoSource).toContain('"@type": "LocalBusiness"');
+    expect(seoSource).toContain('"@type": "FAQPage"');
+    expect(EMAIL).toBe("booking@luxride-eg.com");
   });
 });

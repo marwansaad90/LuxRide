@@ -19,6 +19,7 @@ import { BookingErrorPage } from "./pages/BookingErrorPage";
 import { PrivacyPolicyPage } from "./pages/PrivacyPolicyPage";
 import { TermsPage } from "./pages/TermsPage";
 import { JourneysPage } from "./pages/JourneysPage";
+import { NotFoundPage } from "./pages/NotFoundPage";
 
 export const router = createBrowserRouter([
   {
@@ -29,8 +30,9 @@ export const router = createBrowserRouter([
       { path: "about", Component: AboutPage },
       { path: "fleet", Component: FleetPage },
       { path: "destinations", Component: DestinationsPage },
-      { path: "featured-transfers", Component: JourneysPage },
-      { path: "journeys", element: <Navigate to="/featured-transfers" replace /> },
+      { path: "experiences", Component: JourneysPage },
+      { path: "featured-transfers", element: <Navigate to="/experiences" replace /> },
+      { path: "journeys", element: <Navigate to="/experiences" replace /> },
       { path: "transfer-details", Component: TransferDetailsPage },
       { path: "booking", Component: BookingPage },
       { path: "contact", Component: ContactPage },
@@ -45,7 +47,7 @@ export const router = createBrowserRouter([
       { path: "availability-admin", Component: AvailabilityAdminPage },
       { path: "whatsapp-preview", Component: WhatsAppPreviewPage },
       { path: "email-preview", Component: EmailPreviewPage },
-      { path: "*", Component: Home },
+      { path: "*", Component: NotFoundPage },
     ],
   },
 ]);

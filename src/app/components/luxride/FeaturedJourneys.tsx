@@ -6,11 +6,12 @@ import { journeyBookingQuery, newestFeaturedTransfers, type FeaturedTransfer } f
 import { SectionHeading } from "./Sections";
 import { useLang } from "./i18n";
 
-export function JourneyCard({ journey }: { journey: FeaturedTransfer }) {
+export function JourneyCard({ journey, compact = false }: { journey: FeaturedTransfer; compact?: boolean }) {
   const lang = useLang();
   const [imageIndex, setImageIndex] = useState(0);
   const currentImage = journey.images[imageIndex] ?? journey.images[0];
   const canNavigate = journey.images.length > 1;
+  const description = compact ? journey.excerpt[lang] : journey.description[lang];
 
   function moveImage(step: number) {
     setImageIndex((index) => (index + step + journey.images.length) % journey.images.length);
@@ -46,8 +47,8 @@ export function JourneyCard({ journey }: { journey: FeaturedTransfer }) {
         <h3 className="mt-2 text-lux-charcoal" style={{ fontSize: "1.2rem", fontWeight: 800, lineHeight: 1.2 }}>
           {journey.title[lang]}
         </h3>
-        <div className="mt-3 max-h-32 overflow-y-auto pr-2 text-sm text-neutral-500 [scrollbar-width:thin]" style={{ lineHeight: 1.65 }} data-featured-transfer-description="scrollable">
-          {journey.description[lang]}
+        <div className="mt-3 max-h-32 whitespace-pre-line overflow-y-auto pr-2 text-sm text-neutral-500 [scrollbar-width:thin]" style={{ lineHeight: 1.65 }} data-experience-description="scrollable">
+          {description}
         </div>
         <Link to={`/booking?${journeyBookingQuery(journey)}`} className="mt-auto inline-flex w-full items-center justify-center gap-2 rounded-full bg-lux-green py-2.5 text-sm font-semibold text-white transition-all hover:brightness-110">
           {lang === "AR" ? "احجز توصيلة مشابهة" : "Book Similar Transfer"}
@@ -63,26 +64,26 @@ export function FeaturedJourneys() {
   const transfers = useMemo(() => newestFeaturedTransfers(), []);
 
   return (
-    <section id="featured-transfers" className="bg-white py-20 md:py-28">
+    <section id="experiences" className="bg-white py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <SectionHeading
-          eyebrow={lang === "AR" ? "توصيلات مختارة" : "Featured Routes"}
-          title={lang === "AR" ? "توصيلات مميزة" : "Featured Transfers"}
-          subtitle={lang === "AR" ? "نماذج توصيلة مختارة تساعدك على اختيار الخدمة المناسبة بثقة." : "Selected transfer examples to help you choose the right private service with confidence."}
+          eyebrow={lang === "AR" ? "تجارب مختارة" : "Selected Experiences"}
+          title={lang === "AR" ? "تجارب لا تُنسى" : "Unforgettable Experiences"}
+          subtitle={lang === "AR" ? "نماذج من تجارب توصيلة حقيقية تساعدك على اختيار الخدمة المناسبة بثقة." : "Selected real transfer experiences to help you choose the right private service with confidence."}
         />
         <div className="relative">
           <div className="pointer-events-none absolute inset-y-0 right-0 z-10 hidden w-16 bg-gradient-to-l from-white to-transparent md:block" />
-          <div className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-4 [scrollbar-width:thin]" data-featured-transfers-feed="horizontal">
+          <div className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-4 [scrollbar-width:thin]" data-experiences-feed="horizontal">
             {transfers.map((journey) => (
               <div key={journey.id} className="snap-start">
-                <JourneyCard journey={journey} />
+                <JourneyCard journey={journey} compact />
               </div>
             ))}
           </div>
         </div>
         <div className="mt-8 text-center">
-          <Link to="/featured-transfers" className="inline-flex items-center justify-center gap-2 rounded-full border border-lux-green/35 px-8 py-3 text-sm font-semibold text-lux-green transition-all hover:bg-lux-green hover:text-white">
-            {lang === "AR" ? "استعرض كل التوصيلات المميزة" : "Explore All Transfers"}
+          <Link to="/experiences" className="inline-flex items-center justify-center gap-2 rounded-full border border-lux-green/35 px-8 py-3 text-sm font-semibold text-lux-green transition-all hover:bg-lux-green hover:text-white">
+            {lang === "AR" ? "استعرض كل التجارب" : "Explore All Experiences"}
             <ArrowRight className="h-4 w-4 rtl:rotate-180" />
           </Link>
         </div>

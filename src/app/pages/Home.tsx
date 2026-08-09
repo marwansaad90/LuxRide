@@ -26,7 +26,7 @@ export function Home() {
       <ServiceBenefits />
       {/* 6. Popular Transfers */}
       <PopularTransfers />
-      {/* 7. Featured Journeys */}
+      {/* 7. Unforgettable Experiences */}
       <FeaturedJourneys />
       {/* 8. Fleet Preview */}
       <Fleet />

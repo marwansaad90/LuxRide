@@ -4,6 +4,19 @@
 import xpanderImg from "../../../assets/vehicles/xpander.webp";
 import corollaImg from "../../../assets/vehicles/corolla.webp";
 import hiacaImg from "../../../assets/vehicles/hiace.webp";
+import aboutTransferImg from "../../../assets/about/luxride-about-transfer.webp";
+import airportImg from "../../../assets/destinations/hurghada-airport-transfer.webp";
+import villageRoadImg from "../../../assets/destinations/village-road-transfer.webp";
+import cairoPyramidsImg from "../../../assets/destinations/cairo-pyramids-transfer.webp";
+import marsaAlamImg from "../../../assets/destinations/marsa-alam-transfer.webp";
+import marsaAlamBeachImg from "../../../assets/destinations/marsa-alam-beach-transfer.webp";
+import luxorImg from "../../../assets/destinations/luxor-private-transfer.webp";
+import luxorStatueImg from "../../../assets/destinations/luxor-statue-transfer.webp";
+import elGounaImg from "../../../assets/destinations/el-gouna-transfer.webp";
+import makadiBayImg from "../../../assets/destinations/makadi-bay-transfer.webp";
+import aswanImg from "../../../assets/destinations/aswan-private-transfer.webp";
+import somaBayImg from "../../../assets/destinations/soma-bay-transfer.webp";
+import sharmElSheikhImg from "../../../assets/destinations/sharm-el-sheikh-transfer.webp";
 import { WORKBOOK_PRICE_LIST_META, WORKBOOK_PRICE_LIST_ROWS, type WorkbookDraftStatus, type WorkbookRouteRow } from "./workbookRoutes";
 
 export const VEHICLE_IMAGES = {
@@ -13,36 +26,31 @@ export const VEHICLE_IMAGES = {
 } as const;
 
 export const IMAGES = {
+  aboutTransfer: aboutTransferImg,
+  airport: airportImg,
   heroCar:
     "https://images.unsplash.com/photo-1564890379653-0eb3a6b4eaad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1600",
   driver:
     "https://images.unsplash.com/photo-1627285886624-5cd637dafb50?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1200",
   hurghada:
     "https://images.unsplash.com/photo-1755545414327-36524febb5b6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  villageRoad:
-    "https://images.unsplash.com/photo-1518391846015-55a9cc003b25?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+  villageRoad: villageRoadImg,
   alAhyaa:
     "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  elGouna:
-    "https://images.unsplash.com/photo-1601816500593-8f1276479ea6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  makadi:
-    "https://images.unsplash.com/photo-1755545760275-abd2f1b8ed2c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  soma:
-    "https://images.unsplash.com/photo-1755545745583-334a6398c61b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  luxor:
-    "https://images.unsplash.com/photo-1629468855534-450d7c4c5f72?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  aswan:
-    "https://images.unsplash.com/photo-1738580426867-03fa8c8b5288?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  cairo:
-    "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+  elGouna: elGounaImg,
+  makadi: makadiBayImg,
+  soma: somaBayImg,
+  luxor: luxorImg,
+  luxorDetail: luxorStatueImg,
+  aswan: aswanImg,
+  cairo: cairoPyramidsImg,
   alexandria:
     "https://images.unsplash.com/photo-1682090500311-9e57a5a57390?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  sharm:
-    "https://commons.wikimedia.org/wiki/Special:FilePath/Naama_Bay_Beach_R01.jpg?width=1080",
+  sharm: sharmElSheikhImg,
   wadiElGemal:
     "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
-  marsaAlam:
-    "https://images.unsplash.com/photo-1630328639261-4c9e94108671?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+  marsaAlam: marsaAlamImg,
+  marsaAlamBeach: marsaAlamBeachImg,
   sedan:
     "https://images.unsplash.com/photo-1618232796173-b7520d9b5941?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
   mpv:
@@ -107,7 +115,7 @@ export const FLEET: Vehicle[] = [
   },
   {
     id: "corolla",
-    name: "Toyota Corolla 2027",
+    name: "Toyota Corolla",
     category: "Sedan",
     categoryAr: "سيدان",
     image: VEHICLE_IMAGES.corolla,
@@ -122,7 +130,7 @@ export const FLEET: Vehicle[] = [
   },
   {
     id: "hiace",
-    name: "Toyota HiAce 2027",
+    name: "Toyota HiAce",
     category: "Minivan",
     categoryAr: "ميني فان",
     image: VEHICLE_IMAGES.hiace,
@@ -179,8 +187,8 @@ export interface RouteTripRule {
 }
 
 const OVERNIGHT_RETURN_DESTINATIONS = new Set(["Aswan", "Alexandria", "Sharm El Sheikh"]);
-const CONFIRMED_WORKBOOK_ROWS = WORKBOOK_PRICE_LIST_ROWS.filter((row) => !row.yellowColumns.some((column) => column <= 10));
-export const DRAFT_ROUTE_REFERENCES = WORKBOOK_PRICE_LIST_ROWS.filter((row) => row.draftStatus === "provisional");
+const APPROVED_WORKBOOK_ROWS = WORKBOOK_PRICE_LIST_ROWS;
+export const DRAFT_ROUTE_REFERENCES: WorkbookRouteRow[] = [];
 export { WORKBOOK_PRICE_LIST_META };
 
 function workbookReturnMode(row: WorkbookRouteRow): RoundTripMode {
@@ -190,7 +198,7 @@ function workbookReturnMode(row: WorkbookRouteRow): RoundTripMode {
 }
 
 function routeDuration(row: WorkbookRouteRow): string {
-  if (row.pickup === "Hurghada Airport" && row.destination === "Hurghada") return "20 min";
+  if ([row.pickup, row.destination].includes("Hurghada Airport") && [row.pickup, row.destination].includes("Hurghada")) return "20 min";
   if ([row.pickup, row.destination].includes("Luxor")) return "4 h";
   if ([row.pickup, row.destination].includes("Cairo")) return "5 h 30 min";
   if ([row.pickup, row.destination].includes("Aswan")) return "7 h";
@@ -211,6 +219,7 @@ function routeDuration(row: WorkbookRouteRow): string {
 
 function routeImage(row: WorkbookRouteRow): string {
   const key = `${row.pickup} ${row.destination}`;
+  if (row.destination === "Hurghada Airport" || (row.pickup === "Hurghada Airport" && row.destination === "Hurghada")) return IMAGES.airport;
   if (key.includes("Luxor")) return IMAGES.luxor;
   if (key.includes("Aswan")) return IMAGES.aswan;
   if (key.includes("Cairo") || key.includes("Zaafarana")) return IMAGES.cairo;
@@ -250,7 +259,7 @@ function routeFromWorkbook(row: WorkbookRouteRow): Route {
     prices: { oneWay: row.mpvOneWay, [roundTripMode]: mpvRoundTrip },
     duration: routeDuration(row),
     image: routeImage(row),
-    airport: row.pickup === "Hurghada Airport",
+    airport: row.pickup === "Hurghada Airport" || row.destination === "Hurghada Airport",
     permit: PERMIT_DESTINATIONS.includes(row.pickup) || PERMIT_DESTINATIONS.includes(row.destination),
     outboundClassification: row.outboundTripName,
     returnClassification: row.returnTripName,
@@ -259,7 +268,7 @@ function routeFromWorkbook(row: WorkbookRouteRow): Route {
   };
 }
 
-export const ROUTES: Route[] = CONFIRMED_WORKBOOK_ROWS.map(routeFromWorkbook);
+export const ROUTES: Route[] = APPROVED_WORKBOOK_ROWS.map(routeFromWorkbook);
 
 export function tripRulesFor(route: Route | undefined): RouteTripRule | null {
   if (!route) return null;
@@ -388,6 +397,8 @@ export interface PopularTransfer {
   discountPct?: number;
   airport?: boolean;
   permit?: boolean;
+  displayFrom?: Partial<Record<"EN" | "AR", string>>;
+  displayTo?: Partial<Record<"EN" | "AR", string>>;
 }
 
 function popularTransfer(
@@ -395,6 +406,7 @@ function popularTransfer(
   from: string,
   to: string,
   image: string,
+  options: Pick<PopularTransfer, "displayFrom" | "displayTo"> = {},
 ): PopularTransfer {
   const route = findRoute(from, to);
   return {
@@ -406,11 +418,16 @@ function popularTransfer(
     fromPrice: route?.prices.oneWay ?? route?.mpvOneWay ?? 0,
     airport: route?.airport,
     permit: route?.permit,
+    displayFrom: options.displayFrom,
+    displayTo: options.displayTo,
   };
 }
 
 export const POPULAR_TRANSFERS: PopularTransfer[] = [
-  popularTransfer("airport-hurghada", "Hurghada Airport", "Hurghada", IMAGES.hurghada),
+  popularTransfer("hurghada-city-airport", "Hurghada", "Hurghada Airport", IMAGES.airport, {
+    displayFrom: { EN: "Hurghada City", AR: "مدينة الغردقة" },
+  }),
+  popularTransfer("airport-hurghada", "Hurghada Airport", "Hurghada", IMAGES.airport),
   popularTransfer("airport-makadi", "Hurghada Airport", "Makadi Bay", IMAGES.makadi),
   popularTransfer("airport-gouna", "Hurghada Airport", "El Gouna", IMAGES.elGouna),
   popularTransfer("airport-sahl", "Hurghada Airport", "Sahl Hasheesh", IMAGES.hurghada),

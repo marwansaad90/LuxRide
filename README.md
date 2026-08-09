@@ -1,6 +1,6 @@
 # LuxRide client-review application
 
-LuxRide is a bilingual English/Arabic React and Vite application for fixed-price private transfers from Hurghada across the Red Sea coast and Egypt. It includes the homepage calculator, three-step booking flow, route pricing, fleet selection, Featured Journeys, customer information pages, official Tripadvisor widgets, and direct review screens for future notification and availability workflows.
+LuxRide is a bilingual English/Arabic React and Vite application for fixed-price private transfers from Hurghada across the Red Sea coast and Egypt. It includes the homepage calculator, three-step booking flow, route pricing, fleet selection, Unforgettable Experiences, customer information pages, official Tripadvisor widgets, and direct review screens for future notification and availability workflows.
 
 ## Setup and development
 
@@ -68,7 +68,7 @@ Internally, route rules in `src/app/components/luxride/data.ts` map Round Trip t
 - `overday` for same-day return routes
 - `overnight` for later-date return routes
 
-`ROUTE_TRIP_RULES`, `tripRulesFor`, `availablePublicTripTypes`, and `resolveTripType` keep this data-driven. Routes without a confirmed Round Trip price expose no Round Trip option; no prices are guessed or doubled.
+`ROUTE_TRIP_RULES`, `tripRulesFor`, `availablePublicTripTypes`, and `resolveTripType` keep this data-driven. The latest client-approved workbook is treated as the pricing source of truth; no prices are guessed or doubled.
 
 ## Official Tripadvisor widgets
 
@@ -86,9 +86,14 @@ Each script has a unique DOM ID, uses the official `www.jscache.com/wejs` URL, s
 
 Customer routes:
 
-- `/`, `/about`, `/fleet`, `/destinations`, `/transfer-details`
-- `/journeys`, `/booking`, `/booking-success`, `/contact`, `/faq`
+- `/`, `/about`, `/fleet`, `/destinations`, `/experiences`, `/transfer-details`
+- `/booking`, `/booking-success`, `/contact`, `/faq`
 - `/cancellation-policy`, `/privacy-policy`, `/terms`
+
+Compatibility redirects:
+
+- `/featured-transfers` → `/experiences`
+- `/journeys` → `/experiences`
 
 Direct review routes are intentionally excluded from normal customer navigation:
 
@@ -102,9 +107,9 @@ Direct review routes are intentionally excluded from normal customer navigation:
 
 A production backend, persistent availability management, operational WhatsApp/email delivery, payment processing, final legal approval, and final client-owned content remain outside this React client-review release. Confirmed missing client inputs are tracked in `CLIENT_INPUT_REQUIRED.md`; the application does not invent them.
 
-For the WordPress phase, Featured Journeys is intended to map to:
+For the WordPress phase, Unforgettable Experiences is intended to map to:
 
-- CPT: `Journeys`
+- CPT: `Experiences`
 - fields such as `journey_gallery`, `route_type`, `vehicle_type`, `pickup_location`, `dropoff_location`, and `direct_booking_link`
 
 No WordPress backend, CPT, or ACF implementation is included in this React prototype.

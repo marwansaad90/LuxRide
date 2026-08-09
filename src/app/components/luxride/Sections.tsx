@@ -183,7 +183,7 @@ export function PopularTransfers() {
               <div className="relative h-52 overflow-hidden bg-white">
                 <ImageWithFallback
                   src={tr.image}
-                  alt={`${tr.from} to ${tr.to}`}
+                  alt={`${tr.displayFrom?.[lang] ?? locationLabel(lang, tr.from)} to ${tr.displayTo?.[lang] ?? locationLabel(lang, tr.to)}`}
                   className="popular-transfer-image h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   style={{ filter: "none", opacity: 1, mixBlendMode: "normal" }}
                 />
@@ -194,10 +194,10 @@ export function PopularTransfers() {
                 )}
               </div>
               <div className="p-6">
-                <p className="text-xs font-bold uppercase tracking-wider text-lux-bronze">{locationLabel(lang, tr.from)}</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-lux-bronze">{tr.displayFrom?.[lang] ?? locationLabel(lang, tr.from)}</p>
                 <div className="mt-1 flex items-start justify-between gap-4">
                   <h3 className="flex items-center gap-2 text-lux-charcoal" style={{ fontSize: "1.25rem" }}>
-                    {locationLabel(lang, tr.to)}
+                    {tr.displayTo?.[lang] ?? locationLabel(lang, tr.to)}
                   </h3>
                   <div className="shrink-0 text-end">
                     {tr.oldPrice && <p className="text-xs text-neutral-400 line-through">€{tr.oldPrice}</p>}

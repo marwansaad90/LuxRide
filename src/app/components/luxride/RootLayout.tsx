@@ -7,6 +7,7 @@ import { LangContext, t } from "./i18n";
 import type { Lang } from "./i18n";
 import { whatsappLink } from "./data";
 import { WhatsAppIcon } from "./WhatsAppIcon";
+import { useLuxRideSeo } from "./seo";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -20,6 +21,7 @@ export function RootLayout() {
   const [lang, setLang] = useState<Lang>("EN");
   const [showMobileActions, setShowMobileActions] = useState(false);
   const { pathname } = useLocation();
+  useLuxRideSeo(lang);
 
   useEffect(() => {
     document.documentElement.lang = lang === "AR" ? "ar" : "en";
