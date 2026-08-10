@@ -246,7 +246,7 @@ export function Fleet() {
           subtitle={t(lang, "fleet_sub")}
         />
         <div
-          className="flex snap-x gap-5 overflow-x-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex snap-x gap-5 overflow-x-auto pb-4 [scrollbar-width:thin] [scrollbar-color:var(--lux-green)_transparent] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-lux-green/45 [&::-webkit-scrollbar-track]:bg-transparent"
           data-homepage-fleet-feed="horizontal"
         >
           {FLEET.map((v) => (
