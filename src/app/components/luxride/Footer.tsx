@@ -91,15 +91,15 @@ export function Footer() {
             </li>
             <li className="flex items-center gap-3">
               <img src={SOCIAL_LOGOS.email} alt="" className={footerGlyphClass} loading="lazy" />
-              <a href={`mailto:${EMAIL}`} className="hover:text-lux-gold">{EMAIL}</a>
+              <a href={`mailto:${EMAIL}`} className="hover:text-lux-client-accent">{EMAIL}</a>
             </li>
             <li className="flex items-center gap-3">
               <img src={SOCIAL_LOGOS.phone} alt="" className={footerGlyphClass} loading="lazy" />
-              <a href={`tel:${PHONE_DISPLAY.replace(/\s/g, "")}`} className="hover:text-lux-gold">{PHONE_DISPLAY}</a>
+              <a href={`tel:${PHONE_DISPLAY.replace(/\s/g, "")}`} className="hover:text-lux-client-accent">{PHONE_DISPLAY}</a>
             </li>
             <li className="flex items-center gap-3">
               <img src={SOCIAL_LOGOS.whatsapp} alt="" className={footerGlyphClass} loading="lazy" />
-              <a href={whatsappLink("Hello LuxRide!")} target="_blank" rel="noopener noreferrer" className="hover:text-lux-gold">
+              <a href={whatsappLink("Hello LuxRide!")} target="_blank" rel="noopener noreferrer" className="hover:text-lux-client-accent">
                 {t(lang, "footer_wa")}
               </a>
             </li>

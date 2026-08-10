@@ -27,7 +27,7 @@ export function LastMinutePage() {
         <div className="mx-auto max-w-3xl px-4 md:px-8">
           <div className="rounded-3xl border border-[#ffcc00]/45 bg-gradient-to-br from-[#ffcc00]/20 to-transparent p-8 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#ffcc00]/35">
-              <Zap className="h-8 w-8 text-[#A87542]" />
+              <Zap className="h-8 w-8 text-lux-client-accent-text" />
             </div>
             <h2 className="mt-5 text-lux-charcoal" style={{ fontSize: "1.75rem", fontWeight: 700 }}>{L("Need a transfer today?", "تحتاج توصيلة اليوم؟")}</h2>
             <p className="mx-auto mt-2 max-w-lg text-neutral-600">{L("If you wish to book a transfer or any other service for today, please contact us directly on WhatsApp to check availability.", "إذا كنت ترغب في حجز توصيلة أو أي خدمة أخرى لليوم، يرجى التواصل معنا مباشرةً عبر واتساب للتحقق من التوفر.")}</p>

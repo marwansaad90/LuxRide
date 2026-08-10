@@ -185,7 +185,8 @@ describe("vehicle and booking validation", () => {
     expect(findRoute("Hurghada", "Sharm El Sheikh")?.image).toBe(IMAGES.sharm);
     expect(IMAGES.airport).toContain("hurghada-airport-transfer.webp");
     expect(IMAGES.cityAirportTransfer).toContain("hurghada-city-airport-transfer.webp");
-    expect(IMAGES.hurghada).toContain("hurghada-transfer.webp");
+    expect(IMAGES.hurghada).toContain("hurghada-client.jpg");
+    expect(IMAGES.sahlHasheesh).toContain("sahl-hasheesh-client.jpg");
     expect(IMAGES.luxor).toContain("luxor-private-transfer.webp");
     expect(IMAGES.aswan).toContain("aswan-private-transfer.webp");
     expect(IMAGES.cairo).toContain("cairo-pyramids-transfer.webp");
@@ -307,6 +308,7 @@ describe("latest desktop client-review integration", () => {
       airport: "images.jpg",
       hurghadaCityAirportTransfer: "Airport.jpg",
       hurghada: "Hurghada.jpg",
+      sahlHasheesh: "Sahl-Hasheesh.jpg",
       makadi: "Makadi-Bay.jpg",
       villageRoad: "Village-Road (1).jpg",
       elGouna: "Elguna.jpg",
@@ -325,7 +327,8 @@ describe("latest desktop client-review integration", () => {
     expect(firstTransfer.displayFrom?.EN).toBe("Hurghada City");
     expect(firstTransfer.image).toBe(IMAGES.cityAirportTransfer);
     expect(firstTransfer.image).not.toBe(IMAGES.airport);
-    expect(IMAGES.hurghada).toContain("hurghada-transfer.webp");
+    expect(IMAGES.hurghada).toContain("hurghada-client.jpg");
+    expect(IMAGES.sahlHasheesh).toContain("sahl-hasheesh-client.jpg");
     expect(IMAGES.villageRoad).toContain("village-road-transfer.webp");
     expect(IMAGES.wadiElGemal).toContain("wadi-el-gemal-transfer.webp");
     const activeMapping = JSON.stringify({ IMAGES, DESTINATION_IMAGE_SOURCE_FILES });
@@ -395,6 +398,7 @@ describe("latest desktop client-review integration", () => {
     expect(header).not.toContain("shadow-[0_2px_20px");
     expect(sections).toContain('objectPosition: imagePosition');
     expect(sections).toContain('center 72%');
+    expect(sections).toContain("lg:min-w-[calc((100%_-_2.5rem)_/_3)]");
     expect(sections).toContain('data-homepage-fleet-feed="horizontal"');
     expect(fleetPage).not.toContain('data-homepage-fleet-feed="horizontal"');
     expect(experiencesPage).toContain('data-experiences-page-feed="expanded"');
@@ -416,6 +420,7 @@ describe("latest desktop client-review integration", () => {
 
   it("uses the latest client yellow accent only on the requested visual refinement targets", () => {
     const brand = readSource("./brand.ts");
+    const data = readSource("./data.ts");
     const sections = readSource("./Sections.tsx");
     const fleetPage = readSource("../../pages/FleetPage.tsx");
     const lastMinutePage = readSource("../../pages/LastMinutePage.tsx");
@@ -430,7 +435,10 @@ describe("latest desktop client-review integration", () => {
     expect(sections + fleetPage).toContain("CLIENT_ACCENT_TEXT");
     expect(sections).toContain("CLIENT_STEP_NUMBER_BG");
     expect(sections + fleetPage).toContain('data-fleet-type-badge="client-accent"');
+    expect(sections).toContain("hover:border-lux-client-accent");
+    expect(data).toContain("IMAGES.sahlHasheesh");
     expect(sections + lastMinutePage).toContain('data-last-minute-accent="button"');
+    expect(readSource("./FeaturedJourneys.tsx")).toContain('data-experience-badge="client-accent"');
     expect(sections).toContain('data-last-minute-accent="badge"');
     expect(sections).toContain('data-how-it-works-step-number="client-accent-35"');
     expect(sections + fleetPage).toContain('data-vehicle-card-scroll="y"');

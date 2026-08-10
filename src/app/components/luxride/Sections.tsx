@@ -50,11 +50,11 @@ export function SectionHeading({
   return (
     <div className={`mx-auto max-w-2xl text-center ${spacing === "tight" ? "mb-8" : "mb-12"}`}>
       <span
-        className={`inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] ${light ? "text-lux-gold" : "text-lux-green"}`}
+        className={`inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] ${light ? "text-lux-client-accent" : "text-lux-green"}`}
       >
-        <span className={`h-px w-6 ${light ? "bg-lux-gold" : "bg-lux-green"}`} />
+        <span className={`h-px w-6 ${light ? "bg-lux-client-accent" : "bg-lux-green"}`} />
         {eyebrow}
-        <span className={`h-px w-6 ${light ? "bg-lux-gold" : "bg-lux-green"}`} />
+        <span className={`h-px w-6 ${light ? "bg-lux-client-accent" : "bg-lux-green"}`} />
       </span>
       <h2
         className={light ? "text-white mt-3" : "text-lux-charcoal mt-3"}
@@ -170,6 +170,11 @@ export function LastMinute() {
 
 export function PopularTransfers() {
   const lang = useLang();
+  const imagePositionFor = (transferId: string, image: string) => {
+    if (transferId === "hurghada-city-airport") return "center 72%";
+    if (image === IMAGES.hurghada) return "center 72%";
+    return "center";
+  };
 
   return (
     <section id="transfers" className="bg-lux-beige py-20 md:py-28">
@@ -181,7 +186,7 @@ export function PopularTransfers() {
         />
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {POPULAR_TRANSFERS.map((tr) => {
-            const imagePosition = tr.id === "hurghada-city-airport" ? "center 72%" : "center";
+            const imagePosition = imagePositionFor(tr.id, tr.image);
             return (
             <div
               key={tr.id}
@@ -195,7 +200,7 @@ export function PopularTransfers() {
                   style={{ filter: "none", opacity: 1, mixBlendMode: "normal", objectPosition: imagePosition }}
                 />
                 {tr.discountPct && (
-                  <span className="absolute left-4 top-4 rounded-full bg-lux-orange px-3 py-1 text-xs text-lux-dark">
+                  <span className="absolute left-4 top-4 rounded-full px-3 py-1 text-xs" style={{ backgroundColor: CLIENT_ACCENT_YELLOW, color: CLIENT_ACCENT_TEXT }}>
                     {tr.discountPct}% OFF
                   </span>
                 )}
@@ -216,7 +221,7 @@ export function PopularTransfers() {
                     <Clock className="h-4 w-4 text-lux-green" /> {tr.duration}
                   </span>
                   {tr.airport && <span className="rounded-full bg-lux-green/10 px-2 py-0.5 text-xs text-lux-green">+€2 airport fee</span>}
-                  {tr.permit && <span className="rounded-full bg-lux-orange/10 px-2 py-0.5 text-xs text-lux-bronze">+ travel permit</span>}
+                  {tr.permit && <span className="rounded-full px-2 py-0.5 text-xs" style={{ backgroundColor: CLIENT_STEP_NUMBER_BG, color: CLIENT_ACCENT_TEXT }}>+ travel permit</span>}
                 </div>
                 <Link
                   to={`/booking?${new URLSearchParams({ from: tr.from, to: tr.to, trip: "oneWay" }).toString()}`}
@@ -252,7 +257,7 @@ export function Fleet() {
           {FLEET.map((v) => (
             <div
               key={v.id}
-              className={`flex max-h-[34rem] min-w-[82%] snap-start flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] transition-all sm:min-w-[24rem] lg:min-w-[28rem] ${
+              className={`flex max-h-[34rem] min-w-[82%] snap-start flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] transition-all sm:min-w-[24rem] lg:min-w-[calc((100%_-_2.5rem)_/_3)] lg:basis-[calc((100%_-_2.5rem)_/_3)] lg:max-w-[calc((100%_-_2.5rem)_/_3)] ${
                 isVehicleSelectable(v) ? "border-lux-green/30 hover:border-lux-green/60" : "border-neutral-200 opacity-70"
               }`}
             >
@@ -277,7 +282,7 @@ export function Fleet() {
               <div className="min-h-0 flex-1 overflow-y-auto p-6 [scrollbar-width:thin]" data-vehicle-card-scroll="y">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lux-charcoal" style={{ fontSize: "1.25rem" }}>{v.name}</h3>
-                  <Sparkles className="h-4 w-4 text-lux-gold" />
+                  <Sparkles className="h-4 w-4 text-lux-client-accent" />
                 </div>
                 <p className="mt-1 min-h-10 text-sm text-neutral-500">{v.tagline}</p>
                 <div className="mt-5 grid grid-cols-2 gap-3 text-sm text-neutral-600">
@@ -343,7 +348,7 @@ export function WhyChoose() {
               key={r.title}
               className="flex h-full flex-col rounded-2xl border border-lux-charcoal/8 bg-white p-6 transition-all hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)]"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-lux-gold/15">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl" style={{ backgroundColor: CLIENT_STEP_NUMBER_BG }}>
                 <r.icon className="h-6 w-6 text-lux-bronze" />
               </div>
               <h3 className="mt-4 text-lux-charcoal" style={{ fontSize: "1.05rem" }}>
@@ -372,16 +377,16 @@ export function About() {
               className="h-[420px] w-full object-cover"
             />
           </div>
-          <div className="absolute -bottom-6 -right-4 rounded-2xl border border-lux-gold/30 bg-lux-dark-2 px-6 py-5 shadow-2xl sm:right-8">
-            <p className="text-lux-gold" style={{ fontSize: "2.25rem", fontWeight: 700 }}>
+          <div className="absolute -bottom-6 -right-4 rounded-2xl border border-lux-client-accent/35 bg-lux-dark-2 px-6 py-5 shadow-2xl sm:right-8">
+            <p className="text-lux-client-accent" style={{ fontSize: "2.25rem", fontWeight: 700 }}>
               {lang === "AR" ? "نقل خاص" : "Private"}
             </p>
             <p className="text-sm text-lux-beige/70">{t(lang, "about_stat")}</p>
           </div>
         </div>
         <div>
-          <span className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-lux-gold">
-            <span className="h-px w-6 bg-lux-gold" /> {t(lang, "about_eyebrow")}
+          <span className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-lux-client-accent">
+            <span className="h-px w-6 bg-lux-client-accent" /> {t(lang, "about_eyebrow")}
           </span>
           <h2
             className="mt-4 text-lux-beige"
@@ -395,7 +400,8 @@ export function About() {
           <div className="mt-8 flex flex-wrap gap-4">
             <Link
               to="/booking"
-              className="rounded-full bg-lux-gold px-7 py-3 text-lux-dark transition-all hover:bg-lux-gold-light"
+              className="rounded-full px-7 py-3 transition-all hover:brightness-105"
+              style={{ backgroundColor: CLIENT_ACCENT_YELLOW, color: CLIENT_ACCENT_TEXT }}
             >
               {t(lang, "about_book")}
             </Link>
@@ -403,7 +409,7 @@ export function About() {
               href={whatsappLink("Hi LuxRide, I have a question about your services.")}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 rounded-full border border-lux-beige/25 px-7 py-3 text-lux-beige transition-all hover:border-lux-gold hover:text-lux-gold"
+              className="flex items-center gap-2 rounded-full border border-lux-beige/25 px-7 py-3 text-lux-beige transition-all hover:border-lux-client-accent hover:text-lux-client-accent"
             >
               <WhatsAppIcon className="h-4 w-4" /> {t(lang, "about_wa")}
             </a>
@@ -433,7 +439,7 @@ export function DestinationSEO() {
             const query = new URLSearchParams({ from: route.from, to: route.to, trip: publicTrip }).toString();
             return (
               <article key={route.id} className="overflow-hidden rounded-2xl border border-lux-charcoal/8 bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)]">
-                <ImageWithFallback src={route.image ?? IMAGES.hurghada} alt={locationLabel(lang, route.to)} className="h-44 w-full object-cover" />
+                <ImageWithFallback src={route.image ?? IMAGES.hurghada} alt={locationLabel(lang, route.to)} className="h-44 w-full object-cover" style={{ objectPosition: route.image === IMAGES.hurghada ? "center 72%" : "center" }} />
                 <div className="p-6">
                   <p className="text-xs font-bold uppercase tracking-wider text-lux-bronze">{locationLabel(lang, route.from)}</p>
                   <h3 className="mt-1 text-lux-charcoal" style={{ fontSize: "1.25rem" }}>{locationLabel(lang, route.to)}</h3>
@@ -441,7 +447,7 @@ export function DestinationSEO() {
                     <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-lux-green" />{route.duration}</span>
                     <span className="rounded-full bg-lux-green/10 px-2.5 py-0.5 text-lux-green">{lang === "AR" ? "يبدأ من" : "From"} €{startingPrice}</span>
                     {route.airport && <span className="rounded-full bg-lux-green/10 px-2.5 py-0.5 text-xs text-lux-green">+€2 {lang === "AR" ? "رسوم مطار" : "airport fee"}</span>}
-                    {route.permit && <span className="rounded-full bg-lux-orange/10 px-2.5 py-0.5 text-xs text-lux-bronze">+ {lang === "AR" ? "تصريح سفر" : "travel permit"}</span>}
+                    {route.permit && <span className="rounded-full px-2.5 py-0.5 text-xs" style={{ backgroundColor: CLIENT_STEP_NUMBER_BG, color: CLIENT_ACCENT_TEXT }}>+ {lang === "AR" ? "تصريح سفر" : "travel permit"}</span>}
                   </div>
                   <div className="mt-5 flex gap-3">
                     <Link to={`/transfer-details?${query}`} className="flex flex-1 items-center justify-center rounded-full border border-lux-charcoal/15 py-2.5 text-sm text-lux-charcoal hover:border-lux-green hover:text-lux-green">
@@ -593,7 +599,8 @@ export function FinalCTA() {
         <div className="mt-9 flex flex-wrap justify-center gap-4">
           <Link
             to="/booking"
-            className="rounded-full bg-lux-gold px-8 py-3.5 text-lux-dark transition-all hover:bg-lux-gold-light"
+            className="rounded-full px-8 py-3.5 transition-all hover:brightness-105"
+            style={{ backgroundColor: CLIENT_ACCENT_YELLOW, color: CLIENT_ACCENT_TEXT }}
           >
             {t(lang, "cta_calc")}
           </Link>
@@ -601,7 +608,7 @@ export function FinalCTA() {
             href={whatsappLink("Hello LuxRide, I'd like to book a transfer.")}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-2 rounded-full border border-lux-beige/30 px-8 py-3.5 text-lux-beige transition-all hover:border-lux-gold hover:text-lux-gold"
+            className="flex items-center gap-2 rounded-full border border-lux-beige/30 px-8 py-3.5 text-lux-beige transition-all hover:border-lux-client-accent hover:text-lux-client-accent"
           >
             <WhatsAppIcon className="h-5 w-5" /> {t(lang, "cta_wa")}
           </a>

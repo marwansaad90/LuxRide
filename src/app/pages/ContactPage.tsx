@@ -31,12 +31,14 @@ export function ContactPage() {
   };
 
   const contactCardClass =
-    "flex min-h-[104px] items-center gap-3 rounded-2xl border border-lux-charcoal/8 bg-white px-5 py-4 transition-all hover:border-lux-green hover:shadow-[0_14px_34px_rgba(0,0,0,0.06)]";
+    "flex min-h-[108px] items-center gap-4 rounded-2xl border border-lux-charcoal/8 bg-white px-4 py-4 transition-all hover:border-lux-green hover:shadow-[0_14px_34px_rgba(0,0,0,0.06)]";
   const socialIconFilter = {
     filter: "brightness(0) saturate(100%) invert(32%) sepia(51%) saturate(1052%) hue-rotate(122deg) brightness(91%) contrast(94%)",
   };
-  const cardTextClass = "min-w-0 flex-1";
-  const primaryLineClass = "block whitespace-nowrap text-[0.82rem] leading-tight text-lux-charcoal xl:text-[0.95rem]";
+  const cardTextClass = "min-w-0 flex-1 overflow-hidden";
+  const labelLineClass = "block whitespace-nowrap text-sm leading-tight text-neutral-500";
+  const primaryLineClass = "block max-w-full whitespace-nowrap text-[0.8rem] leading-snug text-lux-charcoal min-[1180px]:text-[0.84rem] 2xl:text-[0.95rem]";
+  const emailLineClass = "block max-w-full whitespace-nowrap text-[0.72rem] leading-snug text-lux-charcoal min-[1180px]:text-[0.76rem] 2xl:text-[0.88rem]";
 
   return (
     <PageShell
@@ -50,26 +52,26 @@ export function ContactPage() {
     >
       <section className="bg-lux-beige py-16 md:py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <a href={`tel:${PHONE_DISPLAY.replace(/\s/g, "")}`} className={contactCardClass}>
-              <SocialLogoCircle src={SOCIAL_LOGOS.phone} alt="" className="h-5 w-5" imgClassName="max-h-5 max-w-5" imgStyle={socialIconFilter} />
-              <span className={cardTextClass}><span className="block text-sm text-neutral-500">{L("Phone", "الهاتف")}</span><span className={primaryLineClass} dir="ltr">{PHONE_DISPLAY}</span></span>
+              <SocialLogoCircle src={SOCIAL_LOGOS.phone} alt="" className="!h-10 !w-10" imgClassName="!max-h-10 !max-w-10" imgStyle={socialIconFilter} />
+              <span className={cardTextClass}><span className={labelLineClass}>{L("Phone", "الهاتف")}</span><span className={primaryLineClass} dir="ltr">{PHONE_DISPLAY}</span></span>
             </a>
             <a href={`mailto:${EMAIL}`} className={contactCardClass}>
-              <SocialLogoCircle src={SOCIAL_LOGOS.email} alt="" className="h-5 w-5" imgClassName="max-h-5 max-w-5" imgStyle={socialIconFilter} />
-              <span className={cardTextClass}><span className="block text-sm text-neutral-500">{L("Email", "البريد الإلكتروني")}</span><span className={primaryLineClass} dir="ltr">{EMAIL}</span></span>
+              <SocialLogoCircle src={SOCIAL_LOGOS.email} alt="" className="!h-10 !w-10" imgClassName="!max-h-10 !max-w-10" imgStyle={socialIconFilter} />
+              <span className={cardTextClass}><span className={labelLineClass}>{L("Email", "البريد الإلكتروني")}</span><span className={emailLineClass} dir="ltr">{EMAIL}</span></span>
             </a>
             <a href={whatsappLink("Hello LuxRide!")} target="_blank" rel="noopener noreferrer" className={contactCardClass}>
-              <SocialLogoCircle src={SOCIAL_LOGOS.whatsapp} alt="" className="h-5 w-5" imgClassName="max-h-5 max-w-5" imgStyle={socialIconFilter} />
-              <span className={cardTextClass}><span className="block text-sm text-neutral-500">WhatsApp</span><span className={primaryLineClass} dir="ltr">{PHONE_DISPLAY}</span></span>
+              <SocialLogoCircle src={SOCIAL_LOGOS.whatsapp} alt="" className="!h-10 !w-10" imgClassName="!max-h-10 !max-w-10" imgStyle={socialIconFilter} />
+              <span className={cardTextClass}><span className={labelLineClass}>WhatsApp</span><span className={primaryLineClass} dir="ltr">{PHONE_DISPLAY}</span></span>
             </a>
             <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" className={contactCardClass} aria-label="LuxRide on Facebook">
-              <SocialLogoCircle src={SOCIAL_LOGOS.facebook} alt="" className="h-5 w-5" imgClassName="max-h-5 max-w-5" imgStyle={socialIconFilter} />
-              <span className={cardTextClass}><span className="block text-sm text-neutral-500">Facebook</span><span className={primaryLineClass}>luxride.eg</span></span>
+              <SocialLogoCircle src={SOCIAL_LOGOS.facebook} alt="" className="!h-10 !w-10" imgClassName="!max-h-10 !max-w-10" imgStyle={socialIconFilter} />
+              <span className={cardTextClass}><span className={labelLineClass}>Facebook</span><span className={primaryLineClass}>luxride.eg</span></span>
             </a>
             <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className={contactCardClass} aria-label="LuxRide on Instagram">
-              <SocialLogoCircle src={SOCIAL_LOGOS.instagram} alt="" className="h-5 w-5" imgClassName="max-h-5 max-w-5" imgStyle={socialIconFilter} />
-              <span className={cardTextClass}><span className="block text-sm text-neutral-500">Instagram</span><span className={primaryLineClass}>luxride.eg</span></span>
+              <SocialLogoCircle src={SOCIAL_LOGOS.instagram} alt="" className="!h-10 !w-10" imgClassName="!max-h-10 !max-w-10" imgStyle={socialIconFilter} />
+              <span className={cardTextClass}><span className={labelLineClass}>Instagram</span><span className={primaryLineClass}>luxride.eg</span></span>
             </a>
           </div>
 

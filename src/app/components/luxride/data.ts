@@ -7,7 +7,8 @@ import hiacaImg from "../../../assets/vehicles/hiace.webp";
 import aboutTransferImg from "../../../assets/about/luxride-about-transfer.webp";
 import airportImg from "../../../assets/destinations/hurghada-airport-transfer.webp";
 import cityAirportTransferImg from "../../../assets/destinations/hurghada-city-airport-transfer.webp";
-import hurghadaImg from "../../../assets/destinations/hurghada-transfer.webp";
+import hurghadaImg from "../../../assets/destinations/hurghada-client.jpg";
+import sahlHasheeshImg from "../../../assets/destinations/sahl-hasheesh-client.jpg";
 import villageRoadImg from "../../../assets/destinations/village-road-transfer.webp";
 import cairoPyramidsImg from "../../../assets/destinations/cairo-pyramids-transfer.webp";
 import marsaAlamImg from "../../../assets/destinations/marsa-alam-transfer.webp";
@@ -36,6 +37,7 @@ export const IMAGES = {
   driver:
     "https://images.unsplash.com/photo-1627285886624-5cd637dafb50?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1200",
   hurghada: hurghadaImg,
+  sahlHasheesh: sahlHasheeshImg,
   villageRoad: villageRoadImg,
   alAhyaa:
     "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
@@ -67,6 +69,7 @@ export const DESTINATION_IMAGE_SOURCE_FILES = {
   airport: "images.jpg",
   hurghadaCityAirportTransfer: "Airport.jpg",
   hurghada: "Hurghada.jpg",
+  sahlHasheesh: "Sahl-Hasheesh.jpg",
   makadi: "Makadi-Bay.jpg",
   villageRoad: "Village-Road (1).jpg",
   elGouna: "Elguna.jpg",
@@ -259,6 +262,7 @@ function routeImage(row: WorkbookRouteRow): string {
   if (key.includes("Sharm El Sheikh")) return IMAGES.sharm;
   if (key.includes("Wadi El Gemal") || key.includes("Sharm El Luli") || key.includes("El Qulaan") || key.includes("Abu Dabbab")) return IMAGES.wadiElGemal;
   if (key.includes("Marsa Alam") || key.includes("Marsa Ghaleb") || key.includes("Hamata") || key.includes("El Quseir")) return IMAGES.marsaAlam;
+  if (key.includes("Sahl Hasheesh")) return IMAGES.sahlHasheesh;
   if (key.includes("El Gouna")) return IMAGES.elGouna;
   if (key.includes("Makadi")) return IMAGES.makadi;
   if (key.includes("Soma Bay") || key.includes("Safaga")) return IMAGES.soma;
@@ -462,7 +466,7 @@ export const POPULAR_TRANSFERS: PopularTransfer[] = [
   popularTransfer("airport-hurghada", "Hurghada Airport", "Hurghada", IMAGES.airport),
   popularTransfer("airport-makadi", "Hurghada Airport", "Makadi Bay", IMAGES.makadi),
   popularTransfer("airport-gouna", "Hurghada Airport", "El Gouna", IMAGES.elGouna),
-  popularTransfer("airport-sahl", "Hurghada Airport", "Sahl Hasheesh", IMAGES.hurghada),
+  popularTransfer("airport-sahl", "Hurghada Airport", "Sahl Hasheesh", IMAGES.sahlHasheesh),
   popularTransfer("airport-village", "Hurghada Airport", "Village Road", IMAGES.villageRoad),
   popularTransfer("airport-ahyaa", "Hurghada Airport", "Al Ahyaa", IMAGES.alAhyaa),
   popularTransfer("hurghada-luxor", "Hurghada", "Luxor", IMAGES.luxor),

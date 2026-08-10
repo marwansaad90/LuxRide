@@ -40,7 +40,7 @@ export function AboutPage() {
           <div>
             <h2 id="about-introduction" className="text-lux-charcoal" style={{ fontSize: "clamp(1.75rem,3vw,2.5rem)", fontWeight: 800, lineHeight: 1.12 }}>{L("Premium private transportation", "نقل خاص متميز")}</h2>
             <p className="mt-5 text-neutral-700" style={{ lineHeight: 1.85 }}>{L("LuxRide provides private airport transfers, door-to-door hotel transfers, Red Sea resort transportation, and long-distance private transfers. Each service is arranged around the guest's confirmed route, timing, group and luggage.", "توفّر LuxRide توصيلات مطار خاصة، ونقلاً من الباب إلى الباب للفنادق، وتنقلاً إلى منتجعات البحر الأحمر، وتوصيلات خاصة بعيدة المسافة. تُرتب كل خدمة وفق المسار والموعد والمجموعة والأمتعة المؤكدة للضيف.")}</p>
-            <div className="mt-7 rounded-2xl border border-[#CC9966]/25 bg-white p-5 text-sm text-neutral-700 shadow-sm">
+            <div className="mt-7 rounded-2xl border border-lux-client-accent/35 bg-white p-5 text-sm text-neutral-700 shadow-sm">
               {L("Our focus is simple: clear information, comfortable vehicles, and predictable private transport from request to arrival.", "تركيزنا بسيط: معلومات واضحة، سيارات مريحة، وتنقل خاص يمكن الاعتماد عليه من لحظة الطلب وحتى الوصول.")}
             </div>
           </div>

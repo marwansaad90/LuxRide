@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { journeyBookingQuery, newestFeaturedTransfers, type FeaturedTransfer } from "./journeys";
+import { CLIENT_ACCENT_TEXT, CLIENT_ACCENT_YELLOW } from "./brand";
 import { SectionHeading } from "./Sections";
 import { useLang } from "./i18n";
 
@@ -34,7 +35,7 @@ export function JourneyCard({
     >
       <div className={`relative shrink-0 overflow-hidden bg-lux-beige ${isExpanded ? "h-64 md:h-72" : "h-56"}`} data-featured-transfer-gallery="true">
         <ImageWithFallback src={currentImage} alt={journey.title[lang]} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-        <span className="absolute left-4 top-4 rounded-full bg-[#CC9966] px-3 py-1 text-xs font-bold text-white shadow-md">
+        <span className="absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-bold" style={{ backgroundColor: CLIENT_ACCENT_YELLOW, color: CLIENT_ACCENT_TEXT }} data-experience-badge="client-accent">
           {journey.routeType[lang]}
         </span>
         {canNavigate && (
@@ -48,7 +49,7 @@ export function JourneyCard({
           </>
         )}
         <span className="absolute bottom-4 right-4 inline-flex items-center gap-1.5 rounded-full bg-white/92 px-3 py-1 text-xs font-semibold text-lux-charcoal backdrop-blur">
-          <Images className="h-3.5 w-3.5 text-[#CC9966]" />
+          <Images className="h-3.5 w-3.5 text-lux-client-accent" />
           {imageIndex + 1}/{journey.images.length}
         </span>
       </div>
