@@ -31,7 +31,7 @@ export function Hero() {
     >
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(15,22,35,0.16)_0%,rgba(15,22,35,0.05)_44%,rgba(15,22,35,0.22)_100%)]" />
       <div className="mx-auto grid min-h-[calc(100svh-80px)] max-w-7xl items-center gap-6 px-4 py-5 md:px-8 md:py-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,500px)] lg:gap-10 lg:py-0">
-        <div className="max-w-2xl text-white">
+        <div className={`${isAR ? "max-w-3xl" : "max-w-2xl"} text-white`}>
           <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/16 px-4 py-1.5 text-xs uppercase tracking-[0.18em] text-white shadow-sm backdrop-blur-md">
             {t(lang, "hero_badge")}
           </span>
@@ -40,10 +40,10 @@ export function Hero() {
             className="mt-4 text-balance drop-shadow-[0_3px_18px_rgba(0,0,0,0.35)]"
             style={{
               fontFamily: "var(--font-heading)",
-              fontSize: isAR ? "clamp(2.4rem, 4.4vw, 4.35rem)" : "clamp(2.45rem, 5vw, 4.75rem)",
+              fontSize: isAR ? "clamp(2.25rem, 3.65vw, 4.05rem)" : "clamp(2.45rem, 5vw, 4.75rem)",
               fontWeight: 800,
-              lineHeight: isAR ? 1.28 : 0.98,
-              maxWidth: isAR ? "14ch" : undefined,
+              lineHeight: isAR ? 1.16 : 0.98,
+              maxWidth: isAR ? "21ch" : undefined,
             }}
           >
             {isAR ? "ارتقِ بتجربة تنقلك في الغردقة والبحر الأحمر" : "Elevate Your Journey in Hurghada"}

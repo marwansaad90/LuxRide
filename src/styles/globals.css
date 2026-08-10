@@ -6,6 +6,8 @@
   --lux-green-light:#00b33c;
   --lux-gold:       #C9A84C;
   --lux-gold-light: #E0C06A;
+  --lux-client-accent: #ffcc00;
+  --lux-client-accent-text: #000000;
   --lux-beige:      #F5F1EA;
   --lux-orange:     #FF9933;
   --lux-charcoal:   #1e2530;
@@ -19,6 +21,8 @@
   --color-lux-green-light: var(--lux-green-light);
   --color-lux-gold:        var(--lux-gold);
   --color-lux-gold-light:  var(--lux-gold-light);
+  --color-lux-client-accent: var(--lux-client-accent);
+  --color-lux-client-accent-text: var(--lux-client-accent-text);
   --color-lux-beige:       var(--lux-beige);
   --color-lux-orange:      var(--lux-orange);
   --color-lux-charcoal:    var(--lux-charcoal);

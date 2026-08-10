@@ -4,6 +4,7 @@ import { PageShell } from "../components/luxride/PageShell";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { FLEET, isVehicleSelectable } from "../components/luxride/data";
 import { useL } from "../components/luxride/i18n";
+import { CLIENT_ACCENT_TEXT, CLIENT_ACCENT_YELLOW } from "../components/luxride/brand";
 
 export function FleetPage() {
   const L = useL();
@@ -23,7 +24,7 @@ export function FleetPage() {
           {FLEET.map((v) => (
             <div
               key={v.id}
-              className={`overflow-hidden rounded-2xl border bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] ${
+              className={`flex max-h-[34rem] flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] ${
                 isVehicleSelectable(v) ? "border-lux-green/30" : "border-neutral-200 opacity-70"
               }`}
             >
@@ -37,9 +38,9 @@ export function FleetPage() {
                 <span className={`absolute left-4 top-4 rounded-full px-3 py-1 text-xs ${isVehicleSelectable(v) ? "bg-lux-green text-white" : "bg-lux-charcoal/90 text-lux-beige/80"}`}>
                   {isVehicleSelectable(v) ? L("Available", "متاح") : L("Coming Soon", "قريباً")}
                 </span>
-                <span className="absolute right-4 top-4 rounded-full bg-black/60 px-3 py-1 text-xs text-lux-gold">{L(v.category, v.categoryAr)}</span>
+                <span className="absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-bold" style={{ backgroundColor: CLIENT_ACCENT_YELLOW, color: CLIENT_ACCENT_TEXT }} data-fleet-type-badge="client-accent">{L(v.category, v.categoryAr)}</span>
               </div>
-              <div className="p-6">
+              <div className="min-h-0 flex-1 overflow-y-auto p-6 [scrollbar-width:thin]" data-vehicle-card-scroll="y">
                 <h3 className="text-lux-charcoal" style={{ fontSize: "1.35rem" }}>{v.name}</h3>
                 <p className="mt-1 text-sm text-neutral-500">{v.tagline}</p>
 

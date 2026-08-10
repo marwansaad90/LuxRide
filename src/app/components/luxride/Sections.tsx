@@ -32,6 +32,7 @@ import {
 } from "./data";
 import { locationLabel, useLang, t } from "./i18n";
 import { WhatsAppIcon } from "./WhatsAppIcon";
+import { CLIENT_ACCENT_TEXT, CLIENT_ACCENT_YELLOW, CLIENT_STEP_NUMBER_BG } from "./brand";
 
 export function SectionHeading({
   eyebrow,
@@ -121,13 +122,14 @@ export function LastMinute() {
   const lang = useLang();
   const isAR = lang === "AR";
   return (
-    <section className="border-y border-[#CC9966]/25 bg-[#FBF5EF] py-10">
+    <section className="border-y border-[#ffcc00]/35 bg-[#FBF5EF] py-10">
       <div className="mx-auto max-w-5xl px-4 md:px-8">
-        <div className="flex flex-col items-start gap-5 rounded-2xl border border-[#CC9966]/35 bg-white px-6 py-7 shadow-[0_4px_24px_rgba(204,153,102,0.16)] md:flex-row md:items-center md:justify-between md:px-8">
+        <div className="flex flex-col items-start gap-5 rounded-2xl border border-[#ffcc00]/45 bg-white px-6 py-7 shadow-[0_4px_20px_rgba(0,0,0,0.06)] md:flex-row md:items-center md:justify-between md:px-8">
           <div>
             <span
-              className="inline-block rounded-full bg-[#CC9966] px-4 py-1 text-xs uppercase tracking-wider text-white"
-              style={{ fontFamily: isAR ? "Cairo, sans-serif" : "'Barlow Condensed', sans-serif", fontWeight: 700 }}
+              className="inline-block rounded-full px-4 py-1 text-xs uppercase tracking-wider"
+              style={{ backgroundColor: CLIENT_ACCENT_YELLOW, color: CLIENT_ACCENT_TEXT, fontFamily: isAR ? "Cairo, sans-serif" : "'Barlow Condensed', sans-serif", fontWeight: 700 }}
+              data-last-minute-accent="badge"
             >
               {t(lang, "lm_title")}
             </span>
@@ -151,9 +153,10 @@ export function LastMinute() {
             <a
               href={whatsappLink("Hi LuxRide, I'd like to check last-minute availability for today.")}
               target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center gap-2 rounded-full bg-[#CC9966] px-7 py-3.5 font-medium text-white shadow-md shadow-[#CC9966]/25 transition-all hover:brightness-105"
-              style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "1rem" }}
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 rounded-full px-7 py-3.5 font-medium transition-all hover:brightness-105"
+              style={{ backgroundColor: CLIENT_ACCENT_YELLOW, color: CLIENT_ACCENT_TEXT, fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "1rem" }}
+              data-last-minute-accent="button"
             >
               <WhatsAppIcon className="h-5 w-5" /> {t(lang, "lm_cta")}
             </a>
@@ -249,7 +252,7 @@ export function Fleet() {
           {FLEET.map((v) => (
             <div
               key={v.id}
-              className={`min-w-[82%] snap-start overflow-hidden rounded-2xl border bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] transition-all sm:min-w-[24rem] lg:min-w-[28rem] ${
+              className={`flex max-h-[34rem] min-w-[82%] snap-start flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] transition-all sm:min-w-[24rem] lg:min-w-[28rem] ${
                 isVehicleSelectable(v) ? "border-lux-green/30 hover:border-lux-green/60" : "border-neutral-200 opacity-70"
               }`}
             >
@@ -267,11 +270,11 @@ export function Fleet() {
                 >
                   {isVehicleSelectable(v) ? t(lang, "fleet_available") : t(lang, "fleet_soon")}
                 </span>
-                <span className="absolute right-4 top-4 rounded-full bg-[#F6EFE6] px-3.5 py-1.5 text-xs font-bold text-lux-charcoal shadow-sm ring-1 ring-[#CC9966]/25">
+                <span className="absolute right-4 top-4 rounded-full px-3.5 py-1.5 text-xs font-bold" style={{ backgroundColor: CLIENT_ACCENT_YELLOW, color: CLIENT_ACCENT_TEXT }} data-fleet-type-badge="client-accent">
                   {lang === "AR" ? v.categoryAr : v.category}
                 </span>
               </div>
-              <div className="p-6">
+              <div className="min-h-0 flex-1 overflow-y-auto p-6 [scrollbar-width:thin]" data-vehicle-card-scroll="y">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lux-charcoal" style={{ fontSize: "1.25rem" }}>{v.name}</h3>
                   <Sparkles className="h-4 w-4 text-lux-gold" />
@@ -531,7 +534,7 @@ export function HowItWorks() {
                 <div className="mb-4 flex items-center gap-4 sm:flex-col sm:gap-3">
                   <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4 border-white bg-lux-green/10 shadow-sm">
                     <s.Icon className="h-7 w-7 text-lux-green" aria-hidden="true" />
-                    <span className="absolute -end-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full bg-[#CC9966] text-[0.68rem] font-bold text-white">
+                    <span className="absolute -end-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full text-[0.68rem] font-bold" style={{ backgroundColor: CLIENT_STEP_NUMBER_BG, color: CLIENT_ACCENT_TEXT }} data-how-it-works-step-number="client-accent-35">
                       {s.num}
                     </span>
                   </div>

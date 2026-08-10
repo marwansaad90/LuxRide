@@ -414,6 +414,33 @@ describe("latest desktop client-review integration", () => {
     expect(footer).toContain("SOCIAL_LOGOS.phone");
   });
 
+  it("uses the latest client yellow accent only on the requested visual refinement targets", () => {
+    const brand = readSource("./brand.ts");
+    const sections = readSource("./Sections.tsx");
+    const fleetPage = readSource("../../pages/FleetPage.tsx");
+    const lastMinutePage = readSource("../../pages/LastMinutePage.tsx");
+    const hero = readSource("./Hero.tsx");
+    const globals = readFileSync(new URL("../../../styles/globals.css", import.meta.url), "utf8");
+
+    expect(brand).toContain('CLIENT_ACCENT_YELLOW = "#ffcc00"');
+    expect(brand).toContain('CLIENT_ACCENT_TEXT = "#000000"');
+    expect(brand).toContain('CLIENT_STEP_NUMBER_BG = "rgba(255, 204, 0, 0.35)"');
+    expect(globals).toContain("--lux-client-accent: #ffcc00");
+    expect(sections + fleetPage).toContain("CLIENT_ACCENT_YELLOW");
+    expect(sections + fleetPage).toContain("CLIENT_ACCENT_TEXT");
+    expect(sections).toContain("CLIENT_STEP_NUMBER_BG");
+    expect(sections + fleetPage).toContain('data-fleet-type-badge="client-accent"');
+    expect(sections + lastMinutePage).toContain('data-last-minute-accent="button"');
+    expect(sections).toContain('data-last-minute-accent="badge"');
+    expect(sections).toContain('data-how-it-works-step-number="client-accent-35"');
+    expect(sections + fleetPage).toContain('data-vehicle-card-scroll="y"');
+    expect(lastMinutePage).toContain("CLIENT_ACCENT_YELLOW");
+    expect(hero).toContain('maxWidth: isAR ? "21ch"');
+    expect(hero).toContain('lineHeight: isAR ? 1.16');
+    expect(hero).toContain("Elevate Your Journey in Hurghada");
+    expect(hero).toContain("ارتقِ بتجربة تنقلك في الغردقة والبحر الأحمر");
+  });
+
   it("removes visible old transport terminology and LuxRide Egypt branding from active app code", () => {
     const activeCode = readActiveAppSources(fileURLToPath(new URL("../../", import.meta.url)));
     expect(activeCode).not.toContain("LuxRide Egypt");
