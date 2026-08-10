@@ -463,7 +463,7 @@ export const POPULAR_TRANSFERS: PopularTransfer[] = [
   popularTransfer("hurghada-city-airport", "Hurghada", "Hurghada Airport", IMAGES.cityAirportTransfer, {
     displayFrom: { EN: "Hurghada City", AR: "مدينة الغردقة" },
   }),
-  popularTransfer("airport-hurghada", "Hurghada Airport", "Hurghada", IMAGES.airport),
+  popularTransfer("airport-hurghada", "Hurghada Airport", "Hurghada", IMAGES.hurghada),
   popularTransfer("airport-makadi", "Hurghada Airport", "Makadi Bay", IMAGES.makadi),
   popularTransfer("airport-gouna", "Hurghada Airport", "El Gouna", IMAGES.elGouna),
   popularTransfer("airport-sahl", "Hurghada Airport", "Sahl Hasheesh", IMAGES.sahlHasheesh),
