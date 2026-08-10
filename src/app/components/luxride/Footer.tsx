@@ -11,7 +11,7 @@ import {
 } from "./data";
 import { useLang, t, POPULAR_DEST_LABELS } from "./i18n";
 import type { TKey } from "./i18n";
-import { SOCIAL_LOGOS, SocialLogoCircle, TripadvisorLogoCircle } from "./SocialBrandIcons";
+import { SOCIAL_LOGOS, SocialLogoCircle, TripadvisorLogoMark } from "./SocialBrandIcons";
 
 const QUICK_LINKS: Array<{ key: TKey; to: string }> = [
   { key: "nav_home", to: "/" },
@@ -39,9 +39,9 @@ export function Footer() {
           <p className="mt-4 text-sm" style={{ lineHeight: 1.6 }}>
             {t(lang, "footer_desc")}
           </p>
-          <div className="mt-5 flex gap-3">
+          <div className="mt-5 flex items-center gap-3">
             <a href={TRIPADVISOR_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Tripadvisor" className="transition-transform hover:-translate-y-0.5">
-              <TripadvisorLogoCircle className="h-10 min-w-[8.5rem]" imgClassName="h-6 max-w-[7.75rem]" />
+              <TripadvisorLogoMark imgClassName="brightness-0 invert" />
             </a>
             <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Facebook" className="transition-transform hover:-translate-y-0.5">
               <SocialLogoCircle src={SOCIAL_LOGOS.facebook} alt="Facebook" className="h-10 w-10 bg-transparent" />
@@ -83,14 +83,14 @@ export function Footer() {
           <h4 className="text-lux-beige">{t(lang, "footer_contact")}</h4>
           <ul className="mt-4 space-y-3 text-sm">
             <li className="flex items-start gap-3">
-              <MapPin className="mt-0.5 h-4 w-4 text-lux-gold" /> {t(lang, "footer_addr")}
+              <MapPin className="mt-0.5 h-4 w-4 text-white" /> {t(lang, "footer_addr")}
             </li>
             <li className="flex items-center gap-3">
-              <Mail className="h-4 w-4 text-lux-gold" />
+              <Mail className="h-4 w-4 text-white" />
               <a href={`mailto:${EMAIL}`} className="hover:text-lux-gold">{EMAIL}</a>
             </li>
             <li className="flex items-center gap-3">
-              <Phone className="h-4 w-4 text-lux-gold" />
+              <Phone className="h-4 w-4 text-white" />
               <a href={`tel:${PHONE_DISPLAY.replace(/\s/g, "")}`} className="hover:text-lux-gold">{PHONE_DISPLAY}</a>
             </li>
             <li className="flex items-center gap-3">

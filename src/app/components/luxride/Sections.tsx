@@ -38,14 +38,16 @@ export function SectionHeading({
   title,
   subtitle,
   light = false,
+  spacing = "default",
 }: {
   eyebrow: string;
   title: string;
   subtitle?: string;
   light?: boolean;
+  spacing?: "default" | "tight";
 }) {
   return (
-    <div className="mx-auto mb-12 max-w-2xl text-center">
+    <div className={`mx-auto max-w-2xl text-center ${spacing === "tight" ? "mb-8" : "mb-12"}`}>
       <span
         className={`inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] ${light ? "text-lux-gold" : "text-lux-green"}`}
       >
@@ -175,7 +177,9 @@ export function PopularTransfers() {
           subtitle={t(lang, "pop_sub")}
         />
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {POPULAR_TRANSFERS.map((tr) => (
+          {POPULAR_TRANSFERS.map((tr) => {
+            const imagePosition = tr.id === "hurghada-city-airport" ? "center 72%" : "center";
+            return (
             <div
               key={tr.id}
               className="group overflow-hidden rounded-2xl bg-white shadow-[0_10px_40px_rgba(0,0,0,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)]"
@@ -185,7 +189,7 @@ export function PopularTransfers() {
                   src={tr.image}
                   alt={`${tr.displayFrom?.[lang] ?? locationLabel(lang, tr.from)} to ${tr.displayTo?.[lang] ?? locationLabel(lang, tr.to)}`}
                   className="popular-transfer-image h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  style={{ filter: "none", opacity: 1, mixBlendMode: "normal" }}
+                  style={{ filter: "none", opacity: 1, mixBlendMode: "normal", objectPosition: imagePosition }}
                 />
                 {tr.discountPct && (
                   <span className="absolute left-4 top-4 rounded-full bg-lux-orange px-3 py-1 text-xs text-lux-dark">
@@ -219,7 +223,8 @@ export function PopularTransfers() {
                 </Link>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
@@ -230,18 +235,21 @@ export function Fleet() {
   const lang = useLang();
 
   return (
-    <section id="fleet" className="bg-white py-16 md:py-24">
+    <section id="fleet" className="bg-white py-14 md:py-18">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <SectionHeading
           eyebrow={t(lang, "fleet_eyebrow")}
           title={t(lang, "fleet_title")}
           subtitle={t(lang, "fleet_sub")}
         />
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div
+          className="flex snap-x gap-5 overflow-x-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          data-homepage-fleet-feed="horizontal"
+        >
           {FLEET.map((v) => (
             <div
               key={v.id}
-              className={`overflow-hidden rounded-2xl border bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] transition-all ${
+              className={`min-w-[82%] snap-start overflow-hidden rounded-2xl border bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] transition-all sm:min-w-[24rem] lg:min-w-[28rem] ${
                 isVehicleSelectable(v) ? "border-lux-green/30 hover:border-lux-green/60" : "border-neutral-200 opacity-70"
               }`}
             >
@@ -319,17 +327,18 @@ export function WhyChoose() {
   const lang = useLang();
 
   return (
-    <section className="bg-lux-beige pt-6 pb-14 md:pt-8 md:pb-20">
+    <section className="bg-lux-beige pt-4 pb-14 md:pt-6 md:pb-16">
       <div className="mx-auto max-w-7xl px-4 md:px-8">
         <SectionHeading
           eyebrow={t(lang, "why_eyebrow")}
           title={t(lang, "why_title")}
+          spacing="tight"
         />
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {REASON_KEYS.map((r) => (
             <div
               key={r.title}
-              className="rounded-2xl border border-lux-charcoal/8 bg-white p-6 transition-all hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)]"
+              className="flex h-full flex-col rounded-2xl border border-lux-charcoal/8 bg-white p-6 transition-all hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(0,0,0,0.08)]"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-lux-gold/15">
                 <r.icon className="h-6 w-6 text-lux-bronze" />
@@ -337,7 +346,7 @@ export function WhyChoose() {
               <h3 className="mt-4 text-lux-charcoal" style={{ fontSize: "1.05rem" }}>
                 {t(lang, r.title)}
               </h3>
-              <p className="mt-2 text-sm text-neutral-500">{t(lang, r.text)}</p>
+              <p className="mt-2 text-sm leading-6 text-neutral-500">{t(lang, r.text)}</p>
             </div>
           ))}
         </div>
@@ -581,7 +590,7 @@ export function FinalCTA() {
         <div className="mt-9 flex flex-wrap justify-center gap-4">
           <Link
             to="/booking"
-            className="rounded-full bg-lux-gold px-8 py-3.5 text-lux-dark shadow-lg shadow-lux-gold/25 transition-all hover:bg-lux-gold-light"
+            className="rounded-full bg-lux-gold px-8 py-3.5 text-lux-dark transition-all hover:bg-lux-gold-light"
           >
             {t(lang, "cta_calc")}
           </Link>

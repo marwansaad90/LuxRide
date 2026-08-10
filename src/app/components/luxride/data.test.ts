@@ -185,6 +185,7 @@ describe("vehicle and booking validation", () => {
     expect(findRoute("Hurghada", "Sharm El Sheikh")?.image).toBe(IMAGES.sharm);
     expect(IMAGES.airport).toContain("hurghada-airport-transfer.webp");
     expect(IMAGES.cityAirportTransfer).toContain("hurghada-city-airport-transfer.webp");
+    expect(IMAGES.hurghada).toContain("hurghada-transfer.webp");
     expect(IMAGES.luxor).toContain("luxor-private-transfer.webp");
     expect(IMAGES.aswan).toContain("aswan-private-transfer.webp");
     expect(IMAGES.cairo).toContain("cairo-pyramids-transfer.webp");
@@ -305,8 +306,9 @@ describe("latest desktop client-review integration", () => {
     expect(DESTINATION_IMAGE_SOURCE_FILES).toMatchObject({
       airport: "images.jpg",
       hurghadaCityAirportTransfer: "Airport.jpg",
+      hurghada: "Hurghada.jpg",
       makadi: "Makadi-Bay.jpg",
-      villageRoad: "Village-Road.jpg",
+      villageRoad: "Village-Road (1).jpg",
       elGouna: "Elguna.jpg",
       soma: "Soma-Bay.jpg",
       marsaAlam: "Marsa-Allam.jpg",
@@ -315,7 +317,7 @@ describe("latest desktop client-review integration", () => {
       aswan: "Aswan2.jpg",
       luxor: "Luxor.jpg",
       luxorSecondary: "Luxor2.jpg",
-      wadiElGemal: "04-Robin-Utrecht-1.jpg",
+      wadiElGemal: "Wadi-Elgemal.jpg",
     });
     const [firstTransfer] = POPULAR_TRANSFERS;
     expect(firstTransfer.from).toBe("Hurghada");
@@ -323,6 +325,9 @@ describe("latest desktop client-review integration", () => {
     expect(firstTransfer.displayFrom?.EN).toBe("Hurghada City");
     expect(firstTransfer.image).toBe(IMAGES.cityAirportTransfer);
     expect(firstTransfer.image).not.toBe(IMAGES.airport);
+    expect(IMAGES.hurghada).toContain("hurghada-transfer.webp");
+    expect(IMAGES.villageRoad).toContain("village-road-transfer.webp");
+    expect(IMAGES.wadiElGemal).toContain("wadi-el-gemal-transfer.webp");
     const activeMapping = JSON.stringify({ IMAGES, DESTINATION_IMAGE_SOURCE_FILES });
     for (const filename of SUPERSEDED_SOURCE_IMAGE_FILES) {
       expect(activeMapping).not.toContain(filename);
@@ -368,6 +373,36 @@ describe("latest desktop client-review integration", () => {
     expect(contact).toContain('href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer"');
     expect(contact).toContain('href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer"');
     expect(footer + contact).toContain("SocialLogoCircle");
+    expect(readSource("./SocialBrandIcons.tsx")).toContain("facebook-white.png");
+    expect(readSource("./SocialBrandIcons.tsx")).toContain("instagram-white.png");
+    expect(readSource("./SocialBrandIcons.tsx")).toContain("whatsapp-white.png");
+    expect(readSource("./SocialBrandIcons.tsx")).not.toContain("upload.wikimedia.org");
+  });
+
+  it("keeps the latest client visual cleanup source guards in place", () => {
+    const header = readSource("./Header.tsx");
+    const sections = readSource("./Sections.tsx");
+    const hero = readSource("./Hero.tsx");
+    const footer = readSource("./Footer.tsx");
+    const contact = readSource("../../pages/ContactPage.tsx");
+    const fleetPage = readSource("../../pages/FleetPage.tsx");
+    expect(header).not.toContain("drop-shadow");
+    expect(header).not.toContain("shadow-sm");
+    expect(header).not.toContain("shadow-[0_2px_20px");
+    expect(sections).toContain('objectPosition: imagePosition');
+    expect(sections).toContain('center 72%');
+    expect(sections).toContain('data-homepage-fleet-feed="horizontal"');
+    expect(fleetPage).not.toContain('data-homepage-fleet-feed="horizontal"');
+    expect(sections).toContain('spacing="tight"');
+    expect(sections).not.toContain("shadow-lux-gold/25");
+    expect(hero).not.toContain("shadow-lux-green/25");
+    expect(footer).toContain("TripadvisorLogoMark");
+    expect(footer).toContain("brightness-0 invert");
+    expect(footer).not.toContain("TripadvisorLogoCircle");
+    expect(contact).not.toContain("iconZoneClass");
+    expect(contact).not.toContain("bg-lux-green/[0.06]");
+    expect(contact).toContain("SocialLogoCircle");
+    expect(contact).toContain("socialIconFilter");
   });
 
   it("removes visible old transport terminology and LuxRide Egypt branding from active app code", () => {

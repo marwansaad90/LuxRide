@@ -9,7 +9,7 @@ Only unresolved client-owned or operational information is listed here. None of 
 | Route-specific driver accommodation rules | Applying the €33 accommodation fee only where explicitly required |
 | Admission-fee policy | Clarifying whether any attraction admission is included or excluded from tour pricing |
 | Commercial-use confirmation for `Al-Mina_Mosque_in_Hurghada10.jpg` | Approving the client-provided hero image for final production use |
-| Commercial-use confirmation for `04-Robin-Utrecht-1.jpg` | Confirming the current client-selected Wadi El Gemal review image can be used commercially |
+| Commercial-use confirmation for `Wadi-Elgemal.jpg` | Confirming the current client-selected Wadi El Gemal image can be used commercially |
 | Commercial-use confirmation for `images.jpg` | Confirming the current generic Hurghada Airport destination image can be used commercially |
 | Remaining destination-image approvals not covered by the latest licensed-source replacement set | Replacing any remaining destination imagery if the client provides newer production-approved assets |
 | Final Privacy Policy and Terms and Conditions text | Replacing the neutral review drafts after legal approval |

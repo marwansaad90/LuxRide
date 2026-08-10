@@ -68,7 +68,7 @@ export function Hero() {
             <a
               href="#estimate"
               onClick={focusCalculator}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-lux-green px-7 py-3 text-white shadow-lg shadow-lux-green/25 transition-all hover:brightness-110"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-lux-green px-7 py-3 text-white transition-all hover:brightness-110"
               style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "1rem" }}
             >
               {isAR ? "احسب سعرك" : "Calculate Your Price"}

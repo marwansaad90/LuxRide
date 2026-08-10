@@ -41,14 +41,14 @@ export function Header({
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-white shadow-[0_2px_20px_rgba(0,0,0,0.10)] border-b border-gray-100"
+          ? "bg-white border-b border-gray-100"
           : "bg-lux-green"
       }`}
     >
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 md:px-8">
         {/* Logo */}
         <Link to="/" aria-label="LuxRide home" className="flex h-16 w-16 items-center justify-center">
-          <LuxRideLogo className="h-16 w-16 drop-shadow-[0_2px_10px_rgba(0,0,0,0.18)]" />
+          <LuxRideLogo className="h-16 w-16" />
         </Link>
 
         {/* Desktop nav */}
@@ -110,7 +110,7 @@ export function Header({
 
           <Link
             to="/booking"
-            className={`hidden rounded-full px-5 py-2.5 text-sm font-medium shadow-sm transition-all md:inline-block ${
+            className={`hidden rounded-full px-5 py-2.5 text-sm font-medium transition-all md:inline-block ${
               scrolled
                 ? "bg-lux-green text-white hover:brightness-110"
                 : "bg-white text-lux-green hover:bg-lux-beige"

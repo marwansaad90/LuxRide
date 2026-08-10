@@ -7,6 +7,7 @@ import hiacaImg from "../../../assets/vehicles/hiace.webp";
 import aboutTransferImg from "../../../assets/about/luxride-about-transfer.webp";
 import airportImg from "../../../assets/destinations/hurghada-airport-transfer.webp";
 import cityAirportTransferImg from "../../../assets/destinations/hurghada-city-airport-transfer.webp";
+import hurghadaImg from "../../../assets/destinations/hurghada-transfer.webp";
 import villageRoadImg from "../../../assets/destinations/village-road-transfer.webp";
 import cairoPyramidsImg from "../../../assets/destinations/cairo-pyramids-transfer.webp";
 import marsaAlamImg from "../../../assets/destinations/marsa-alam-transfer.webp";
@@ -34,8 +35,7 @@ export const IMAGES = {
     "https://images.unsplash.com/photo-1564890379653-0eb3a6b4eaad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1600",
   driver:
     "https://images.unsplash.com/photo-1627285886624-5cd637dafb50?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1200",
-  hurghada:
-    "https://images.unsplash.com/photo-1755545414327-36524febb5b6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
+  hurghada: hurghadaImg,
   villageRoad: villageRoadImg,
   alAhyaa:
     "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080",
@@ -66,8 +66,9 @@ export const ABOUT_IMAGE_SOURCE_FILE = "LuxRide.gif" as const;
 export const DESTINATION_IMAGE_SOURCE_FILES = {
   airport: "images.jpg",
   hurghadaCityAirportTransfer: "Airport.jpg",
+  hurghada: "Hurghada.jpg",
   makadi: "Makadi-Bay.jpg",
-  villageRoad: "Village-Road.jpg",
+  villageRoad: "Village-Road (1).jpg",
   elGouna: "Elguna.jpg",
   soma: "Soma-Bay.jpg",
   marsaAlam: "Marsa-Allam.jpg",
@@ -77,15 +78,17 @@ export const DESTINATION_IMAGE_SOURCE_FILES = {
   luxor: "Luxor.jpg",
   luxorSecondary: "Luxor2.jpg",
   sharm: "Wikimedia Commons: Sharm_El_Sheikh._Naama_Bay..jpg",
-  wadiElGemal: "04-Robin-Utrecht-1.jpg",
+  wadiElGemal: "Wadi-Elgemal.jpg",
 } as const;
 
 export const SUPERSEDED_SOURCE_IMAGE_FILES = [
+  "04-Robin-Utrecht-1.jpg",
   "507879331.jpg",
   "images-1.jpg",
   "images-2.jpg",
   "pic-panorama-bungalows-resort-el-gouna-hurghada-55.jpg",
   "LuxRide.jpg",
+  "Village-Road.jpg",
 ] as const;
 
 // ─── Contact (real business details) ─────────────────────────────────────────
