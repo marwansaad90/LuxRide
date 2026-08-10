@@ -6,20 +6,33 @@ import { journeyBookingQuery, newestFeaturedTransfers, type FeaturedTransfer } f
 import { SectionHeading } from "./Sections";
 import { useLang } from "./i18n";
 
-export function JourneyCard({ journey, compact = false }: { journey: FeaturedTransfer; compact?: boolean }) {
+export function JourneyCard({
+  journey,
+  compact = false,
+  layout = "strip",
+}: {
+  journey: FeaturedTransfer;
+  compact?: boolean;
+  layout?: "strip" | "expanded";
+}) {
   const lang = useLang();
   const [imageIndex, setImageIndex] = useState(0);
   const currentImage = journey.images[imageIndex] ?? journey.images[0];
   const canNavigate = journey.images.length > 1;
   const description = compact ? journey.excerpt[lang] : journey.description[lang];
+  const isExpanded = layout === "expanded";
 
   function moveImage(step: number) {
     setImageIndex((index) => (index + step + journey.images.length) % journey.images.length);
   }
 
   return (
-    <article className="group flex h-[560px] min-w-[20rem] max-w-[20rem] flex-col overflow-hidden rounded-2xl border border-lux-charcoal/8 bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_20px_48px_rgba(0,0,0,0.12)] sm:min-w-[23rem] sm:max-w-[23rem] lg:min-w-[25rem] lg:max-w-[25rem]">
-      <div className="relative h-56 shrink-0 overflow-hidden bg-lux-beige" data-featured-transfer-gallery="true">
+    <article
+      className={`group flex flex-col overflow-hidden rounded-2xl border border-lux-charcoal/8 bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_20px_48px_rgba(0,0,0,0.12)] ${
+        isExpanded ? "h-full min-w-0" : "h-[560px] min-w-[20rem] max-w-[20rem] sm:min-w-[23rem] sm:max-w-[23rem] lg:min-w-[25rem] lg:max-w-[25rem]"
+      }`}
+    >
+      <div className={`relative shrink-0 overflow-hidden bg-lux-beige ${isExpanded ? "h-64 md:h-72" : "h-56"}`} data-featured-transfer-gallery="true">
         <ImageWithFallback src={currentImage} alt={journey.title[lang]} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
         <span className="absolute left-4 top-4 rounded-full bg-[#CC9966] px-3 py-1 text-xs font-bold text-white shadow-md">
           {journey.routeType[lang]}
@@ -47,7 +60,13 @@ export function JourneyCard({ journey, compact = false }: { journey: FeaturedTra
         <h3 className="mt-2 text-lux-charcoal" style={{ fontSize: "1.2rem", fontWeight: 800, lineHeight: 1.2 }}>
           {journey.title[lang]}
         </h3>
-        <div className="mt-3 max-h-32 whitespace-pre-line overflow-y-auto pr-2 text-sm text-neutral-500 [scrollbar-width:thin]" style={{ lineHeight: 1.65 }} data-experience-description="scrollable">
+        <div
+          className={`mt-3 whitespace-pre-line pr-2 text-sm text-neutral-500 [scrollbar-width:thin] ${
+            isExpanded ? "max-h-44 overflow-y-auto" : "max-h-32 overflow-y-auto"
+          }`}
+          style={{ lineHeight: 1.65 }}
+          data-experience-description="scrollable"
+        >
           {description}
         </div>
         <Link to={`/booking?${journeyBookingQuery(journey)}`} className="mt-auto inline-flex w-full items-center justify-center gap-2 rounded-full bg-lux-green py-2.5 text-sm font-semibold text-white transition-all hover:brightness-110">

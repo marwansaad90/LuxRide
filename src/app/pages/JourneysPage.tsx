@@ -26,10 +26,10 @@ export function JourneysPage() {
               {transfers.length} {lang === "AR" ? "تجارب" : "experiences"}
             </span>
           </div>
-          <div className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-5 [scrollbar-width:thin]" data-experiences-page-feed="horizontal">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2" data-experiences-page-feed="expanded">
             {transfers.map((journey) => (
-              <div key={journey.id} className="snap-start">
-                <JourneyCard journey={journey} />
+              <div key={journey.id} className="min-w-0">
+                <JourneyCard journey={journey} layout="expanded" />
               </div>
             ))}
           </div>

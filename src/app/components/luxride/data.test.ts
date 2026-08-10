@@ -373,9 +373,12 @@ describe("latest desktop client-review integration", () => {
     expect(contact).toContain('href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer"');
     expect(contact).toContain('href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer"');
     expect(footer + contact).toContain("SocialLogoCircle");
-    expect(readSource("./SocialBrandIcons.tsx")).toContain("facebook-white.png");
-    expect(readSource("./SocialBrandIcons.tsx")).toContain("instagram-white.png");
-    expect(readSource("./SocialBrandIcons.tsx")).toContain("whatsapp-white.png");
+    expect(readSource("./SocialBrandIcons.tsx")).toContain("luxride-facebook-glyph.png");
+    expect(readSource("./SocialBrandIcons.tsx")).toContain("luxride-instagram-glyph.png");
+    expect(readSource("./SocialBrandIcons.tsx")).toContain("luxride-whatsapp-glyph.png");
+    expect(readSource("./SocialBrandIcons.tsx")).toContain("luxride-phone-glyph.png");
+    expect(readSource("./SocialBrandIcons.tsx")).toContain("luxride-email-glyph.png");
+    expect(readSource("./SocialBrandIcons.tsx")).toContain("luxride-location-glyph.png");
     expect(readSource("./SocialBrandIcons.tsx")).not.toContain("upload.wikimedia.org");
   });
 
@@ -386,6 +389,7 @@ describe("latest desktop client-review integration", () => {
     const footer = readSource("./Footer.tsx");
     const contact = readSource("../../pages/ContactPage.tsx");
     const fleetPage = readSource("../../pages/FleetPage.tsx");
+    const experiencesPage = readSource("../../pages/JourneysPage.tsx");
     expect(header).not.toContain("drop-shadow");
     expect(header).not.toContain("shadow-sm");
     expect(header).not.toContain("shadow-[0_2px_20px");
@@ -393,6 +397,8 @@ describe("latest desktop client-review integration", () => {
     expect(sections).toContain('center 72%');
     expect(sections).toContain('data-homepage-fleet-feed="horizontal"');
     expect(fleetPage).not.toContain('data-homepage-fleet-feed="horizontal"');
+    expect(experiencesPage).toContain('data-experiences-page-feed="expanded"');
+    expect(experiencesPage).not.toContain('data-experiences-page-feed="horizontal"');
     expect(sections).toContain('spacing="tight"');
     expect(sections).not.toContain("shadow-lux-gold/25");
     expect(hero).not.toContain("shadow-lux-green/25");
@@ -403,6 +409,9 @@ describe("latest desktop client-review integration", () => {
     expect(contact).not.toContain("bg-lux-green/[0.06]");
     expect(contact).toContain("SocialLogoCircle");
     expect(contact).toContain("socialIconFilter");
+    expect(footer).toContain("SOCIAL_LOGOS.location");
+    expect(footer).toContain("SOCIAL_LOGOS.email");
+    expect(footer).toContain("SOCIAL_LOGOS.phone");
   });
 
   it("removes visible old transport terminology and LuxRide Egypt branding from active app code", () => {

@@ -1,4 +1,3 @@
-import { Mail, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router";
 import { LuxRideLogo } from "./LuxRideLogo";
 import {
@@ -29,6 +28,8 @@ const QUICK_LINKS: Array<{ key: TKey; to: string }> = [
 export function Footer() {
   const lang = useLang();
   const destLabels = POPULAR_DEST_LABELS[lang];
+  const footerGlyphClass = "h-4 w-4 shrink-0 object-contain brightness-0 invert";
+  const footerSocialGlyphClass = "h-5 w-5 brightness-0 invert";
 
   return (
     <footer id="contact" className="bg-lux-dark-2 pt-16 text-lux-beige/70">
@@ -40,14 +41,17 @@ export function Footer() {
             {t(lang, "footer_desc")}
           </p>
           <div className="mt-5 flex items-center gap-3">
+            <a href={whatsappLink("Hello LuxRide!")} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on WhatsApp" className="transition-transform hover:-translate-y-0.5">
+              <SocialLogoCircle src={SOCIAL_LOGOS.whatsapp} alt="" className="h-10 w-10 bg-transparent" imgClassName={footerSocialGlyphClass} />
+            </a>
             <a href={TRIPADVISOR_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Tripadvisor" className="transition-transform hover:-translate-y-0.5">
               <TripadvisorLogoMark imgClassName="brightness-0 invert" />
             </a>
             <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Facebook" className="transition-transform hover:-translate-y-0.5">
-              <SocialLogoCircle src={SOCIAL_LOGOS.facebook} alt="Facebook" className="h-10 w-10 bg-transparent" />
+              <SocialLogoCircle src={SOCIAL_LOGOS.facebook} alt="" className="h-10 w-10 bg-transparent" imgClassName={footerSocialGlyphClass} />
             </a>
             <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Instagram" className="transition-transform hover:-translate-y-0.5">
-              <SocialLogoCircle src={SOCIAL_LOGOS.instagram} alt="Instagram" className="h-10 w-10 bg-transparent" />
+              <SocialLogoCircle src={SOCIAL_LOGOS.instagram} alt="" className="h-10 w-10 bg-transparent" imgClassName={footerSocialGlyphClass} />
             </a>
           </div>
         </div>
@@ -83,19 +87,19 @@ export function Footer() {
           <h4 className="text-lux-beige">{t(lang, "footer_contact")}</h4>
           <ul className="mt-4 space-y-3 text-sm">
             <li className="flex items-start gap-3">
-              <MapPin className="mt-0.5 h-4 w-4 text-white" /> {t(lang, "footer_addr")}
+              <img src={SOCIAL_LOGOS.location} alt="" className={`mt-0.5 ${footerGlyphClass}`} loading="lazy" /> {t(lang, "footer_addr")}
             </li>
             <li className="flex items-center gap-3">
-              <Mail className="h-4 w-4 text-white" />
+              <img src={SOCIAL_LOGOS.email} alt="" className={footerGlyphClass} loading="lazy" />
               <a href={`mailto:${EMAIL}`} className="hover:text-lux-gold">{EMAIL}</a>
             </li>
             <li className="flex items-center gap-3">
-              <Phone className="h-4 w-4 text-white" />
+              <img src={SOCIAL_LOGOS.phone} alt="" className={footerGlyphClass} loading="lazy" />
               <a href={`tel:${PHONE_DISPLAY.replace(/\s/g, "")}`} className="hover:text-lux-gold">{PHONE_DISPLAY}</a>
             </li>
             <li className="flex items-center gap-3">
-              <img src={SOCIAL_LOGOS.whatsapp} alt="" className="h-4 w-4" loading="lazy" />
-              <a href={whatsappLink("Hello LuxRide!")} target="_blank" rel="noreferrer" className="hover:text-lux-gold">
+              <img src={SOCIAL_LOGOS.whatsapp} alt="" className={footerGlyphClass} loading="lazy" />
+              <a href={whatsappLink("Hello LuxRide!")} target="_blank" rel="noopener noreferrer" className="hover:text-lux-gold">
                 {t(lang, "footer_wa")}
               </a>
             </li>

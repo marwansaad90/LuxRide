@@ -1,5 +1,4 @@
 import { useState, type FormEvent } from "react";
-import { Mail, MapPin, Phone } from "lucide-react";
 import { PageShell } from "../components/luxride/PageShell";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -33,7 +32,6 @@ export function ContactPage() {
 
   const contactCardClass =
     "flex min-h-[104px] items-center gap-3 rounded-2xl border border-lux-charcoal/8 bg-white px-5 py-4 transition-all hover:border-lux-green hover:shadow-[0_14px_34px_rgba(0,0,0,0.06)]";
-  const iconClass = "h-5 w-5 shrink-0 text-lux-green";
   const socialIconFilter = {
     filter: "brightness(0) saturate(100%) invert(32%) sepia(51%) saturate(1052%) hue-rotate(122deg) brightness(91%) contrast(94%)",
   };
@@ -54,11 +52,11 @@ export function ContactPage() {
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
             <a href={`tel:${PHONE_DISPLAY.replace(/\s/g, "")}`} className={contactCardClass}>
-              <Phone className={iconClass} />
+              <SocialLogoCircle src={SOCIAL_LOGOS.phone} alt="" className="h-5 w-5" imgClassName="max-h-5 max-w-5" imgStyle={socialIconFilter} />
               <span className={cardTextClass}><span className="block text-sm text-neutral-500">{L("Phone", "الهاتف")}</span><span className={primaryLineClass} dir="ltr">{PHONE_DISPLAY}</span></span>
             </a>
             <a href={`mailto:${EMAIL}`} className={contactCardClass}>
-              <Mail className={iconClass} />
+              <SocialLogoCircle src={SOCIAL_LOGOS.email} alt="" className="h-5 w-5" imgClassName="max-h-5 max-w-5" imgStyle={socialIconFilter} />
               <span className={cardTextClass}><span className="block text-sm text-neutral-500">{L("Email", "البريد الإلكتروني")}</span><span className={primaryLineClass} dir="ltr">{EMAIL}</span></span>
             </a>
             <a href={whatsappLink("Hello LuxRide!")} target="_blank" rel="noopener noreferrer" className={contactCardClass}>
@@ -100,7 +98,10 @@ export function ContactPage() {
 
             <div className="space-y-6">
               <div className="rounded-2xl border border-lux-charcoal/8 bg-white p-7">
-                <h3 className="flex items-center gap-2 text-lux-charcoal" style={{ fontSize: "1.15rem" }}><MapPin className="h-5 w-5 text-lux-green" /> {L("Service area", "منطقة الخدمة")}</h3>
+                <h3 className="flex items-center gap-2 text-lux-charcoal" style={{ fontSize: "1.15rem" }}>
+                  <SocialLogoCircle src={SOCIAL_LOGOS.location} alt="" className="h-5 w-5" imgClassName="max-h-5 max-w-5" imgStyle={socialIconFilter} />
+                  {L("Service area", "منطقة الخدمة")}
+                </h3>
                 <p className="mt-3 text-sm text-neutral-500" style={{ lineHeight: 1.7 }}>{L("Based in Hurghada, serving the Red Sea coast and destinations across Egypt including Luxor, Cairo, Aswan and Sharm El Sheikh.", "مقرنا الغردقة، ونخدم ساحل البحر الأحمر ووجهات عبر مصر تشمل الأقصر والقاهرة وأسوان وشرم الشيخ.")}</p>
               </div>
               <div className="rounded-2xl border border-lux-charcoal/8 bg-white p-7">
