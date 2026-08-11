@@ -53,7 +53,7 @@ export const FEATURED_TRANSFERS: FeaturedTransfer[] = [
   {
     id: "hurghada-wadi-el-gemal-overday",
     createdAt: "2026-08-07",
-    images: [IMAGES.wadiElGemal, IMAGES.marsaAlam, IMAGES.soma],
+    images: [IMAGES.wadiElGemal],
     routeType: { EN: "Round Trip Transfer", AR: "توصيلة ذهاب وعودة" },
     title: { EN: "Nature Escape Transfer: Hurghada to Wadi El Gemal", AR: "توصيلة طبيعية خاصة: من الغردقة إلى وادي الجمال" },
     vehicle: { EN: "Mitsubishi Xpander 2027", AR: "Mitsubishi Xpander 2027" },
@@ -71,7 +71,7 @@ export const FEATURED_TRANSFERS: FeaturedTransfer[] = [
   {
     id: "hurghada-luxor-dendera-overday",
     createdAt: "2026-08-06",
-    images: [IMAGES.luxorDetail, IMAGES.luxor, IMAGES.cairo],
+    images: [IMAGES.luxorDetail],
     routeType: { EN: "Round Trip Transfer", AR: "توصيلة ذهاب وعودة" },
     title: { EN: "Historical Private Transfer: Hurghada to Luxor & Dendera", AR: "توصيلة تاريخية خاصة: من الغردقة إلى الأقصر ودندرة" },
     vehicle: { EN: "Mitsubishi Xpander 2027", AR: "Mitsubishi Xpander 2027" },
