@@ -326,6 +326,8 @@ describe("latest desktop client-review integration", () => {
     expect(portoGhalib?.booking).toEqual({ from: "Hurghada", to: "Marsa Ghaleb", trip: "roundTrip" });
     expect(portoGhalib?.images).toHaveLength(1);
     expect(portoGhalib?.imagePosition).toBe("center 72%");
+    expect(transfers.find((transfer) => transfer.id === "hurghada-wadi-el-gemal-overday")?.images).toEqual([IMAGES.wadiElGemal]);
+    expect(transfers.find((transfer) => transfer.id === "hurghada-luxor-dendera-overday")?.images).toEqual([IMAGES.luxorDetail]);
     expect(sharm?.images).toEqual([IMAGES.sharm]);
     expect(journeySource).toContain("port-ghalib-transfer.jpg");
     expect(journeySource).not.toContain("Airport Arrival Transfer: Hurghada Airport to El Gouna");
