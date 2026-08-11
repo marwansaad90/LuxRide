@@ -21,11 +21,11 @@ import {
 import { Link } from "react-router";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import {
-  FLEET,
   IMAGES,
   PHONE_DISPLAY,
   POPULAR_TRANSFERS,
   ROUTES,
+  SELECTABLE_FLEET,
   availablePublicTripTypes,
   isVehicleSelectable,
   whatsappLink,
@@ -254,7 +254,7 @@ export function Fleet() {
           className="flex snap-x gap-5 overflow-x-auto pb-4 [scrollbar-width:thin] [scrollbar-color:var(--lux-green)_transparent] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-lux-green/45 [&::-webkit-scrollbar-track]:bg-transparent"
           data-homepage-fleet-feed="horizontal"
         >
-          {FLEET.map((v) => (
+          {SELECTABLE_FLEET.map((v) => (
             <div
               key={v.id}
               className={`flex max-h-[34rem] min-w-[82%] snap-start flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] transition-all sm:min-w-[24rem] lg:min-w-[calc((100%_-_2.5rem)_/_3)] lg:basis-[calc((100%_-_2.5rem)_/_3)] lg:max-w-[calc((100%_-_2.5rem)_/_3)] ${
@@ -284,7 +284,7 @@ export function Fleet() {
                   <h3 className="text-lux-charcoal" style={{ fontSize: "1.25rem" }}>{v.name}</h3>
                   <Sparkles className="h-4 w-4 text-lux-client-accent" />
                 </div>
-                <p className="mt-1 min-h-10 text-sm text-neutral-500">{v.tagline}</p>
+                <p className="mt-1 min-h-10 text-sm text-neutral-500">{lang === "AR" ? v.taglineAr : v.tagline}</p>
                 <div className="mt-5 grid grid-cols-2 gap-3 text-sm text-neutral-600">
                   <span className="col-span-2 flex items-center gap-2">
                     <Users className="h-4 w-4 text-lux-green" /> {lang === "AR" ? v.capacityAr : v.capacityEn}

@@ -2,7 +2,7 @@ import { Check, Snowflake, Usb, Users, Wifi, X } from "lucide-react";
 import { Link } from "react-router";
 import { PageShell } from "../components/luxride/PageShell";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import { FLEET, isVehicleSelectable } from "../components/luxride/data";
+import { SELECTABLE_FLEET, isVehicleSelectable } from "../components/luxride/data";
 import { useL } from "../components/luxride/i18n";
 import { CLIENT_ACCENT_TEXT, CLIENT_ACCENT_YELLOW } from "../components/luxride/brand";
 
@@ -21,7 +21,7 @@ export function FleetPage() {
     >
       <section className="bg-lux-beige py-16 md:py-24">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 md:px-8 lg:grid-cols-3">
-          {FLEET.map((v) => (
+          {SELECTABLE_FLEET.map((v) => (
             <div
               key={v.id}
               className={`flex max-h-[34rem] flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] ${
@@ -42,7 +42,7 @@ export function FleetPage() {
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto p-6 [scrollbar-width:thin]" data-vehicle-card-scroll="y">
                 <h3 className="text-lux-charcoal" style={{ fontSize: "1.35rem" }}>{v.name}</h3>
-                <p className="mt-1 text-sm text-neutral-500">{v.tagline}</p>
+                <p className="mt-1 text-sm text-neutral-500">{L(v.tagline, v.taglineAr)}</p>
 
                 <ul className="mt-5 space-y-3 text-sm text-neutral-600">
                   <li className="flex items-center gap-3"><Users className="h-4 w-4 text-lux-green" /> {L(v.capacityEn, v.capacityAr)}</li>

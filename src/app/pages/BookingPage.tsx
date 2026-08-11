@@ -175,7 +175,7 @@ export function BookingPage() {
   const hFamily = isAR ? "Cairo, sans-serif" : "'Barlow Condensed', sans-serif";
   const inputCls =
     "w-full h-11 rounded-lg border border-gray-200 bg-white px-3 text-gray-800 text-sm focus:border-lux-green focus:outline-none focus:ring-2 focus:ring-lux-green/20 transition-all";
-  const labelCls = "block text-sm font-medium text-gray-700 mb-1.5";
+  const labelCls = "mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700";
 
   const tripTypes: { id: PublicTripType; label: string; desc: string }[] = [
     { id: "oneWay", label: isAR ? "ذهاب فقط" : "One Way", desc: isAR ? "توصيلة واحدة" : "Single transfer" },
@@ -207,7 +207,7 @@ export function BookingPage() {
                 {i < 2 && (
                   <div
                     className={`absolute top-[1.75rem] hidden h-px sm:block ${done ? "bg-lux-green" : "bg-gray-200"}`}
-                    style={{ left: "calc(50% + 1.5rem)", right: "-50%" }}
+                    style={isAR ? { right: "calc(50% + 1.5rem)", left: "-50%" } : { left: "calc(50% + 1.5rem)", right: "-50%" }}
                   />
                 )}
                 <div
@@ -284,23 +284,23 @@ export function BookingPage() {
               {/* Route */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="booking-from" className={labelCls}><MapPin className="inline h-4 w-4 mr-1 text-lux-green" />{isAR ? "موقع الانطلاق" : "Pickup"}</label>
+                  <label htmlFor="booking-from" className={labelCls}><MapPin className="h-4 w-4 text-lux-green" />{isAR ? "موقع الانطلاق" : "Pickup"}</label>
                   <select id="booking-from" value={from} onChange={(e) => handlePickup(e.target.value)} className={inputCls}>
                     {PICKUPS.map((p) => <option key={p} value={p}>{locationLabel(lang, p)}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="booking-to" className={labelCls}><MapPin className="inline h-4 w-4 mr-1 text-lux-green" />{isAR ? "الوجهة" : "Destination"}</label>
+                  <label htmlFor="booking-to" className={labelCls}><MapPin className="h-4 w-4 text-lux-green" />{isAR ? "الوجهة" : "Destination"}</label>
                   <select id="booking-to" value={to} onChange={(e) => handleDestination(e.target.value)} className={inputCls}>
                     {dests.map((d) => <option key={d} value={d}>{locationLabel(lang, d)}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="booking-date" className={labelCls}><CalendarDays className="inline h-4 w-4 mr-1 text-lux-green" />{isAR ? "تاريخ المغادرة" : "Departure Date"}</label>
+                  <label htmlFor="booking-date" className={labelCls}><CalendarDays className="h-4 w-4 text-lux-green" />{isAR ? "تاريخ المغادرة" : "Departure Date"}</label>
                   <input id="booking-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} min={todayLocal} />
                 </div>
                 <div>
-                  <label htmlFor="booking-time" className={labelCls}><Clock className="inline h-4 w-4 mr-1 text-lux-green" />{isAR ? "وقت الانطلاق" : "Pickup Time"}</label>
+                  <label htmlFor="booking-time" className={labelCls}><Clock className="h-4 w-4 text-lux-green" />{isAR ? "وقت الانطلاق" : "Pickup Time"}</label>
                   <input id="booking-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} className={inputCls} />
                 </div>
               </div>
@@ -314,7 +314,7 @@ export function BookingPage() {
               {/* Pax + Luggage */}
               <div className="mt-5 grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="booking-passengers" className={labelCls}><Users className="inline h-4 w-4 mr-1 text-lux-green" />{isAR ? "ركاب" : "Passengers"}</label>
+                  <label htmlFor="booking-passengers" className={labelCls}><Users className="h-4 w-4 text-lux-green" />{isAR ? "ركاب" : "Passengers"}</label>
                   <select id="booking-passengers" value={pax} onChange={(e) => setPax(e.target.value)} className={inputCls}>
                     {Array.from({ length: vehicle.pax }, (_, i) => i + 1).map((n) => (
                       <option key={n} value={String(n)}>{n}</option>
@@ -322,7 +322,7 @@ export function BookingPage() {
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="booking-luggage" className={labelCls}><Luggage className="inline h-4 w-4 mr-1 text-lux-green" />{isAR ? "حقائب" : "Bags"}</label>
+                  <label htmlFor="booking-luggage" className={labelCls}><Luggage className="h-4 w-4 text-lux-green" />{isAR ? "حقائب" : "Bags"}</label>
                   <select id="booking-luggage" value={luggage} onChange={(e) => setLuggage(e.target.value)} className={inputCls}>
                     {Array.from({ length: vehicle.luggage + 1 }, (_, i) => i).map((n) => (
                       <option key={n} value={String(n)}>{n}</option>

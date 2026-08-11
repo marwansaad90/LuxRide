@@ -22,6 +22,7 @@ export function JourneyCard({
   const canNavigate = journey.images.length > 1;
   const description = compact ? journey.excerpt[lang] : journey.description[lang];
   const isExpanded = layout === "expanded";
+  const shouldScrollDescription = description.length > (isExpanded ? 520 : 220);
 
   function moveImage(step: number) {
     setImageIndex((index) => (index + step + journey.images.length) % journey.images.length);
@@ -29,6 +30,7 @@ export function JourneyCard({
 
   return (
     <article
+      dir={lang === "AR" ? "rtl" : "ltr"}
       className={`group flex flex-col overflow-hidden rounded-2xl border border-lux-charcoal/8 bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_20px_48px_rgba(0,0,0,0.12)] ${
         isExpanded ? "h-full min-w-0" : "h-[560px] min-w-[20rem] max-w-[20rem] sm:min-w-[23rem] sm:max-w-[23rem] lg:min-w-[25rem] lg:max-w-[25rem]"
       }`}
@@ -62,8 +64,10 @@ export function JourneyCard({
           {journey.title[lang]}
         </h3>
         <div
-          className={`mt-3 whitespace-pre-line pr-2 text-sm text-neutral-500 [scrollbar-width:thin] ${
-            isExpanded ? "max-h-44 overflow-y-auto" : "max-h-32 overflow-y-auto"
+          className={`mt-3 whitespace-pre-line text-sm text-neutral-500 [scrollbar-width:thin] ${lang === "AR" ? "pl-2 text-right" : "pr-2"} ${
+            isExpanded ? "max-h-44" : "max-h-32"
+          } ${
+            shouldScrollDescription ? "overflow-y-auto" : "overflow-hidden"
           }`}
           style={{ lineHeight: 1.65 }}
           data-experience-description="scrollable"
@@ -92,8 +96,8 @@ export function FeaturedJourneys() {
           subtitle={lang === "AR" ? "نماذج من تجارب توصيلة حقيقية تساعدك على اختيار الخدمة المناسبة بثقة." : "Selected real transfer experiences to help you choose the right private service with confidence."}
         />
         <div className="relative">
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 hidden w-16 bg-gradient-to-l from-white to-transparent md:block" />
-          <div className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-4 [scrollbar-width:thin]" data-experiences-feed="horizontal">
+          <div className={`pointer-events-none absolute inset-y-0 z-10 hidden w-16 from-white to-transparent md:block ${lang === "AR" ? "left-0 bg-gradient-to-r" : "right-0 bg-gradient-to-l"}`} />
+          <div dir={lang === "AR" ? "rtl" : "ltr"} className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-4 [scrollbar-width:thin]" data-experiences-feed="horizontal">
             {transfers.map((journey) => (
               <div key={journey.id} className="snap-start">
                 <JourneyCard journey={journey} compact />

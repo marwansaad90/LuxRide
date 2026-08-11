@@ -100,12 +100,13 @@ export function Header({
 
           <a
             href={`tel:${PHONE_DISPLAY.replace(/\s/g, "")}`}
+            dir="ltr"
             className={`hidden items-center gap-2 text-sm transition-colors lg:flex ${
               scrolled ? "text-lux-charcoal hover:text-lux-green" : "text-white/90 hover:text-white"
             }`}
           >
             <Phone className={`h-4 w-4 ${scrolled ? "text-lux-green" : "text-white"}`} />
-            {PHONE_DISPLAY}
+            <span style={{ unicodeBidi: "isolate" }}>{PHONE_DISPLAY}</span>
           </a>
 
           <Link

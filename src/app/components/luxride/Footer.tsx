@@ -96,7 +96,7 @@ export function Footer() {
             </li>
             <li className="flex items-center gap-3">
               <img src={SOCIAL_LOGOS.phone} alt="" className={footerGlyphClass} loading="lazy" />
-              <a href={`tel:${PHONE_DISPLAY.replace(/\s/g, "")}`} className="hover:text-lux-client-accent">{PHONE_DISPLAY}</a>
+              <a href={`tel:${PHONE_DISPLAY.replace(/\s/g, "")}`} dir="ltr" className="hover:text-lux-client-accent" style={{ unicodeBidi: "isolate" }}>{PHONE_DISPLAY}</a>
             </li>
             <li className="flex items-center gap-3">
               <img src={SOCIAL_LOGOS.whatsapp} alt="" className={footerGlyphClass} loading="lazy" />
