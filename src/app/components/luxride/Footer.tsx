@@ -30,12 +30,13 @@ export function Footer() {
   const destLabels = POPULAR_DEST_LABELS[lang];
   const footerGlyphClass = "h-4 w-4 shrink-0 object-contain brightness-0 invert";
   const footerSocialGlyphClass = "h-5 w-5 brightness-0 invert";
+  const footerColumnClass = "min-w-0 px-1 sm:px-0";
 
   return (
     <footer id="contact" className="bg-lux-dark-2 pt-16 text-lux-beige/70">
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 pb-12 sm:px-8 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-8 pb-12 sm:px-10 md:grid-cols-2 md:px-8 lg:grid-cols-4">
         {/* Brand column */}
-        <div>
+        <div className={footerColumnClass}>
           <LuxRideLogo className="h-16 w-auto" />
           <p className="mt-4 max-w-sm text-sm" style={{ lineHeight: 1.6 }}>
             {t(lang, "footer_desc")}
@@ -57,7 +58,7 @@ export function Footer() {
         </div>
 
         {/* Quick links */}
-        <div>
+        <div className={footerColumnClass}>
           <h4 className="text-lux-beige">{t(lang, "footer_quick")}</h4>
           <ul className="mt-4 space-y-2.5 text-sm">
             {QUICK_LINKS.map((q) => (
@@ -71,7 +72,7 @@ export function Footer() {
         </div>
 
         {/* Destinations */}
-        <div>
+        <div className={footerColumnClass}>
           <h4 className="text-lux-beige">{t(lang, "footer_dests")}</h4>
           <ul className="mt-4 space-y-2.5 text-sm">
             {destLabels.map((d) => (
@@ -83,7 +84,7 @@ export function Footer() {
         </div>
 
         {/* Contact */}
-        <div>
+        <div className={footerColumnClass}>
           <h4 className="text-lux-beige">{t(lang, "footer_contact")}</h4>
           <ul className="mt-4 space-y-3 text-sm">
             <li className="flex items-start gap-3">
@@ -108,7 +109,7 @@ export function Footer() {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-6 py-6 text-xs sm:px-8 md:flex-row">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-8 py-6 text-xs sm:px-10 md:flex-row md:px-8">
           <p>© {new Date().getFullYear()} {t(lang, "footer_copy")}</p>
           <div className="flex flex-wrap items-center gap-5">
             <Link to="/cancellation-policy" className="hover:text-lux-green">{t(lang, "footer_cancellation")}</Link>
