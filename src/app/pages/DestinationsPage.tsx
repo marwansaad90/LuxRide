@@ -1,5 +1,6 @@
 import { ArrowRight, Clock } from "lucide-react";
 import { Link } from "react-router";
+import airportClientImage from "../../assets/destinations/airport-client.jpg";
 import { PageShell } from "../components/luxride/PageShell";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
 import { IMAGES, availablePublicTripTypes, findRoute, resolveTripType, tripRulesFor, type Route } from "../components/luxride/data";
@@ -66,12 +67,12 @@ function destinationGroups(): DestinationGroup[] {
 }
 
 function destinationCardImage(routeItem: Route): string {
-  if (routeItem.from === "Hurghada" && routeItem.to === "Hurghada Airport") return IMAGES.airport;
+  if (routeItem.from === "Hurghada" && routeItem.to === "Hurghada Airport") return airportClientImage;
   return routeItem.image ?? IMAGES.hurghada;
 }
 
 function routeImagePosition(routeItem: Route, image: string): string {
-  if (routeItem.from === "Hurghada" && routeItem.to === "Hurghada Airport") return "center 42%";
+  if (routeItem.from === "Hurghada" && routeItem.to === "Hurghada Airport") return "center 82%";
   if (image === IMAGES.hurghada) return "center 72%";
   if (image === IMAGES.airport) return "center 42%";
   if (image === IMAGES.villageRoad) return "center 62%";
