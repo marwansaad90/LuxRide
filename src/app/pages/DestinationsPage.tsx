@@ -65,8 +65,21 @@ function destinationGroups(): DestinationGroup[] {
   }));
 }
 
-function routeImagePosition(image: string | undefined): string {
-  return image === IMAGES.hurghada ? "center 72%" : "center";
+function destinationCardImage(routeItem: Route): string {
+  if (routeItem.from === "Hurghada" && routeItem.to === "Hurghada Airport") return IMAGES.airport;
+  return routeItem.image ?? IMAGES.hurghada;
+}
+
+function routeImagePosition(routeItem: Route, image: string): string {
+  if (routeItem.from === "Hurghada" && routeItem.to === "Hurghada Airport") return "center 42%";
+  if (image === IMAGES.hurghada) return "center 72%";
+  if (image === IMAGES.airport) return "center 42%";
+  if (image === IMAGES.villageRoad) return "center 62%";
+  if (image === IMAGES.makadi) return "center 58%";
+  if (image === IMAGES.elGouna) return "center 60%";
+  if (image === IMAGES.sahlHasheesh) return "center 66%";
+  if (image === IMAGES.soma) return "center 56%";
+  return "center";
 }
 
 export function DestinationsPage() {
@@ -93,11 +106,11 @@ export function DestinationsPage() {
                   const classification = tripRulesFor(routeItem)?.roundTripMode;
                   const classificationLabel = classification === "overday" ? L("Same-day return", "عودة في نفس اليوم") : classification === "overnight" ? L("Overnight", "مبيت") : "";
                   const query = new URLSearchParams({ from: routeItem.from, to: routeItem.to, trip: publicTrip }).toString();
-                  const image = routeItem.image ?? IMAGES.hurghada;
+                  const image = destinationCardImage(routeItem);
                   return (
                     <article key={routeItem.id} className="group overflow-hidden rounded-2xl bg-white shadow-[0_10px_40px_rgba(0,0,0,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)]">
                       <div className="relative h-44 overflow-hidden bg-white">
-                        <ImageWithFallback loading="lazy" src={image} alt={`${locationLabel(lang, routeItem.from)} — ${locationLabel(lang, routeItem.to)}`} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" style={{ objectPosition: routeImagePosition(image) }} />
+                        <ImageWithFallback loading="lazy" src={image} alt={`${locationLabel(lang, routeItem.from)} — ${locationLabel(lang, routeItem.to)}`} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" style={{ objectPosition: routeImagePosition(routeItem, image) }} />
                         <span className="absolute right-4 top-4 rounded-full bg-lux-green px-3 py-1 text-xs text-white">{L("from", "من")} €{price}</span>
                       </div>
                       <div className="p-6">
