@@ -313,6 +313,13 @@ describe("latest desktop client-review integration", () => {
     const destinationsPage = readSource("../../pages/DestinationsPage.tsx");
     const journeySource = readSource("./journeys.ts");
 
+    expect(transfers.map((transfer) => transfer.id)).toEqual([
+      "hurghada-luxor-unforgettable-day-trip",
+      "hurghada-port-ghalib-marina-overday",
+      "hurghada-wadi-el-gemal-overday",
+      "hurghada-luxor-dendera-overday",
+      "hurghada-sharm-one-way",
+    ]);
     expect(portoGhalib).toBeDefined();
     expect(portoGhalib?.title.EN).toBe("Marina Escape Transfer: Hurghada to Porto Ghalib");
     expect(portoGhalib?.title.AR).toContain("بورتو غالب");

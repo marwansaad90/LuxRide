@@ -52,7 +52,7 @@ export const FEATURED_TRANSFERS: FeaturedTransfer[] = [
   },
   {
     id: "hurghada-wadi-el-gemal-overday",
-    createdAt: "2026-08-08",
+    createdAt: "2026-08-07",
     images: [IMAGES.wadiElGemal, IMAGES.marsaAlam, IMAGES.soma],
     routeType: { EN: "Round Trip Transfer", AR: "توصيلة ذهاب وعودة" },
     title: { EN: "Nature Escape Transfer: Hurghada to Wadi El Gemal", AR: "توصيلة طبيعية خاصة: من الغردقة إلى وادي الجمال" },
@@ -70,7 +70,7 @@ export const FEATURED_TRANSFERS: FeaturedTransfer[] = [
   },
   {
     id: "hurghada-luxor-dendera-overday",
-    createdAt: "2026-08-07",
+    createdAt: "2026-08-06",
     images: [IMAGES.luxorDetail, IMAGES.luxor, IMAGES.cairo],
     routeType: { EN: "Round Trip Transfer", AR: "توصيلة ذهاب وعودة" },
     title: { EN: "Historical Private Transfer: Hurghada to Luxor & Dendera", AR: "توصيلة تاريخية خاصة: من الغردقة إلى الأقصر ودندرة" },
@@ -88,7 +88,7 @@ export const FEATURED_TRANSFERS: FeaturedTransfer[] = [
   },
   {
     id: "hurghada-port-ghalib-marina-overday",
-    createdAt: "2026-08-06",
+    createdAt: "2026-08-08",
     images: [portGhalibTransfer],
     routeType: { EN: "Round Trip Transfer", AR: "توصيلة ذهاب وعودة" },
     title: { EN: "Marina Escape Transfer: Hurghada to Porto Ghalib", AR: "توصيلة مارينا خاصة: من الغردقة إلى بورتو غالب" },
