@@ -6,6 +6,7 @@ import luxorDayTrip2 from "../../../assets/experiences/luxor-day-trip-2.webp";
 import luxorDayTrip3 from "../../../assets/experiences/luxor-day-trip-3.webp";
 import luxorDayTrip4 from "../../../assets/experiences/luxor-day-trip-4.webp";
 import luxorDayTrip5 from "../../../assets/experiences/luxor-day-trip-5.webp";
+import portGhalibTransfer from "../../../assets/experiences/port-ghalib-transfer.jpg";
 
 export interface FeaturedTransfer {
   id: string;
@@ -16,6 +17,7 @@ export interface FeaturedTransfer {
   vehicle: Record<Lang, string>;
   excerpt: Record<Lang, string>;
   description: Record<Lang, string>;
+  imagePosition?: string;
   tags: Record<Lang, string[]>;
   booking: {
     from: string;
@@ -85,27 +87,28 @@ export const FEATURED_TRANSFERS: FeaturedTransfer[] = [
     booking: { from: "Hurghada", to: "Luxor", trip: "roundTrip" },
   },
   {
-    id: "airport-el-gouna-one-way",
+    id: "hurghada-port-ghalib-marina-overday",
     createdAt: "2026-08-06",
-    images: [IMAGES.elGouna, IMAGES.hurghada, IMAGES.villageRoad],
-    routeType: { EN: "One Way Transfer", AR: "توصيلة ذهاب فقط" },
-    title: { EN: "Airport Arrival Transfer: Hurghada Airport to El Gouna", AR: "توصيلة وصول من المطار: مطار الغردقة إلى الجونة" },
-    vehicle: { EN: "Toyota Corolla / Mitsubishi Xpander", AR: "Toyota Corolla / Mitsubishi Xpander" },
+    images: [portGhalibTransfer],
+    routeType: { EN: "Round Trip Transfer", AR: "توصيلة ذهاب وعودة" },
+    title: { EN: "Marina Escape Transfer: Hurghada to Porto Ghalib", AR: "توصيلة مارينا خاصة: من الغردقة إلى بورتو غالب" },
+    vehicle: { EN: "Mitsubishi Xpander 2027", AR: "Mitsubishi Xpander 2027" },
     excerpt: {
-      EN: "A clean one-way airport arrival transfer to El Gouna with flight monitoring and fixed pickup details.",
-      AR: "توصيلة وصول منظمة من المطار إلى الجونة مع متابعة الرحلة وتفاصيل استلام واضحة.",
+      EN: "A comfortable private transfer from Hurghada to Porto Ghalib Marina, planned around relaxed Red Sea views and clear fixed pricing.",
+      AR: "توصيلة خاصة ومريحة من الغردقة إلى مارينا بورتو غالب، مع رحلة هادئة على ساحل البحر الأحمر وسعر ثابت واضح.",
     },
     description: {
-      EN: "A clean arrival transfer from Hurghada Airport to El Gouna, with flight monitoring, fixed airport pickup details, and a clear one-way price before submission.",
-      AR: "توصيلة وصول منظمة من مطار الغردقة إلى الجونة، مع متابعة الرحلة الجوية، وتفاصيل استلام واضحة من المطار، وسعر ذهاب فقط ظاهر قبل الإرسال.",
+      EN: "A private Red Sea transfer for guests heading from Hurghada to Porto Ghalib Marina, with comfortable air-conditioned seating, space for luggage, planned pickup details, and fixed pricing prepared before the booking request is sent.",
+      AR: "توصيلة خاصة على ساحل البحر الأحمر للضيوف المتجهين من الغردقة إلى مارينا بورتو غالب، مع مقاعد مكيفة ومريحة، ومساحة للأمتعة، وتفاصيل استلام واضحة، وسعر ثابت يظهر قبل إرسال طلب الحجز.",
     },
-    tags: { EN: ["#AirportTransfer", "#ElGouna"], AR: ["#توصيلة_مطار", "#الجونة"] },
-    booking: { from: "Hurghada Airport", to: "El Gouna", trip: "oneWay" },
+    imagePosition: "center 72%",
+    tags: { EN: ["#PortoGhalib", "#PrivateTransfer"], AR: ["#بورتو_غالب", "#توصيلة_خاصة"] },
+    booking: { from: "Hurghada", to: "Marsa Ghaleb", trip: "roundTrip" },
   },
   {
     id: "hurghada-sharm-one-way",
     createdAt: "2026-08-05",
-    images: [IMAGES.sharm, IMAGES.soma, IMAGES.marsaAlam],
+    images: [IMAGES.sharm],
     routeType: { EN: "One Way Transfer", AR: "توصيلة ذهاب فقط" },
     title: { EN: "Direct Private Transfer: Hurghada to Sharm El Sheikh", AR: "توصيلة خاصة مباشرة: من الغردقة إلى شرم الشيخ" },
     vehicle: { EN: "Mitsubishi Xpander 2027", AR: "Mitsubishi Xpander 2027" },

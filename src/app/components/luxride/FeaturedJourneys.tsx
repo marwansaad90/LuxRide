@@ -34,7 +34,7 @@ export function JourneyCard({
       }`}
     >
       <div className={`relative shrink-0 overflow-hidden bg-lux-beige ${isExpanded ? "h-64 md:h-72" : "h-56"}`} data-featured-transfer-gallery="true">
-        <ImageWithFallback src={currentImage} alt={journey.title[lang]} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+        <ImageWithFallback src={currentImage} alt={journey.title[lang]} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" style={{ objectPosition: journey.imagePosition ?? "center" }} />
         <span className="absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-bold" style={{ backgroundColor: CLIENT_ACCENT_YELLOW, color: CLIENT_ACCENT_TEXT }} data-experience-badge="client-accent">
           {journey.routeType[lang]}
         </span>

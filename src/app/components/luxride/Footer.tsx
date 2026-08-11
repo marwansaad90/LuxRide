@@ -33,11 +33,11 @@ export function Footer() {
 
   return (
     <footer id="contact" className="bg-lux-dark-2 pt-16 text-lux-beige/70">
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 pb-12 md:grid-cols-2 md:px-8 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 pb-12 sm:px-8 md:grid-cols-2 lg:grid-cols-4">
         {/* Brand column */}
         <div>
           <LuxRideLogo className="h-16 w-auto" />
-          <p className="mt-4 text-sm" style={{ lineHeight: 1.6 }}>
+          <p className="mt-4 max-w-sm text-sm" style={{ lineHeight: 1.6 }}>
             {t(lang, "footer_desc")}
           </p>
           <div className="mt-5 flex items-center gap-3">
@@ -108,7 +108,7 @@ export function Footer() {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-6 text-xs md:flex-row md:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-6 py-6 text-xs sm:px-8 md:flex-row">
           <p>© {new Date().getFullYear()} {t(lang, "footer_copy")}</p>
           <div className="flex flex-wrap items-center gap-5">
             <Link to="/cancellation-policy" className="hover:text-lux-green">{t(lang, "footer_cancellation")}</Link>

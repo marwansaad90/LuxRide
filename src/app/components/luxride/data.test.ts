@@ -183,6 +183,8 @@ describe("vehicle and booking validation", () => {
     expect(findRoute("Hurghada", "Cairo")?.image).toBe(IMAGES.cairo);
     expect(findRoute("Hurghada", "Alexandria")?.image).toBe(IMAGES.alexandria);
     expect(findRoute("Hurghada", "Sharm El Sheikh")?.image).toBe(IMAGES.sharm);
+    expect(findRoute("Hurghada Airport", "Hurghada")?.image).toBe(IMAGES.hurghada);
+    expect(findRoute("Hurghada", "Hurghada Airport")?.image).toBe(IMAGES.cityAirportTransfer);
     expect(IMAGES.airport).toContain("hurghada-airport-transfer.webp");
     expect(IMAGES.cityAirportTransfer).toContain("hurghada-city-airport-transfer.webp");
     expect(IMAGES.hurghada).toContain("hurghada-client.jpg");
@@ -194,6 +196,8 @@ describe("vehicle and booking validation", () => {
     expect(IMAGES.wadiElGemal).toContain("wadi-el-gemal-transfer.webp");
     expect(IMAGES.sharm).toContain("Sharm_El_Sheikh._Naama_Bay..jpg");
     expect(new Set([IMAGES.luxor, IMAGES.aswan, IMAGES.cairo, IMAGES.alexandria, IMAGES.sharm]).size).toBe(5);
+    expect(assetSize("../../../assets/destinations/hurghada-client.jpg")).toBeLessThan(400_000);
+    expect(assetSize("../../../assets/destinations/sahl-hasheesh-client.jpg")).toBeLessThan(500_000);
   });
 
   it("sanitizes disabled vehicles, capacity, route, trip, date, and time URL values", () => {
@@ -279,6 +283,7 @@ describe("latest desktop client-review integration", () => {
     expect(page).not.toContain("Scroll horizontally to see older transfers");
     expect(page).not.toContain("More featured transfers can be added once final images and content are approved");
     expect(featured).not.toContain("journey.tags");
+    expect(featured).toContain("objectPosition: journey.imagePosition");
   });
 
   it("keeps Luxor as the first experience with the five supplied LuxRide gallery images", () => {
@@ -299,6 +304,26 @@ describe("latest desktop client-review integration", () => {
     expect(first.images).not.toContain(IMAGES.luxorDetail);
     expect(journeySource).toContain("luxorDayTrip3, luxorDayTrip1, luxorDayTrip5, luxorDayTrip2, luxorDayTrip4");
     expect(first.description.EN).toContain("We’d love to share the story of a recent trip");
+  });
+
+  it("replaces the airport El Gouna experience with Porto Ghalib and keeps Sharm to one image", () => {
+    const transfers = newestFeaturedTransfers();
+    const portoGhalib = transfers.find((transfer) => transfer.id === "hurghada-port-ghalib-marina-overday");
+    const sharm = transfers.find((transfer) => transfer.id === "hurghada-sharm-one-way");
+    const destinationsPage = readSource("../../pages/DestinationsPage.tsx");
+    const journeySource = readSource("./journeys.ts");
+
+    expect(portoGhalib).toBeDefined();
+    expect(portoGhalib?.title.EN).toBe("Marina Escape Transfer: Hurghada to Porto Ghalib");
+    expect(portoGhalib?.title.AR).toContain("بورتو غالب");
+    expect(portoGhalib?.booking).toEqual({ from: "Hurghada", to: "Marsa Ghaleb", trip: "roundTrip" });
+    expect(portoGhalib?.images).toHaveLength(1);
+    expect(portoGhalib?.imagePosition).toBe("center 72%");
+    expect(sharm?.images).toEqual([IMAGES.sharm]);
+    expect(journeySource).toContain("port-ghalib-transfer.jpg");
+    expect(journeySource).not.toContain("Airport Arrival Transfer: Hurghada Airport to El Gouna");
+    expect(destinationsPage).toContain('["Hurghada", "Hurghada Airport"]');
+    expect(assetSize("../../../assets/experiences/port-ghalib-transfer.jpg")).toBeLessThan(300_000);
   });
 
   it("keeps the client-corrected image source mapping auditable", () => {

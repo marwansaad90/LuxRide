@@ -254,7 +254,9 @@ function routeDuration(row: WorkbookRouteRow): string {
 
 function routeImage(row: WorkbookRouteRow): string {
   const key = `${row.pickup} ${row.destination}`;
-  if (row.destination === "Hurghada Airport" || (row.pickup === "Hurghada Airport" && row.destination === "Hurghada")) return IMAGES.airport;
+  if (row.pickup === "Hurghada Airport" && row.destination === "Hurghada") return IMAGES.hurghada;
+  if (row.pickup === "Hurghada" && row.destination === "Hurghada Airport") return IMAGES.cityAirportTransfer;
+  if (row.destination === "Hurghada Airport") return IMAGES.airport;
   if (key.includes("Luxor")) return IMAGES.luxor;
   if (key.includes("Aswan")) return IMAGES.aswan;
   if (key.includes("Cairo") || key.includes("Zaafarana")) return IMAGES.cairo;

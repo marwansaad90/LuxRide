@@ -34,6 +34,7 @@ function destinationGroups(): DestinationGroup[] {
       en: "Hurghada area transfers",
       ar: "توصيلات منطقة الغردقة",
       pairs: [
+        ["Hurghada", "Hurghada Airport"],
         ["Hurghada", "Village Road"],
         ["Hurghada", "Makadi Bay"],
         ["Hurghada", "El Gouna"],

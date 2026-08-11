@@ -172,7 +172,7 @@ const TripadvisorEmbed = memo(function TripadvisorEmbed({
   return (
     <div
       ref={wrapperRef}
-      className="tripadvisor-embed flex min-h-32 min-w-0 max-w-full items-center justify-center overflow-x-auto pb-2 text-center"
+      className="tripadvisor-embed flex min-h-32 w-full min-w-0 max-w-full items-center justify-start overflow-x-auto pb-2 text-left sm:justify-center sm:text-center"
       dir="ltr"
     >
       <p ref={loaderRef} className="mb-3 text-sm text-neutral-500" role="status">
@@ -194,7 +194,7 @@ function TripadvisorWidget({
   large?: boolean;
 }) {
   return (
-    <article className={`flex min-w-0 items-center justify-center rounded-2xl border border-lux-charcoal/10 bg-white p-5 shadow-[0_10px_34px_rgba(15,22,35,0.06)] ${large ? "min-h-[23rem]" : "min-h-[11rem]"}`} data-tripadvisor-widget={config.key} aria-label={isAR ? "محتوى Tripadvisor الرسمي" : "Official Tripadvisor content"}>
+    <article className={`flex min-w-0 items-center justify-center overflow-hidden rounded-2xl border border-lux-charcoal/10 bg-white p-4 shadow-[0_10px_34px_rgba(15,22,35,0.06)] sm:p-5 ${large ? "min-h-[23rem]" : "min-h-[11rem]"}`} data-tripadvisor-widget={config.key} aria-label={isAR ? "محتوى Tripadvisor الرسمي" : "Official Tripadvisor content"}>
       <TripadvisorEmbed config={config} />
     </article>
   );
