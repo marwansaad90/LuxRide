@@ -251,12 +251,14 @@ export function Fleet() {
           subtitle={t(lang, "fleet_sub")}
         />
         <div
+          dir={lang === "AR" ? "rtl" : "ltr"}
           className="flex snap-x gap-5 overflow-x-auto pb-4 [scrollbar-width:thin] [scrollbar-color:var(--lux-green)_transparent] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-lux-green/45 [&::-webkit-scrollbar-track]:bg-transparent"
           data-homepage-fleet-feed="horizontal"
         >
           {SELECTABLE_FLEET.map((v) => (
             <div
               key={v.id}
+              dir={lang === "AR" ? "rtl" : "ltr"}
               className={`flex max-h-[34rem] min-w-[82%] snap-start flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] transition-all sm:min-w-[24rem] lg:min-w-[calc((100%_-_2.5rem)_/_3)] lg:basis-[calc((100%_-_2.5rem)_/_3)] lg:max-w-[calc((100%_-_2.5rem)_/_3)] ${
                 isVehicleSelectable(v) ? "border-lux-green/30 hover:border-lux-green/60" : "border-neutral-200 opacity-70"
               }`}

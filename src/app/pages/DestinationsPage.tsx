@@ -104,7 +104,7 @@ export function DestinationsPage() {
                   const publicTrip = availablePublicTripTypes(routeItem)[0];
                   const trip = resolveTripType(routeItem, publicTrip);
                   const price = trip ? routeItem.prices[trip] : undefined;
-                  const hideNearbyTransferBadge = group.en === "Airport transfers" || group.en === "Hurghada area transfers";
+                  const showRouteClassificationBadge = group.en !== "Airport transfers" && group.en !== "Hurghada area transfers";
                   const classification = tripRulesFor(routeItem)?.roundTripMode;
                   const classificationLabel = classification === "overday" ? L("Same-day return", "عودة في نفس اليوم") : classification === "overnight" ? L("Overnight", "مبيت") : "";
                   const query = new URLSearchParams({ from: routeItem.from, to: routeItem.to, trip: publicTrip }).toString();
@@ -122,7 +122,7 @@ export function DestinationsPage() {
                           <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-lux-green" /> {routeItem.duration}</span>
                           {routeItem.airport && <span className="rounded-full bg-lux-green/10 px-2 py-0.5 text-xs text-lux-green">+€2 {L("airport fee", "رسوم مطار")}</span>}
                           {routeItem.permit && <span className="rounded-full px-2 py-0.5 text-xs" style={{ backgroundColor: CLIENT_STEP_NUMBER_BG, color: CLIENT_ACCENT_TEXT }}>+ {L("travel permit", "تصريح سفر")}</span>}
-                          {!hideNearbyTransferBadge && classificationLabel && <span className="rounded-full bg-lux-green/10 px-2 py-0.5 text-xs font-medium text-lux-green">{L("Round Trip", "ذهاب وعودة")} · {classificationLabel}</span>}
+                          {showRouteClassificationBadge && classificationLabel && <span className="rounded-full bg-lux-green/10 px-2 py-0.5 text-xs font-medium text-lux-green">{L("Round Trip", "ذهاب وعودة")} · {classificationLabel}</span>}
                         </div>
                         <div className="mt-5 flex gap-3">
                           <Link to={`/booking?${query}`} className="flex flex-1 items-center justify-center rounded-full bg-lux-green py-2.5 text-sm text-white transition-all hover:brightness-110">{L("Book Now", "احجز الآن")}</Link>

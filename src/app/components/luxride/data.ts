@@ -147,8 +147,8 @@ export const FLEET: Vehicle[] = [
     permitTier: "mpv",
     available: true,
     wifi: true,
-    tagline: "Spacious, air-conditioned  — ideal for families and small groups",
-    taglineAr: "سيارة  واسعة ، مثالية للعائلات والمجموعات الصغيرة",
+    tagline: "Spacious, air-conditioned MPV — ideal for families and small groups",
+    taglineAr: "سيارة MPV واسعة ومكيفة، مثالية للعائلات والمجموعات الصغيرة",
   },
   {
     id: "corolla",
@@ -164,7 +164,7 @@ export const FLEET: Vehicle[] = [
     available: false,
     wifi: true,
     tagline: "Comfortable executive sedan for couples and solo travellers",
-    taglineAr: "سيدان  مريحة للأزواج والمسافرين بمفردهم",
+    taglineAr: "سيدان تنفيذية مريحة للأزواج والمسافرين بمفردهم",
   },
   {
     id: "hiace",
