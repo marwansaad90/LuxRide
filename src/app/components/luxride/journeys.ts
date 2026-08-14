@@ -48,7 +48,7 @@ export const FEATURED_TRANSFERS: FeaturedTransfer[] = [
       AR: "نود مشاركة قصة رحلة حديثة مع أحد ضيوفنا الكرام الذي اختارنا ليوم كامل من الغردقة إلى الأقصر.\n\nمنذ البداية وصل السائق في الموعد تماماً، واستقبل الضيوف بسيارة نظيفة ولامعة ومكيفة بالكامل، ومجهزة لراحة عالية في حرارة الطريق الصحراوي. ولجعل الرحلة الطويلة أكثر متعة، كانت هناك حقيبة تبريد جاهزة ومليئة بالمشروبات الباردة والوجبات الخفيفة.\n\nوأثناء عبور الصحراء، عندما بدأت المشروبات تنفد، لم ينتظر السائق أن يُطلب منه ذلك؛ بل توقف من تلقاء نفسه عند متجر محلي لإعادة تزويد السيارة بالمشروبات الباردة، ليبقى الجميع منتعشين طوال الطريق.\n\nوخلال جولتهم في آثار الأقصر القديمة، استمتع الضيوف بمرونة كاملة واستكشفوا على وتيرتهم الخاصة من دون أي شعور بالاستعجال. كان التواصل سهلاً وواضحاً بالإنجليزية الأساسية، وأي أسئلة إضافية جعلت تطبيقات الترجمة المحادثة أكثر سلاسة.\n\nاختتم الضيوف يومهم وهم مرتاحون ومنتعشون وممتلئون بذكريات جميلة، مع توصيل سلس حتى باب الفندق. بالنسبة لنا، الأمر لا يقتصر على نقلك من نقطة إلى أخرى؛ بل على الاهتمام بكل تفصيلة حتى تستمتع بالرحلة حقاً.",
     },
     tags: { EN: ["#Luxor", "#PrivateTransfer"], AR: ["#الأقصر", "#توصيلة_خاصة"] },
-    booking: { from: "Hurghada", to: "Luxor", trip: "roundTrip" },
+    booking: { from: "Hurghada City Center", to: "Luxor", trip: "roundTrip" },
   },
   {
     id: "hurghada-wadi-el-gemal-overday",
@@ -66,7 +66,7 @@ export const FEATURED_TRANSFERS: FeaturedTransfer[] = [
       AR: "توصيلة خاصة للضيوف المتجهين من الغردقة إلى منطقة وادي الجمال مع استلام هادئ، وتخطيط واضح للمسار، ومقاعد مكيفة مريحة، وسعر ثابت يظهر قبل إرسال الطلب.",
     },
     tags: { EN: ["#WadiElGemal", "#PrivateTransfer"], AR: ["#وادي_الجمال", "#توصيلة_خاصة"] },
-    booking: { from: "Hurghada", to: "Wadi El Gemal", trip: "roundTrip" },
+    booking: { from: "Hurghada City Center", to: "Wadi El Gemal", trip: "roundTrip" },
   },
   {
     id: "hurghada-luxor-dendera-overday",
@@ -84,7 +84,7 @@ export const FEATURED_TRANSFERS: FeaturedTransfer[] = [
       AR: "توصيلة خاصة ليوم كامل لعائلة ألمانية من الغردقة عبر الطريق الصحراوي إلى الأقصر، مع وقت مخطط لوادي الملوك وتوقف في طريق العودة قرب دندرة. تعرض التوصيلة التفاصيل العملية بوضوح: سعر ثابت، سيارة خاصة، استراحات مخططة، ودعم مباشر للحجز.",
     },
     tags: { EN: ["#Luxor", "#DenderaTemple", "#PrivateTransfer"], AR: ["#الأقصر", "#معبد_دندرة", "#توصيلة_خاصة"] },
-    booking: { from: "Hurghada", to: "Luxor", trip: "roundTrip" },
+    booking: { from: "Hurghada City Center", to: "Luxor", trip: "roundTrip" },
   },
   {
     id: "hurghada-port-ghalib-marina-overday",
@@ -103,7 +103,7 @@ export const FEATURED_TRANSFERS: FeaturedTransfer[] = [
     },
     imagePosition: "center 72%",
     tags: { EN: ["#PortoGhalib", "#PrivateTransfer"], AR: ["#بورتو_غالب", "#توصيلة_خاصة"] },
-    booking: { from: "Hurghada", to: "Marsa Ghaleb", trip: "roundTrip" },
+    booking: { from: "Hurghada City Center", to: "Porto Ghaleb", trip: "roundTrip" },
   },
   {
     id: "hurghada-sharm-one-way",
@@ -121,7 +121,7 @@ export const FEATURED_TRANSFERS: FeaturedTransfer[] = [
       AR: "توصيلة برية خاصة وسلسة للضيوف المسافرين مباشرة من الغردقة إلى شرم الشيخ، مع مساحة للأمتعة وراحة مكيفة وسعر ثابت دون مفاجآت مخفية.",
     },
     tags: { EN: ["#SharmElSheikh", "#DoorToDoor"], AR: ["#شرم_الشيخ", "#من_الباب_إلى_الباب"] },
-    booking: { from: "Hurghada", to: "Sharm El Sheikh", trip: "oneWay" },
+    booking: { from: "Hurghada City Center", to: "Sharm El Sheikh", trip: "oneWay" },
   },
 ];
 

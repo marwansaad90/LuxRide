@@ -1,0 +1,22 @@
+/*
+Theme Name: LuxRide
+Theme URI: https://luxride-eg.com/
+Author: LuxRide
+Author URI: https://luxride-eg.com/
+Description: Pixel-accurate LuxRide custom WordPress theme wrapping the approved React/Vite client design.
+Version: 0.1.0
+Requires at least: 6.0
+Requires PHP: 8.1
+Text Domain: luxride
+*/
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow-x: hidden;
+}

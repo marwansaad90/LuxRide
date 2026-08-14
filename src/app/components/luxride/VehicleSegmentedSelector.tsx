@@ -1,5 +1,6 @@
 import { Check, Info } from "lucide-react";
-import { SELECTABLE_FLEET, Vehicle, VehicleId } from "./data";
+import { Vehicle, VehicleId } from "./data";
+import { useVehicles } from "./cms";
 import { Lang } from "./i18n";
 
 const LABELS: Record<VehicleId, { en: string; ar: string; model: string }> = {
@@ -29,7 +30,8 @@ export function VehicleSegmentedSelector({
   onChange: (value: VehicleId) => void;
 }) {
   const isAR = lang === "AR";
-  const selectedVehicle = SELECTABLE_FLEET.find((vehicle) => vehicle.id === value) ?? SELECTABLE_FLEET[0];
+  const vehicles = useVehicles();
+  const selectedVehicle = vehicles.find((vehicle) => vehicle.id === value) ?? vehicles[0];
   const helperId = `${id}-capacity`;
 
   return (
@@ -40,7 +42,7 @@ export function VehicleSegmentedSelector({
         aria-label={isAR ? "نوع السيارة" : "Vehicle type"}
         className="grid grid-cols-3 overflow-visible rounded-xl border border-gray-200 bg-gray-100 p-1"
       >
-        {SELECTABLE_FLEET.map((vehicle) => {
+        {vehicles.map((vehicle) => {
           const selected = vehicle.id === value;
           const descId = `${id}-${vehicle.id}-desc`;
           return (
@@ -55,10 +57,10 @@ export function VehicleSegmentedSelector({
               onKeyDown={(event) => {
                 if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
                 event.preventDefault();
-                const current = SELECTABLE_FLEET.findIndex((item) => item.id === value);
+                const current = vehicles.findIndex((item) => item.id === value);
                 const step = event.key === "ArrowRight" ? 1 : -1;
-                const next = (current + step + SELECTABLE_FLEET.length) % SELECTABLE_FLEET.length;
-                onChange(SELECTABLE_FLEET[next].id);
+                const next = (current + step + vehicles.length) % vehicles.length;
+                onChange(vehicles[next].id);
               }}
               className={`group relative min-h-9 rounded-lg px-2 py-1.5 text-center text-sm font-semibold transition-all focus-visible:z-10 ${
                 selected

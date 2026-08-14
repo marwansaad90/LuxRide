@@ -1,8 +1,9 @@
 import { ArrowRight, ChevronLeft, ChevronRight, Images, MapPinned } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
-import { journeyBookingQuery, newestFeaturedTransfers, type FeaturedTransfer } from "./journeys";
+import { useExperiences } from "./cms";
+import { journeyBookingQuery, type FeaturedTransfer } from "./journeys";
 import { CLIENT_ACCENT_TEXT, CLIENT_ACCENT_YELLOW } from "./brand";
 import { SectionHeading } from "./Sections";
 import { useLang } from "./i18n";
@@ -85,7 +86,7 @@ export function JourneyCard({
 
 export function FeaturedJourneys() {
   const lang = useLang();
-  const transfers = useMemo(() => newestFeaturedTransfers(), []);
+  const transfers = useExperiences();
 
   return (
     <section id="experiences" className="bg-white py-20 md:py-28">

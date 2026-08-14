@@ -5,11 +5,12 @@ import {
   AccordionTrigger,
 } from "../ui/accordion";
 import { SectionHeading } from "./Sections";
-import { useLang, t, FAQS } from "./i18n";
+import { useFaqItems } from "./cms";
+import { useLang, t } from "./i18n";
 
 export function FAQ() {
   const lang = useLang();
-  const faqs = FAQS[lang];
+  const faqs = useFaqItems("home");
 
   return (
     <section className="bg-lux-beige py-20 md:py-28">
@@ -26,10 +27,10 @@ export function FAQ() {
               className="rounded-xl border border-lux-charcoal/10 bg-white px-5"
             >
               <AccordionTrigger className="text-left text-lux-charcoal hover:no-underline">
-                {f.q}
+                {f.q[lang]}
               </AccordionTrigger>
               <AccordionContent className="text-neutral-500">
-                {f.a}
+                {f.a[lang]}
               </AccordionContent>
             </AccordionItem>
           ))}

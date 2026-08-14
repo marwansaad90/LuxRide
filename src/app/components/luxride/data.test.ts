@@ -30,6 +30,7 @@ import {
   workbookOneWayPrice,
   workbookRoundTripPrice,
 } from "./data";
+import { WORKBOOK_PRICE_LIST_ROWS } from "./workbookRoutes";
 import { normalizeReturnFields, isValidReturn, readInitialBookingState } from "./bookingState";
 import { newestFeaturedTransfers } from "./journeys";
 import { PUBLIC_SEO_ROUTES } from "./seo";
@@ -76,37 +77,39 @@ function readActiveAppSources(dir: string): string {
 describe("workbook-derived route and pricing model", () => {
   it("keeps the workbook metadata and provisional yellow rows auditable", () => {
     expect(WORKBOOK_PRICE_LIST_META.sourceFile).toBe("LuxRide-Price-List.xlsx");
-    expect(WORKBOOK_PRICE_LIST_META.baseVehicle).toBe("MPV One Way");
-    expect(WORKBOOK_PRICE_LIST_META).toMatchObject({ sedanRatio: 0.8, miniVanRatio: 1.75, roundTripRatio: 1.8 });
-    expect(WORKBOOK_PRICE_LIST_META.sourceRows).toBe(302);
-    expect(WORKBOOK_PRICE_LIST_META.confirmedRows).toBe(302);
+    expect(WORKBOOK_PRICE_LIST_META.vehiclePricing).toBe("exact_workbook_values");
+    expect(WORKBOOK_PRICE_LIST_META.sourceRows).toBe(320);
+    expect(WORKBOOK_PRICE_LIST_META.confirmedRows).toBe(320);
     expect(WORKBOOK_PRICE_LIST_META.provisionalRows).toBe(0);
     expect(DRAFT_ROUTE_REFERENCES.length).toBe(WORKBOOK_PRICE_LIST_META.provisionalRows);
     expect(ROUTES.some((route) => route.draftStatus === "provisional")).toBe(false);
-    expect(findRoute("Hurghada", "Village Road")?.draftStatus).toBe("confirmed");
+    expect(findRoute("Hurghada City Center", "Village Road")?.draftStatus).toBe("confirmed");
   });
 
-  it("uses workbook MPV One Way as the base and derives vehicle prices with the workbook ratios", () => {
+  it("uses exact workbook prices for each vehicle without ratio derivation", () => {
+    const workbookRow = WORKBOOK_PRICE_LIST_ROWS.find((row) => row.pickup === "Hurghada Airport" && row.destination === "El Gouna")!;
     const route = findRoute("Hurghada Airport", "El Gouna")!;
-    expect(route.mpvOneWay).toBe(21);
-    expect(workbookOneWayPrice(route.mpvOneWay!, corolla)).toBe(17);
-    expect(workbookOneWayPrice(route.mpvOneWay!, xpander)).toBe(21);
-    expect(workbookOneWayPrice(route.mpvOneWay!, hiace)).toBe(37);
-    expect(workbookRoundTripPrice(route.mpvOneWay!, corolla)).toBe(31);
-    expect(workbookRoundTripPrice(route.mpvOneWay!, xpander)).toBe(38);
-    expect(workbookRoundTripPrice(route.mpvOneWay!, hiace)).toBe(67);
+    expect(route.vehiclePrices.corolla).toMatchObject({ oneWay: 17, overday: 30.6 });
+    expect(route.vehiclePrices.xpander).toMatchObject({ oneWay: 21, overday: 38 });
+    expect(route.vehiclePrices.hiace).toMatchObject({ oneWay: 37, overday: 67 });
+    expect(workbookOneWayPrice(workbookRow, corolla)).toBe(17);
+    expect(workbookOneWayPrice(workbookRow, xpander)).toBe(21);
+    expect(workbookOneWayPrice(workbookRow, hiace)).toBe(37);
+    expect(workbookRoundTripPrice(workbookRow, corolla)).toBe(30.6);
+    expect(workbookRoundTripPrice(workbookRow, xpander)).toBe(38);
+    expect(workbookRoundTripPrice(workbookRow, hiace)).toBe(67);
   });
 
   it("computes clean whole-Euro customer prices including unchanged airport and permit fees", () => {
     expect(price("Hurghada Airport", "El Gouna", "oneWay", xpander)).toMatchObject({ base: 21, airport: AIRPORT_SURCHARGE, total: 23 });
-    expect(price("Hurghada", "Hurghada Airport", "oneWay", xpander)).toMatchObject({ base: 13, airport: AIRPORT_SURCHARGE, total: 15 });
-    expect(price("Hurghada Airport", "El Gouna", "roundTrip", corolla)).toMatchObject({ base: 31, airport: AIRPORT_SURCHARGE, total: 33 });
-    expect(price("Hurghada", "Luxor", "oneWay", xpander)).toMatchObject({ base: 75, permit: 20, total: 95 });
-    expect(price("Hurghada", "Luxor", "roundTrip", hiace)).toMatchObject({ base: 236, permit: 30, total: 266 });
+    expect(price("Hurghada City Center", "Hurghada Airport", "oneWay", xpander)).toMatchObject({ base: 13, airport: AIRPORT_SURCHARGE, total: 15 });
+    expect(price("Hurghada Airport", "El Gouna", "roundTrip", corolla)).toMatchObject({ base: 30.6, airport: AIRPORT_SURCHARGE, total: 32.6 });
+    expect(price("Hurghada City Center", "Luxor", "oneWay", xpander)).toMatchObject({ base: 75, permit: 20, total: 95 });
+    expect(price("Hurghada City Center", "Luxor", "roundTrip", hiace)).toMatchObject({ base: 236, permit: 30, total: 266 });
   });
 
   it("supports One Way and Round Trip for every public workbook transfer while keeping Overday/Overnight internal", () => {
-    expect(ROUTES.length).toBe(302);
+    expect(ROUTES.length).toBe(320);
     for (const route of ROUTES) {
       expect(availablePublicTripTypes(route)).toEqual(["oneWay", "roundTrip"]);
       expect(resolveTripType(route, "oneWay")).toBe("oneWay");
@@ -115,29 +118,29 @@ describe("workbook-derived route and pricing model", () => {
   });
 
   it("automatically classifies Aswan, Alexandria, and Sharm El Sheikh as Overnight returns", () => {
-    expect(tripRulesFor(findRoute("Hurghada", "Aswan"))?.roundTripMode).toBe("overnight");
-    expect(tripRulesFor(findRoute("Hurghada", "Alexandria"))?.roundTripMode).toBe("overnight");
-    expect(tripRulesFor(findRoute("Hurghada", "Sharm El Sheikh"))?.roundTripMode).toBe("overnight");
-    expect(tripRulesFor(findRoute("Hurghada", "Luxor"))?.roundTripMode).toBe("overday");
+    expect(tripRulesFor(findRoute("Hurghada City Center", "Aswan"))?.roundTripMode).toBe("overnight");
+    expect(tripRulesFor(findRoute("Hurghada City Center", "Alexandria"))?.roundTripMode).toBe("overnight");
+    expect(tripRulesFor(findRoute("Hurghada City Center", "Sharm El Sheikh"))?.roundTripMode).toBe("overnight");
+    expect(tripRulesFor(findRoute("Hurghada City Center", "Luxor"))?.roundTripMode).toBe("overday");
   });
 
   it("keeps the requested important homepage transfer list concise", () => {
     expect(POPULAR_TRANSFERS.map((transfer) => `${transfer.from} -> ${transfer.to}`)).toEqual([
-      "Hurghada -> Hurghada Airport",
-      "Hurghada Airport -> Hurghada",
+      "Hurghada City Center -> Hurghada Airport",
+      "Hurghada Airport -> Hurghada City Center",
       "Hurghada Airport -> Makadi Bay",
       "Hurghada Airport -> El Gouna",
       "Hurghada Airport -> Sahl Hasheesh",
       "Hurghada Airport -> Village Road",
-      "Hurghada Airport -> Al Ahyaa",
-      "Hurghada -> Luxor",
-      "Hurghada -> Cairo",
-      "Hurghada -> Marsa Alam",
-      "Hurghada -> Wadi El Gemal",
+      "Hurghada Airport -> Al Ahyaa Subdivisions",
+      "Hurghada City Center -> Luxor",
+      "Hurghada City Center -> Cairo",
+      "Hurghada City Center -> Marsa Alam",
+      "Hurghada City Center -> Wadi El Gemal",
     ]);
     expect(POPULAR_TRANSFERS[0]).toMatchObject({
       id: "hurghada-city-airport",
-      from: "Hurghada",
+      from: "Hurghada City Center",
       to: "Hurghada Airport",
       fromPrice: 13,
       airport: true,
@@ -173,18 +176,18 @@ describe("vehicle and booking validation", () => {
 
   it("provides workbook pickup and destination cascades", () => {
     expect(pickupLocations()).toContain("Hurghada Airport");
-    expect(destinationsFor("Hurghada Airport")).toEqual(expect.arrayContaining(["Hurghada", "El Gouna", "Village Road", "Al Ahyaa"]));
-    expect(destinationsFor("Hurghada")).toEqual(expect.arrayContaining(["Luxor", "Cairo", "Marsa Alam", "Wadi El Gemal"]));
+    expect(destinationsFor("Hurghada Airport")).toEqual(expect.arrayContaining(["Hurghada City Center", "El Gouna", "Village Road", "Al Ahyaa Subdivisions", "Wadi Lahmy"]));
+    expect(destinationsFor("Hurghada City Center")).toEqual(expect.arrayContaining(["Luxor", "Cairo", "Marsa Alam", "Wadi El Gemal", "Wadi Lahmy"]));
   });
 
   it("uses valid, distinct imagery for major long-distance destination cards", () => {
-    expect(findRoute("Hurghada", "Luxor")?.image).toBe(IMAGES.luxor);
-    expect(findRoute("Hurghada", "Aswan")?.image).toBe(IMAGES.aswan);
-    expect(findRoute("Hurghada", "Cairo")?.image).toBe(IMAGES.cairo);
-    expect(findRoute("Hurghada", "Alexandria")?.image).toBe(IMAGES.alexandria);
-    expect(findRoute("Hurghada", "Sharm El Sheikh")?.image).toBe(IMAGES.sharm);
-    expect(findRoute("Hurghada Airport", "Hurghada")?.image).toBe(IMAGES.hurghada);
-    expect(findRoute("Hurghada", "Hurghada Airport")?.image).toBe(IMAGES.cityAirportTransfer);
+    expect(findRoute("Hurghada City Center", "Luxor")?.image).toBe(IMAGES.luxor);
+    expect(findRoute("Hurghada City Center", "Aswan")?.image).toBe(IMAGES.aswan);
+    expect(findRoute("Hurghada City Center", "Cairo")?.image).toBe(IMAGES.cairo);
+    expect(findRoute("Hurghada City Center", "Alexandria")?.image).toBe(IMAGES.alexandria);
+    expect(findRoute("Hurghada City Center", "Sharm El Sheikh")?.image).toBe(IMAGES.sharm);
+    expect(findRoute("Hurghada Airport", "Hurghada City Center")?.image).toBe(IMAGES.hurghada);
+    expect(findRoute("Hurghada City Center", "Hurghada Airport")?.image).toBe(IMAGES.cityAirportTransfer);
     expect(IMAGES.airport).toContain("hurghada-airport-transfer.webp");
     expect(IMAGES.cityAirportTransfer).toContain("hurghada-city-airport-transfer.webp");
     expect(IMAGES.hurghada).toContain("hurghada-client.jpg");
@@ -291,7 +294,7 @@ describe("latest desktop client-review integration", () => {
     const journeySource = readSource("./journeys.ts");
     expect(first.id).toBe("hurghada-luxor-unforgettable-day-trip");
     expect(first.title.EN).toBe("A Featured Journey: An Unforgettable Day Trip to Luxor");
-    expect(first.booking).toEqual({ from: "Hurghada", to: "Luxor", trip: "roundTrip" });
+    expect(first.booking).toEqual({ from: "Hurghada City Center", to: "Luxor", trip: "roundTrip" });
     expect(first.images).toHaveLength(5);
     expect(first.images.map((image) => image.match(/luxor-day-trip-\d/)?.[0])).toEqual([
       "luxor-day-trip-3",
@@ -323,7 +326,7 @@ describe("latest desktop client-review integration", () => {
     expect(portoGhalib).toBeDefined();
     expect(portoGhalib?.title.EN).toBe("Marina Escape Transfer: Hurghada to Porto Ghalib");
     expect(portoGhalib?.title.AR).toContain("بورتو غالب");
-    expect(portoGhalib?.booking).toEqual({ from: "Hurghada", to: "Marsa Ghaleb", trip: "roundTrip" });
+    expect(portoGhalib?.booking).toEqual({ from: "Hurghada City Center", to: "Porto Ghaleb", trip: "roundTrip" });
     expect(portoGhalib?.images).toHaveLength(1);
     expect(portoGhalib?.imagePosition).toBe("center 72%");
     expect(transfers.find((transfer) => transfer.id === "hurghada-wadi-el-gemal-overday")?.images).toEqual([IMAGES.wadiElGemal]);
@@ -331,7 +334,8 @@ describe("latest desktop client-review integration", () => {
     expect(sharm?.images).toEqual([IMAGES.sharm]);
     expect(journeySource).toContain("port-ghalib-transfer.jpg");
     expect(journeySource).not.toContain("Airport Arrival Transfer: Hurghada Airport to El Gouna");
-    expect(destinationsPage).toContain('["Hurghada", "Hurghada Airport"]');
+    expect(destinationsPage).toContain("useDestinationGroups");
+    expect(readSource("../../../../wordpress/wp-content/themes/luxride/inc/seed-data.php")).toContain("'Hurghada', 'Hurghada Airport'");
     expect(assetSize("../../../assets/experiences/port-ghalib-transfer.jpg")).toBeLessThan(300_000);
   });
 
@@ -356,7 +360,7 @@ describe("latest desktop client-review integration", () => {
       wadiElGemal: "Wadi-Elgemal.jpg",
     });
     const [firstTransfer] = POPULAR_TRANSFERS;
-    expect(firstTransfer.from).toBe("Hurghada");
+    expect(firstTransfer.from).toBe("Hurghada City Center");
     expect(firstTransfer.to).toBe("Hurghada Airport");
     expect(firstTransfer.displayFrom?.EN).toBe("Hurghada City");
     expect(firstTransfer.image).toBe(IMAGES.cityAirportTransfer);
@@ -405,10 +409,11 @@ describe("latest desktop client-review integration", () => {
     expect(FACEBOOK_URL).toBe("https://www.facebook.com/luxride.eg/");
     expect(INSTAGRAM_URL).toBe("https://www.instagram.com/luxride.eg/");
     expect(readSource("./data.ts")).toContain('export const EMAIL = "booking@luxride-eg.com"');
-    expect(footer).toContain('href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer"');
-    expect(footer).toContain('href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer"');
-    expect(contact).toContain('href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer"');
-    expect(contact).toContain('href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer"');
+    expect(footer).toContain('href={settings.facebookUrl} target="_blank" rel="noopener noreferrer"');
+    expect(footer).toContain('href={settings.instagramUrl} target="_blank" rel="noopener noreferrer"');
+    expect(contact).toContain('href={settings.facebookUrl} target="_blank" rel="noopener noreferrer"');
+    expect(contact).toContain('href={settings.instagramUrl} target="_blank" rel="noopener noreferrer"');
+    expect(footer + contact).toContain("useSiteSettings");
     expect(footer + contact).toContain("SocialLogoCircle");
     expect(readSource("./SocialBrandIcons.tsx")).toContain("luxride-facebook-glyph.png");
     expect(readSource("./SocialBrandIcons.tsx")).toContain("luxride-instagram-glyph.png");

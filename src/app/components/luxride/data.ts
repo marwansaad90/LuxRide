@@ -105,7 +105,7 @@ export const INSTAGRAM_URL = "https://www.instagram.com/luxride.eg/";
 
 // ─── Fees & rules ─────────────────────────────────────────────────────────────
 export const AIRPORT_SURCHARGE = 2; // €, once per booking on Hurghada Airport routes
-export const DRIVER_OVERNIGHT = 33; // €, only when a route explicitly requires it
+export const DRIVER_OVERNIGHT = 42; // €, per night for overnight round trips
 export const PERMIT_FEE = { sedan: 20, mpv: 20, minivan: 30 } as const; // € once per booking
 export const PERMIT_DESTINATIONS = ["Luxor", "Aswan", "Cairo", "Sharm El Sheikh"];
 export const MAX_AIRPORT_WAIT_HOURS = 3;
@@ -147,8 +147,8 @@ export const FLEET: Vehicle[] = [
     permitTier: "mpv",
     available: true,
     wifi: true,
-    tagline: "Spacious, — ideal for families and small groups",
-    taglineAr: "سيارة  واسعة ، مثالية للعائلات والمجموعات الصغيرة",
+    tagline: "Spacious vehicle — ideal for families and small groups",
+    taglineAr: "سيارة واسعة، مثالية للعائلات والمجموعات الصغيرة",
   },
   {
     id: "corolla",
@@ -163,8 +163,8 @@ export const FLEET: Vehicle[] = [
     permitTier: "sedan",
     available: false,
     wifi: true,
-    tagline: "Comfortable  sedan for couples and solo travellers",
-    taglineAr: "سيدان  مريحة للأزواج والمسافرين بمفردهم",
+    tagline: "Comfortable sedan for couples and solo travellers",
+    taglineAr: "سيدان مريحة للأزواج والمسافرين بمفردهم",
   },
   {
     id: "hiace",
@@ -179,8 +179,8 @@ export const FLEET: Vehicle[] = [
     permitTier: "minivan",
     available: false,
     wifi: true,
-    tagline: "Roomy minivan for larger groups and extra luggage",
-    taglineAr: "ميني للمجموعات الأكبر والأمتعة الإضافية",
+    tagline: "Minivan for larger groups and extra luggage",
+    taglineAr: "ميني فان للمجموعات الأكبر والأمتعة الإضافية",
   },
 ];
 
@@ -203,6 +203,7 @@ export interface Route {
   from: string;
   to: string;
   prices: Partial<Record<TripType, number>>;
+  vehiclePrices: Record<VehicleId, Partial<Record<TripType, number>>>;
   mpvOneWay?: number;
   sourceRow?: number;
   draftStatus?: WorkbookDraftStatus;
@@ -225,19 +226,16 @@ export interface RouteTripRule {
   roundTripPrice?: number;
 }
 
-const OVERNIGHT_RETURN_DESTINATIONS = new Set(["Aswan", "Alexandria", "Sharm El Sheikh"]);
 const APPROVED_WORKBOOK_ROWS = WORKBOOK_PRICE_LIST_ROWS;
 export const DRAFT_ROUTE_REFERENCES: WorkbookRouteRow[] = [];
 export { WORKBOOK_PRICE_LIST_META };
 
 function workbookReturnMode(row: WorkbookRouteRow): RoundTripMode {
-  const returnName = row.returnTripName.toLowerCase();
-  if (returnName.includes("overnight") || OVERNIGHT_RETURN_DESTINATIONS.has(row.destination)) return "overnight";
-  return "overday";
+  return row.roundTripClassification;
 }
 
 function routeDuration(row: WorkbookRouteRow): string {
-  if ([row.pickup, row.destination].includes("Hurghada Airport") && [row.pickup, row.destination].includes("Hurghada")) return "20 min";
+  if ([row.pickup, row.destination].includes("Hurghada Airport") && [row.pickup, row.destination].includes("Hurghada City Center")) return "20 min";
   if ([row.pickup, row.destination].includes("Luxor")) return "4 h";
   if ([row.pickup, row.destination].includes("Cairo")) return "5 h 30 min";
   if ([row.pickup, row.destination].includes("Aswan")) return "7 h";
@@ -246,7 +244,7 @@ function routeDuration(row: WorkbookRouteRow): string {
   if ([row.pickup, row.destination].includes("Marsa Alam")) return "3 h";
   if ([row.pickup, row.destination].includes("Wadi El Gemal")) return "4 h";
   if ([row.pickup, row.destination].includes("Hamata")) return "4 h";
-  if ([row.pickup, row.destination].includes("Marsa Ghaleb")) return "2 h 30 min";
+  if ([row.pickup, row.destination].includes("Marsa Ghaleb") || [row.pickup, row.destination].includes("Porto Ghaleb")) return "2 h 30 min";
   if ([row.pickup, row.destination].includes("El Quseir")) return "2 h";
   if ([row.pickup, row.destination].includes("Safaga")) return "1 h";
   if ([row.pickup, row.destination].includes("Soma Bay")) return "50 min";
@@ -258,8 +256,8 @@ function routeDuration(row: WorkbookRouteRow): string {
 
 function routeImage(row: WorkbookRouteRow): string {
   const key = `${row.pickup} ${row.destination}`;
-  if (row.pickup === "Hurghada Airport" && row.destination === "Hurghada") return IMAGES.hurghada;
-  if (row.pickup === "Hurghada" && row.destination === "Hurghada Airport") return IMAGES.cityAirportTransfer;
+  if (row.pickup === "Hurghada Airport" && row.destination === "Hurghada City Center") return IMAGES.hurghada;
+  if (row.pickup === "Hurghada City Center" && row.destination === "Hurghada Airport") return IMAGES.cityAirportTransfer;
   if (row.destination === "Hurghada Airport") return IMAGES.airport;
   if (key.includes("Luxor")) return IMAGES.luxor;
   if (key.includes("Aswan")) return IMAGES.aswan;
@@ -267,7 +265,7 @@ function routeImage(row: WorkbookRouteRow): string {
   if (key.includes("Alexandria")) return IMAGES.alexandria;
   if (key.includes("Sharm El Sheikh")) return IMAGES.sharm;
   if (key.includes("Wadi El Gemal") || key.includes("Sharm El Luli") || key.includes("El Qulaan") || key.includes("Abu Dabbab")) return IMAGES.wadiElGemal;
-  if (key.includes("Marsa Alam") || key.includes("Marsa Ghaleb") || key.includes("Hamata") || key.includes("El Quseir")) return IMAGES.marsaAlam;
+  if (key.includes("Marsa Alam") || key.includes("Marsa Ghaleb") || key.includes("Porto Ghaleb") || key.includes("Hamata") || key.includes("El Quseir")) return IMAGES.marsaAlam;
   if (key.includes("Sahl Hasheesh")) return IMAGES.sahlHasheesh;
   if (key.includes("El Gouna")) return IMAGES.elGouna;
   if (key.includes("Makadi")) return IMAGES.makadi;
@@ -277,19 +275,20 @@ function routeImage(row: WorkbookRouteRow): string {
   return IMAGES.hurghada;
 }
 
-export function workbookOneWayPrice(mpvOneWay: number, vehicle: Vehicle): number {
-  if (vehicle.permitTier === "sedan") return Math.round(mpvOneWay * WORKBOOK_PRICE_LIST_META.sedanRatio);
-  if (vehicle.permitTier === "minivan") return Math.round(mpvOneWay * WORKBOOK_PRICE_LIST_META.miniVanRatio);
-  return Math.round(mpvOneWay);
+export function workbookOneWayPrice(row: WorkbookRouteRow, vehicle: Vehicle): number {
+  if (vehicle.id === "corolla") return row.sedanOneWay;
+  if (vehicle.id === "hiace") return row.minivanOneWay;
+  return row.mpvOneWay;
 }
 
-export function workbookRoundTripPrice(mpvOneWay: number, vehicle: Vehicle): number {
-  return Math.round(workbookOneWayPrice(mpvOneWay, vehicle) * WORKBOOK_PRICE_LIST_META.roundTripRatio);
+export function workbookRoundTripPrice(row: WorkbookRouteRow, vehicle: Vehicle): number {
+  if (vehicle.id === "corolla") return row.sedanRoundTrip;
+  if (vehicle.id === "hiace") return row.minivanRoundTrip;
+  return row.mpvRoundTrip;
 }
 
 function routeFromWorkbook(row: WorkbookRouteRow): Route {
   const roundTripMode = workbookReturnMode(row);
-  const mpvRoundTrip = workbookRoundTripPrice(row.mpvOneWay, FLEET.find((vehicle) => vehicle.id === "xpander")!);
   return {
     id: row.id,
     sourceRow: row.sourceRow,
@@ -298,11 +297,17 @@ function routeFromWorkbook(row: WorkbookRouteRow): Route {
     fromAr: row.pickupAr,
     toAr: row.destinationAr,
     mpvOneWay: row.mpvOneWay,
-    prices: { oneWay: row.mpvOneWay, [roundTripMode]: mpvRoundTrip },
+    prices: { oneWay: row.mpvOneWay, [roundTripMode]: row.mpvRoundTrip },
+    vehiclePrices: {
+      corolla: { oneWay: row.sedanOneWay, [roundTripMode]: row.sedanRoundTrip },
+      xpander: { oneWay: row.mpvOneWay, [roundTripMode]: row.mpvRoundTrip },
+      hiace: { oneWay: row.minivanOneWay, [roundTripMode]: row.minivanRoundTrip },
+    },
     duration: routeDuration(row),
     image: routeImage(row),
-    airport: row.pickup === "Hurghada Airport" || row.destination === "Hurghada Airport",
-    permit: PERMIT_DESTINATIONS.includes(row.pickup) || PERMIT_DESTINATIONS.includes(row.destination),
+    airport: row.airportFeeApplicable,
+    permit: row.permitRequired,
+    accommodationRequired: roundTripMode === "overnight",
     outboundClassification: row.outboundTripName,
     returnClassification: row.returnTripName,
     returnClassificationAr: row.returnTripNameAr,
@@ -311,6 +316,54 @@ function routeFromWorkbook(row: WorkbookRouteRow): Route {
 }
 
 export const ROUTES: Route[] = APPROVED_WORKBOOK_ROWS.map(routeFromWorkbook);
+
+interface ApiRoutePrice {
+  one_way?: number;
+  round_trip?: number;
+}
+
+interface ApiRoute {
+  id: number;
+  route_code: string;
+  pickup: { key: string; label: string; ar?: string };
+  destination: { key: string; label: string; ar?: string };
+  recommended_trip_type?: "one_way" | "round_trip";
+  round_trip_classification?: RoundTripMode;
+  airport_fee_applicable?: boolean;
+  permit_required?: boolean;
+  prices?: Partial<Record<"sedan" | "mpv" | "minivan", ApiRoutePrice>>;
+}
+
+export function routeFromApiRoute(row: ApiRoute): Route {
+  const roundTripMode = row.round_trip_classification === "overnight" ? "overnight" : "overday";
+  const prices = row.prices ?? {};
+  return {
+    id: row.route_code || String(row.id),
+    from: row.pickup.label,
+    to: row.destination.label,
+    fromAr: row.pickup.ar ?? "",
+    toAr: row.destination.ar ?? "",
+    mpvOneWay: prices.mpv?.one_way,
+    prices: { oneWay: prices.mpv?.one_way, [roundTripMode]: prices.mpv?.round_trip },
+    vehiclePrices: {
+      corolla: { oneWay: prices.sedan?.one_way, [roundTripMode]: prices.sedan?.round_trip },
+      xpander: { oneWay: prices.mpv?.one_way, [roundTripMode]: prices.mpv?.round_trip },
+      hiace: { oneWay: prices.minivan?.one_way, [roundTripMode]: prices.minivan?.round_trip },
+    },
+    duration: "on request",
+    image: routeImage({
+      pickup: row.pickup.label,
+      destination: row.destination.label,
+    } as WorkbookRouteRow),
+    airport: Boolean(row.airport_fee_applicable),
+    permit: Boolean(row.permit_required),
+    accommodationRequired: roundTripMode === "overnight",
+    outboundClassification: "",
+    returnClassification: roundTripMode,
+    returnClassificationAr: roundTripMode === "overnight" ? "رحلة مع مبيت" : "جولة يوم كامل",
+    draftStatus: "confirmed",
+  };
+}
 
 export function tripRulesFor(route: Route | undefined): RouteTripRule | null {
   if (!route) return null;
@@ -328,15 +381,27 @@ export const ROUTE_TRIP_RULES: Record<string, RouteTripRule> = Object.fromEntrie
 );
 
 export function pickupLocations(): string[] {
-  return Array.from(new Set(ROUTES.map((r) => r.from)));
+  return pickupLocationsFor(ROUTES);
+}
+
+export function pickupLocationsFor(routes: readonly Route[]): string[] {
+  return Array.from(new Set(routes.map((r) => r.from)));
 }
 
 export function destinationsFor(from: string): string[] {
-  return ROUTES.filter((r) => r.from === from).map((r) => r.to);
+  return destinationsForRoutes(ROUTES, from);
+}
+
+export function destinationsForRoutes(routes: readonly Route[], from: string): string[] {
+  return routes.filter((r) => r.from === from).map((r) => r.to);
 }
 
 export function findRoute(from: string, to: string): Route | undefined {
-  return ROUTES.find((r) => r.from === from && r.to === to);
+  return findRouteIn(ROUTES, from, to);
+}
+
+export function findRouteIn(routes: readonly Route[], from: string, to: string): Route | undefined {
+  return routes.find((r) => r.from === from && r.to === to);
 }
 
 export interface PriceBreakdown {
@@ -354,12 +419,8 @@ export function computePrice(
   trip: TripType,
   vehicle: Vehicle,
 ): PriceBreakdown | null {
-  if (route.prices[trip] == null) return null;
-  const mpvOneWay = route.mpvOneWay ?? route.prices.oneWay ?? route.prices[trip];
-  if (mpvOneWay == null) return null;
-  const base = trip === "oneWay"
-    ? workbookOneWayPrice(mpvOneWay, vehicle)
-    : workbookRoundTripPrice(mpvOneWay, vehicle);
+  const base = route.vehiclePrices[vehicle.id]?.[trip];
+  if (base == null) return null;
   const discount = route.discountPct
     ? Math.round(base * route.discountPct) / 100
     : 0;
@@ -466,19 +527,31 @@ function popularTransfer(
 }
 
 export const POPULAR_TRANSFERS: PopularTransfer[] = [
-  popularTransfer("hurghada-city-airport", "Hurghada", "Hurghada Airport", IMAGES.cityAirportTransfer, {
+  popularTransfer("hurghada-city-airport", "Hurghada City Center", "Hurghada Airport", IMAGES.cityAirportTransfer, {
     displayFrom: { EN: "Hurghada City", AR: "مدينة الغردقة" },
   }),
-  popularTransfer("airport-hurghada", "Hurghada Airport", "Hurghada", IMAGES.hurghada),
+  popularTransfer("airport-hurghada", "Hurghada Airport", "Hurghada City Center", IMAGES.hurghada, {
+    displayTo: { EN: "Hurghada City", AR: "مدينة الغردقة" },
+  }),
   popularTransfer("airport-makadi", "Hurghada Airport", "Makadi Bay", IMAGES.makadi),
   popularTransfer("airport-gouna", "Hurghada Airport", "El Gouna", IMAGES.elGouna),
   popularTransfer("airport-sahl", "Hurghada Airport", "Sahl Hasheesh", IMAGES.sahlHasheesh),
   popularTransfer("airport-village", "Hurghada Airport", "Village Road", IMAGES.villageRoad),
-  popularTransfer("airport-ahyaa", "Hurghada Airport", "Al Ahyaa", IMAGES.alAhyaa),
-  popularTransfer("hurghada-luxor", "Hurghada", "Luxor", IMAGES.luxor),
-  popularTransfer("hurghada-cairo", "Hurghada", "Cairo", IMAGES.cairo),
-  popularTransfer("hurghada-marsa-alam", "Hurghada", "Marsa Alam", IMAGES.marsaAlam),
-  popularTransfer("hurghada-wadi-el-gemal", "Hurghada", "Wadi El Gemal", IMAGES.wadiElGemal),
+  popularTransfer("airport-ahyaa", "Hurghada Airport", "Al Ahyaa Subdivisions", IMAGES.alAhyaa, {
+    displayTo: { EN: "Al Ahyaa", AR: "الأحياء" },
+  }),
+  popularTransfer("hurghada-luxor", "Hurghada City Center", "Luxor", IMAGES.luxor, {
+    displayFrom: { EN: "Hurghada City", AR: "مدينة الغردقة" },
+  }),
+  popularTransfer("hurghada-cairo", "Hurghada City Center", "Cairo", IMAGES.cairo, {
+    displayFrom: { EN: "Hurghada City", AR: "مدينة الغردقة" },
+  }),
+  popularTransfer("hurghada-marsa-alam", "Hurghada City Center", "Marsa Alam", IMAGES.marsaAlam, {
+    displayFrom: { EN: "Hurghada City", AR: "مدينة الغردقة" },
+  }),
+  popularTransfer("hurghada-wadi-el-gemal", "Hurghada City Center", "Wadi El Gemal", IMAGES.wadiElGemal, {
+    displayFrom: { EN: "Hurghada City", AR: "مدينة الغردقة" },
+  }),
 ];
 
 export function whatsappLink(message: string): string {

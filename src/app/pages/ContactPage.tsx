@@ -3,13 +3,14 @@ import { PageShell } from "../components/luxride/PageShell";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
-import { EMAIL, FACEBOOK_URL, INSTAGRAM_URL, PHONE_DISPLAY, TRIPADVISOR_URL, whatsappLink } from "../components/luxride/data";
+import { settingsTelHref, settingsWhatsappLink, useSiteSettings } from "../components/luxride/cms";
 import { useL } from "../components/luxride/i18n";
 import { WhatsAppIcon } from "../components/luxride/WhatsAppIcon";
 import { SOCIAL_LOGOS, SocialLogoCircle, TripadvisorLogoCircle } from "../components/luxride/SocialBrandIcons";
 
 export function ContactPage() {
   const L = useL();
+  const settings = useSiteSettings();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -27,7 +28,7 @@ export function ContactPage() {
     }
     setError("");
     const body = `Name: ${name.trim()}\nEmail: ${email.trim() || "Not provided"}\nMessage: ${message.trim()}`;
-    window.open(whatsappLink(body), "_blank", "noopener,noreferrer");
+    window.open(settingsWhatsappLink(settings, body), "_blank", "noopener,noreferrer");
   };
 
   const contactCardClass =
@@ -53,23 +54,23 @@ export function ContactPage() {
       <section className="bg-lux-beige py-16 md:py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            <a href={`tel:${PHONE_DISPLAY.replace(/\s/g, "")}`} className={contactCardClass}>
+            <a href={settingsTelHref(settings)} className={contactCardClass}>
               <SocialLogoCircle src={SOCIAL_LOGOS.phone} alt="" className="!h-10 !w-10" imgClassName="!max-h-10 !max-w-10" imgStyle={socialIconFilter} />
-              <span className={cardTextClass}><span className={labelLineClass}>{L("Phone", "الهاتف")}</span><span className={primaryLineClass} dir="ltr">{PHONE_DISPLAY}</span></span>
+              <span className={cardTextClass}><span className={labelLineClass}>{L("Phone", "الهاتف")}</span><span className={primaryLineClass} dir="ltr">{settings.phoneDisplay}</span></span>
             </a>
-            <a href={`mailto:${EMAIL}`} className={contactCardClass}>
+            <a href={`mailto:${settings.email}`} className={contactCardClass}>
               <SocialLogoCircle src={SOCIAL_LOGOS.email} alt="" className="!h-10 !w-10" imgClassName="!max-h-10 !max-w-10" imgStyle={socialIconFilter} />
-              <span className={cardTextClass}><span className={labelLineClass}>{L("Email", "البريد الإلكتروني")}</span><span className={emailLineClass} dir="ltr">{EMAIL}</span></span>
+              <span className={cardTextClass}><span className={labelLineClass}>{L("Email", "البريد الإلكتروني")}</span><span className={emailLineClass} dir="ltr">{settings.email}</span></span>
             </a>
-            <a href={whatsappLink("Hello LuxRide!")} target="_blank" rel="noopener noreferrer" className={contactCardClass}>
+            <a href={settingsWhatsappLink(settings, "Hello LuxRide!")} target="_blank" rel="noopener noreferrer" className={contactCardClass}>
               <SocialLogoCircle src={SOCIAL_LOGOS.whatsapp} alt="" className="!h-10 !w-10" imgClassName="!max-h-10 !max-w-10" imgStyle={socialIconFilter} />
-              <span className={cardTextClass}><span className={labelLineClass}>WhatsApp</span><span className={primaryLineClass} dir="ltr">{PHONE_DISPLAY}</span></span>
+              <span className={cardTextClass}><span className={labelLineClass}>WhatsApp</span><span className={primaryLineClass} dir="ltr">{settings.phoneDisplay}</span></span>
             </a>
-            <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" className={contactCardClass} aria-label="LuxRide on Facebook">
+            <a href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" className={contactCardClass} aria-label="LuxRide on Facebook">
               <SocialLogoCircle src={SOCIAL_LOGOS.facebook} alt="" className="!h-10 !w-10" imgClassName="!max-h-10 !max-w-10" imgStyle={socialIconFilter} />
               <span className={cardTextClass}><span className={labelLineClass}>Facebook</span><span className={primaryLineClass}>luxride.eg</span></span>
             </a>
-            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className={contactCardClass} aria-label="LuxRide on Instagram">
+            <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" className={contactCardClass} aria-label="LuxRide on Instagram">
               <SocialLogoCircle src={SOCIAL_LOGOS.instagram} alt="" className="!h-10 !w-10" imgClassName="!max-h-10 !max-w-10" imgStyle={socialIconFilter} />
               <span className={cardTextClass}><span className={labelLineClass}>Instagram</span><span className={primaryLineClass}>luxride.eg</span></span>
             </a>
@@ -109,7 +110,7 @@ export function ContactPage() {
               <div className="rounded-2xl border border-lux-charcoal/8 bg-white p-7">
                 <h3 className="text-lux-charcoal" style={{ fontSize: "1.15rem" }}>Tripadvisor</h3>
                 <p className="mt-2 text-sm text-neutral-500">{L("View LuxRide's official Tripadvisor page.", "اطّلع على صفحة LuxRide الرسمية على Tripadvisor.")}</p>
-                <a href={TRIPADVISOR_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide official Tripadvisor page" className="mt-4 inline-flex items-center rounded-xl px-0 py-1 transition-all hover:opacity-80">
+                <a href={settings.tripadvisorUrl} target="_blank" rel="noopener noreferrer" aria-label="LuxRide official Tripadvisor page" className="mt-4 inline-flex items-center rounded-xl px-0 py-1 transition-all hover:opacity-80">
                   <TripadvisorLogoCircle />
                 </a>
               </div>

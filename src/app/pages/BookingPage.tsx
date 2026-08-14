@@ -16,7 +16,6 @@ import {
   BOOKING_CUTOFF_HOURS,
   FLEET,
   PublicTripType,
-  SELECTABLE_FLEET,
   VehicleId,
   availablePublicTripTypes,
   computePrice,
@@ -25,9 +24,9 @@ import {
   pickupLocations,
   resolveTripType,
   tripRulesFor,
-  whatsappLink,
 } from "../components/luxride/data";
 import { addDays, formatEur, isValidReturn, normalizeReturnFields, readInitialBookingState } from "../components/luxride/bookingState";
+import { settingsWhatsappLink, useSiteSettings, useVehicles } from "../components/luxride/cms";
 import { locationLabel, useLang } from "../components/luxride/i18n";
 import { PageShell } from "../components/luxride/PageShell";
 import { VehicleSegmentedSelector } from "../components/luxride/VehicleSegmentedSelector";
@@ -41,6 +40,8 @@ export function BookingPage() {
   const isAR = lang === "AR";
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const settings = useSiteSettings();
+  const vehicles = useVehicles();
   const initial = useMemo(() => readInitialBookingState(searchParams), [searchParams]);
 
   // ── Step 1 state (pre-filled from URL params) ──────────────────────────────
@@ -70,7 +71,7 @@ export function BookingPage() {
   const [tripNotice, setTripNotice] = useState("");
 
   // ── Derived ─────────────────────────────────────────────────────────────────
-  const vehicle = SELECTABLE_FLEET.find((v) => v.id === vehicleId) ?? SELECTABLE_FLEET[0] ?? FLEET[0];
+  const vehicle = vehicles.find((v) => v.id === vehicleId) ?? vehicles[0] ?? FLEET[0];
   const route = findRoute(from, to);
   const trip = useMemo(() => resolveTripType(route, publicTrip), [route, publicTrip]);
   const tripRules = useMemo(() => tripRulesFor(route), [route]);
@@ -106,7 +107,7 @@ export function BookingPage() {
   }
 
   function handleVehicleChange(id: VehicleId) {
-    const v = SELECTABLE_FLEET.find((f) => f.id === id);
+    const v = vehicles.find((f) => f.id === id);
     if (!v) return;
     setVehicleId(id);
     const exceedsCapacity = parseInt(pax) > v.pax || parseInt(luggage) > v.luggage;
@@ -364,7 +365,7 @@ export function BookingPage() {
                       : "Standard booking requires at least 3 hours before departure. Contact us on WhatsApp to check last-minute availability."}
                   </p>
                   <a
-                    href={whatsappLink("Hi LuxRide, I need a last-minute transfer.")}
+                    href={settingsWhatsappLink(settings, "Hi LuxRide, I need a last-minute transfer.")}
                     target="_blank" rel="noreferrer"
                     className="mt-2 inline-flex items-center gap-2 rounded-full bg-lux-orange px-5 py-2 text-sm text-white"
                   >

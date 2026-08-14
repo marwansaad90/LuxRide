@@ -1,0 +1,94 @@
+<?php
+/**
+ * LuxRide custom theme bootstrap.
+ *
+ * @package LuxRide
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+define('LUXRIDE_THEME_VERSION', '0.1.0');
+define('LUXRIDE_THEME_DIR', get_template_directory());
+define('LUXRIDE_THEME_URI', get_template_directory_uri());
+
+require_once LUXRIDE_THEME_DIR . '/inc/content-types.php';
+require_once LUXRIDE_THEME_DIR . '/inc/routes.php';
+require_once LUXRIDE_THEME_DIR . '/inc/seo.php';
+require_once LUXRIDE_THEME_DIR . '/inc/settings.php';
+require_once LUXRIDE_THEME_DIR . '/inc/seed-data.php';
+require_once LUXRIDE_THEME_DIR . '/inc/content-bootstrap.php';
+
+add_action('after_setup_theme', function (): void {
+    add_theme_support('title-tag');
+    add_theme_support('post-thumbnails');
+    add_theme_support('html5', ['script', 'style', 'search-form', 'gallery', 'caption']);
+
+    register_nav_menus([
+        'primary' => __('Primary Navigation', 'luxride'),
+        'footer' => __('Footer Navigation', 'luxride'),
+    ]);
+});
+
+function luxride_first_asset(string $pattern): ?string
+{
+    $matches = glob(LUXRIDE_THEME_DIR . '/assets/' . $pattern);
+    if (!$matches) {
+        return null;
+    }
+
+    usort($matches, fn(string $a, string $b): int => filemtime($a) <=> filemtime($b));
+    return basename((string) end($matches));
+}
+
+add_action('wp_enqueue_scripts', function (): void {
+    wp_enqueue_style('luxride-theme', get_stylesheet_uri(), [], LUXRIDE_THEME_VERSION);
+
+    $css = luxride_first_asset('index-*.css');
+    if ($css) {
+        wp_enqueue_style('luxride-app', LUXRIDE_THEME_URI . '/assets/' . $css, [], filemtime(LUXRIDE_THEME_DIR . '/assets/' . $css));
+    }
+
+    $js = luxride_first_asset('index-*.js');
+    if ($js) {
+        wp_enqueue_script('luxride-app', LUXRIDE_THEME_URI . '/assets/' . $js, [], filemtime(LUXRIDE_THEME_DIR . '/assets/' . $js), true);
+    }
+}, 20);
+
+add_filter('script_loader_tag', function (string $tag, string $handle, string $src): string {
+    if ('luxride-app' !== $handle) {
+        return $tag;
+    }
+
+    return sprintf(
+        '<script type="module" crossorigin src="%s" id="%s-js"></script>' . "\n",
+        esc_url($src),
+        esc_attr($handle)
+    );
+}, 10, 3);
+
+add_filter('style_loader_tag', function (string $tag, string $handle, string $href): string {
+    if ('luxride-app' !== $handle) {
+        return $tag;
+    }
+
+    return sprintf(
+        '<link rel="stylesheet" crossorigin href="%s" id="%s-css" media="all" />' . "\n",
+        esc_url($href),
+        esc_attr($handle)
+    );
+}, 10, 3);
+
+register_activation_hook(__FILE__, 'luxride_activate_theme');
+
+add_action('after_switch_theme', 'luxride_activate_theme');
+
+function luxride_activate_theme(): void
+{
+    luxride_register_content_types();
+    luxride_ensure_pages();
+    luxride_seed_default_options();
+    luxride_ensure_seed_content();
+    flush_rewrite_rules();
+}

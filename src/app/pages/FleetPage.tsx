@@ -2,13 +2,15 @@ import { Check, Snowflake, Usb, Users, Wifi, X } from "lucide-react";
 import { Link } from "react-router";
 import { PageShell } from "../components/luxride/PageShell";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import { SELECTABLE_FLEET, isVehicleSelectable } from "../components/luxride/data";
+import { isVehicleSelectable } from "../components/luxride/data";
+import { useVehicles } from "../components/luxride/cms";
 import { useLang, useL } from "../components/luxride/i18n";
 import { CLIENT_ACCENT_TEXT, CLIENT_ACCENT_YELLOW } from "../components/luxride/brand";
 
 export function FleetPage() {
   const lang = useLang();
   const L = useL();
+  const vehicles = useVehicles();
 
   return (
     <PageShell
@@ -22,7 +24,7 @@ export function FleetPage() {
     >
       <section className="bg-lux-beige py-16 md:py-24">
         <div dir={lang === "AR" ? "rtl" : "ltr"} className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 md:px-8 lg:grid-cols-3">
-          {SELECTABLE_FLEET.map((v) => (
+          {vehicles.map((v) => (
             <div
               key={v.id}
               dir={lang === "AR" ? "rtl" : "ltr"}

@@ -1,13 +1,6 @@
 import { Link } from "react-router";
 import { LuxRideLogo } from "./LuxRideLogo";
-import {
-  FACEBOOK_URL,
-  EMAIL,
-  INSTAGRAM_URL,
-  PHONE_DISPLAY,
-  TRIPADVISOR_URL,
-  whatsappLink,
-} from "./data";
+import { settingsTelHref, settingsWhatsappLink, useSiteSettings } from "./cms";
 import { useLang, t, POPULAR_DEST_LABELS } from "./i18n";
 import type { TKey } from "./i18n";
 import { SOCIAL_LOGOS, SocialLogoCircle, TripadvisorLogoMark } from "./SocialBrandIcons";
@@ -27,6 +20,7 @@ const QUICK_LINKS: Array<{ key: TKey; to: string }> = [
 
 export function Footer() {
   const lang = useLang();
+  const settings = useSiteSettings();
   const destLabels = POPULAR_DEST_LABELS[lang];
   const footerGlyphClass = "h-4 w-4 shrink-0 object-contain brightness-0 invert";
   const footerSocialGlyphClass = "h-5 w-5 brightness-0 invert";
@@ -42,16 +36,16 @@ export function Footer() {
             {t(lang, "footer_desc")}
           </p>
           <div className="mt-5 flex items-center gap-3">
-            <a href={whatsappLink("Hello LuxRide!")} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on WhatsApp" className="transition-transform hover:-translate-y-0.5">
+            <a href={settingsWhatsappLink(settings, "Hello LuxRide!")} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on WhatsApp" className="transition-transform hover:-translate-y-0.5">
               <SocialLogoCircle src={SOCIAL_LOGOS.whatsapp} alt="" className="h-10 w-10 bg-transparent" imgClassName={footerSocialGlyphClass} />
             </a>
-            <a href={TRIPADVISOR_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Tripadvisor" className="transition-transform hover:-translate-y-0.5">
+            <a href={settings.tripadvisorUrl} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Tripadvisor" className="transition-transform hover:-translate-y-0.5">
               <TripadvisorLogoMark imgClassName="brightness-0 invert" />
             </a>
-            <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Facebook" className="transition-transform hover:-translate-y-0.5">
+            <a href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Facebook" className="transition-transform hover:-translate-y-0.5">
               <SocialLogoCircle src={SOCIAL_LOGOS.facebook} alt="" className="h-10 w-10 bg-transparent" imgClassName={footerSocialGlyphClass} />
             </a>
-            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Instagram" className="transition-transform hover:-translate-y-0.5">
+            <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="LuxRide on Instagram" className="transition-transform hover:-translate-y-0.5">
               <SocialLogoCircle src={SOCIAL_LOGOS.instagram} alt="" className="h-10 w-10 bg-transparent" imgClassName={footerSocialGlyphClass} />
             </a>
           </div>
@@ -92,17 +86,17 @@ export function Footer() {
             </li>
             <li className="flex items-center gap-3">
               <img src={SOCIAL_LOGOS.email} alt="" className={footerGlyphClass} loading="lazy" />
-              <a href={`mailto:${EMAIL}`} className="hover:text-lux-client-accent">{EMAIL}</a>
+              <a href={`mailto:${settings.email}`} className="hover:text-lux-client-accent">{settings.email}</a>
             </li>
             <li className="flex items-center gap-3">
               <img src={SOCIAL_LOGOS.phone} alt="" className={footerGlyphClass} loading="lazy" />
-              <a href={`tel:${PHONE_DISPLAY.replace(/\s/g, "")}`} dir="ltr" className="whitespace-nowrap hover:text-lux-client-accent" style={{ unicodeBidi: "isolate" }}>
-                <bdi>{PHONE_DISPLAY}</bdi>
+              <a href={settingsTelHref(settings)} dir="ltr" className="whitespace-nowrap hover:text-lux-client-accent" style={{ unicodeBidi: "isolate" }}>
+                <bdi>{settings.phoneDisplay}</bdi>
               </a>
             </li>
             <li className="flex items-center gap-3">
               <img src={SOCIAL_LOGOS.whatsapp} alt="" className={footerGlyphClass} loading="lazy" />
-              <a href={whatsappLink("Hello LuxRide!")} target="_blank" rel="noopener noreferrer" className="hover:text-lux-client-accent">
+              <a href={settingsWhatsappLink(settings, "Hello LuxRide!")} target="_blank" rel="noopener noreferrer" className="hover:text-lux-client-accent">
                 {t(lang, "footer_wa")}
               </a>
             </li>

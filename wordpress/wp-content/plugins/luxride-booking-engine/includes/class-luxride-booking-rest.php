@@ -1,0 +1,103 @@
+<?php
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+final class LuxRide_Booking_Rest
+{
+    public static function register_hooks(): void
+    {
+        add_action('rest_api_init', [self::class, 'register_routes']);
+    }
+
+    public static function register_routes(): void
+    {
+        register_rest_route('luxride/v1', '/routes', [
+            'methods' => WP_REST_Server::READABLE,
+            'callback' => [self::class, 'routes'],
+            'permission_callback' => '__return_true',
+        ]);
+
+        register_rest_route('luxride/v1', '/quote', [
+            'methods' => WP_REST_Server::CREATABLE,
+            'callback' => [self::class, 'quote'],
+            'permission_callback' => '__return_true',
+        ]);
+    }
+
+    public static function routes(WP_REST_Request $request): WP_REST_Response
+    {
+        global $wpdb;
+
+        $pickup = sanitize_text_field((string) $request->get_param('pickup'));
+        $where = 'WHERE r.enabled = 1';
+        $args = [];
+
+        if ('' !== $pickup) {
+            $where .= ' AND (r.pickup_key = %s OR r.pickup_label = %s)';
+            $args[] = sanitize_title($pickup);
+            $args[] = $pickup;
+        }
+
+        $sql = "
+            SELECT r.*, p.vehicle_key, p.one_way_price_eur, p.round_trip_price_eur
+            FROM " . LuxRide_Booking_Schema::table('routes') . " r
+            LEFT JOIN " . LuxRide_Booking_Schema::table('route_prices') . " p ON p.route_id = r.id
+            {$where}
+            ORDER BY r.display_order ASC, r.pickup_label ASC, r.destination_label ASC, p.vehicle_key ASC
+        ";
+
+        $rows = $args ? $wpdb->get_results($wpdb->prepare($sql, ...$args), ARRAY_A) : $wpdb->get_results($sql, ARRAY_A);
+        $routes = [];
+
+        foreach ($rows as $row) {
+            $id = (int) $row['id'];
+            if (!isset($routes[$id])) {
+                $routes[$id] = [
+                    'id' => $id,
+                    'route_code' => $row['route_code'],
+                    'pickup' => ['key' => $row['pickup_key'], 'label' => $row['pickup_label'], 'ar' => $row['pickup_label_ar']],
+                    'destination' => ['key' => $row['destination_key'], 'label' => $row['destination_label'], 'ar' => $row['destination_label_ar']],
+                    'supported_trip_types' => ['one_way', 'round_trip'],
+                    'recommended_trip_type' => $row['recommended_trip_type'],
+                    'round_trip_classification' => $row['round_trip_classification'],
+                    'airport_fee_applicable' => (bool) $row['airport_fee_applicable'],
+                    'permit_required' => (bool) $row['permit_required'],
+                    'accommodation_fee_eur' => (float) $row['accommodation_fee_eur'],
+                    'prices' => [],
+                ];
+            }
+
+            if ($row['vehicle_key']) {
+                $routes[$id]['prices'][$row['vehicle_key']] = [
+                    'one_way' => (float) $row['one_way_price_eur'],
+                    'round_trip' => (float) $row['round_trip_price_eur'],
+                ];
+            }
+        }
+
+        return rest_ensure_response([
+            'source' => 'luxride-booking-engine',
+            'routes' => array_values($routes),
+        ]);
+    }
+
+    public static function quote(WP_REST_Request $request): WP_REST_Response
+    {
+        $input = (array) $request->get_json_params();
+        $quote = LuxRide_Booking_Pricing_Engine::quote($input);
+
+        if (is_wp_error($quote)) {
+            $data = $quote->get_error_data();
+            $status = is_array($data) && isset($data['status']) ? (int) $data['status'] : 400;
+            return new WP_REST_Response([
+                'code' => $quote->get_error_code(),
+                'message' => $quote->get_error_message(),
+                'details' => is_array($data) ? array_diff_key($data, ['status' => true]) : $data,
+            ], $status);
+        }
+
+        return rest_ensure_response($quote);
+    }
+}

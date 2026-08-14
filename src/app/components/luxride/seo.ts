@@ -1,10 +1,9 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router";
-import { EMAIL, FACEBOOK_URL, INSTAGRAM_URL, PHONE_DISPLAY, TRIPADVISOR_URL } from "./data";
-import { FAQ_PAGE_ITEMS } from "./faqPageData";
+import { useFaqItems, useSiteSettings, type LuxRideSettings } from "./cms";
 import type { Lang } from "./i18n";
 
-export const SITE_URL = "https://luxdure.pages.dev";
+export const SITE_URL = typeof window === "undefined" ? "https://luxdure.pages.dev" : window.location.origin;
 export const OG_IMAGE_URL = `${SITE_URL}/luxride-og-image.webp`;
 
 export interface SeoConfig {
@@ -76,15 +75,21 @@ const LEGACY_CANONICALS: Record<string, string> = {
   "/journeys": "/experiences",
 };
 
+function normalizePath(pathname: string): string {
+  if (pathname === "/") return "/";
+  return pathname.replace(/\/+$/, "") || "/";
+}
+
 function canonicalPath(pathname: string): string {
-  return LEGACY_CANONICALS[pathname] ?? pathname;
+  const normalized = normalizePath(pathname);
+  return LEGACY_CANONICALS[normalized] ?? normalized;
 }
 
 function configFor(pathname: string): SeoConfig {
   const canonical = canonicalPath(pathname);
-  if (pathname === "/transfer-details") {
+  if (canonical === "/transfer-details") {
     return {
-      path: pathname,
+      path: canonical,
       title: "Private Transfer Details | LuxRide Taxi",
       description: "Review LuxRide Taxi private transfer route details, fixed prices, vehicle options, and booking links for selected Hurghada transfers.",
     };
@@ -140,46 +145,48 @@ function breadcrumbJsonLd(config: SeoConfig, canonicalUrl: string) {
   };
 }
 
-function localBusinessJsonLd() {
+function localBusinessJsonLd(settings: LuxRideSettings) {
   return {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: "LuxRide Taxi",
-    telephone: PHONE_DISPLAY,
-    email: EMAIL,
+    telephone: settings.phoneDisplay,
+    email: settings.email,
     url: SITE_URL,
     image: OG_IMAGE_URL,
     areaServed: ["Hurghada", "Red Sea", "Egypt"],
-    sameAs: [FACEBOOK_URL, INSTAGRAM_URL, TRIPADVISOR_URL],
+    sameAs: [settings.facebookUrl, settings.instagramUrl, settings.tripadvisorUrl].filter(Boolean),
   };
 }
 
-function serviceJsonLd(canonicalUrl: string) {
+function serviceJsonLd(canonicalUrl: string, settings: LuxRideSettings) {
   return {
     "@context": "https://schema.org",
     "@type": "Service",
     name: "Private transfers in Hurghada",
     serviceType: "Private transfer service",
-    provider: { "@type": "LocalBusiness", name: "LuxRide Taxi", telephone: PHONE_DISPLAY, email: EMAIL },
+    provider: { "@type": "LocalBusiness", name: "LuxRide Taxi", telephone: settings.phoneDisplay, email: settings.email },
     areaServed: ["Hurghada", "Red Sea", "Egypt"],
     url: canonicalUrl,
   };
 }
 
-function faqJsonLd(lang: Lang) {
+function faqJsonLd(lang: Lang, faqs: ReturnType<typeof useFaqItems>) {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: FAQ_PAGE_ITEMS[lang].map((item) => ({
+    mainEntity: faqs.map((item) => ({
       "@type": "Question",
-      name: item.q,
-      acceptedAnswer: { "@type": "Answer", text: item.a },
+      name: item.q[lang],
+      acceptedAnswer: { "@type": "Answer", text: item.a[lang] },
     })),
   };
 }
 
 export function useLuxRideSeo(lang: Lang) {
   const { pathname } = useLocation();
+  const settings = useSiteSettings();
+  const pageFaqs = useFaqItems("page");
 
   useEffect(() => {
     const config = configFor(pathname);
@@ -203,9 +210,9 @@ export function useLuxRideSeo(lang: Lang) {
     removeManagedJsonLd();
     if (!isNotFound) {
       addJsonLd(breadcrumbJsonLd(config, canonicalUrl));
-      if (pathname === "/") addJsonLd(localBusinessJsonLd());
-      if (["/", "/destinations", "/booking", "/experiences"].includes(canonicalPath(pathname))) addJsonLd(serviceJsonLd(canonicalUrl));
-      if (pathname === "/faq") addJsonLd(faqJsonLd(lang));
+      if (pathname === "/") addJsonLd(localBusinessJsonLd(settings));
+      if (["/", "/destinations", "/booking", "/experiences"].includes(canonicalPath(pathname))) addJsonLd(serviceJsonLd(canonicalUrl, settings));
+      if (pathname === "/faq") addJsonLd(faqJsonLd(lang, pageFaqs));
     }
-  }, [pathname, lang]);
+  }, [pathname, lang, settings, pageFaqs]);
 }

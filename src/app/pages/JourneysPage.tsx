@@ -1,13 +1,12 @@
-import { useMemo } from "react";
 import { PageShell } from "../components/luxride/PageShell";
 import { JourneyCard } from "../components/luxride/FeaturedJourneys";
-import { newestFeaturedTransfers } from "../components/luxride/journeys";
+import { useExperiences } from "../components/luxride/cms";
 import { useLang, useL } from "../components/luxride/i18n";
 
 export function JourneysPage() {
   const lang = useLang();
   const L = useL();
-  const transfers = useMemo(() => newestFeaturedTransfers(), []);
+  const transfers = useExperiences();
 
   return (
     <PageShell

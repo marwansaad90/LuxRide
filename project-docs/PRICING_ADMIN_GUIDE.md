@@ -1,0 +1,98 @@
+# LuxRide Pricing Admin Guide
+
+Generated: 2026-08-14
+
+## Current Phase 2 Status
+
+The live `luxride-booking-engine` plugin now includes the guarded Pricing & Routes admin workflow:
+
+- fee/rule settings,
+- route search and status filters,
+- route editor for prices, recommended trip, classifications, enabled state, and fee flags,
+- JSON dry-run/apply import,
+- import history,
+- CSV pricing export.
+
+Production activation, import, and quote validation are complete.
+
+Live state:
+
+- Fresh backup: `/home/u163097036/backups/luxride-phase2-continue-20260814-150534`
+- Active plugin version: `0.2.0`
+- Schema version: `0.2.0`
+- Imported routes: 320
+- Imported vehicle price records: 960
+- Exact workbook/DB mismatches: 0
+- WordPress timezone: `Africa/Cairo`
+
+## Find Pricing & Routes
+
+In WordPress admin, the plugin adds:
+
+LuxRide -> Pricing & Routes
+
+The screen reports:
+
+- total routes,
+- enabled routes,
+- vehicle price records,
+- booking count,
+- schema version.
+
+## Generate Import Payload
+
+Run locally:
+
+```powershell
+$env:PYTHONIOENCODING='utf-8'
+& 'C:\Users\h0676\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe' scripts\luxride_workbook_import.py --workbook LuxRide-Price-List.xlsx --strict --json-out build\luxride-workbook-import.json
+```
+
+Expected approved result:
+
+- `clean: true`
+- `valid_rows: 320`
+- `unique_routes_after_first_duplicate_policy: 320`
+- `price_records_after_first_duplicate_policy: 960`
+- `duplicate_conflicts: 0`
+
+## Import Updated Price Data
+
+1. Open LuxRide -> Pricing & Routes.
+2. Upload `build\luxride-workbook-import.json`.
+3. Click Dry run / validate.
+4. Confirm the dry-run result is clean.
+5. Upload the same JSON again and click Apply clean import.
+6. Verify import history records the workbook SHA-256.
+
+## Change Fees
+
+Open LuxRide -> Pricing & Routes -> Fees & Rules.
+
+Defaults:
+
+- Airport surcharge: EUR 2
+- Sedan permit fee: EUR 20
+- MPV permit fee: EUR 20
+- Minivan permit fee: EUR 30
+- Driver accommodation: EUR 42/night
+- Minimum lead time: 3 hours
+- Taxes included: enabled
+
+Free Child Seat remains EUR 0 by design.
+
+## Disable Or Edit A Route
+
+1. Search by pickup, destination, Arabic label, or route code.
+2. Use the status filter if needed.
+3. Click Edit.
+4. Adjust vehicle prices, recommended trip type, round-trip class, fee flags, accommodation override, or enabled state.
+5. Save route.
+
+Supported customer trip types remain One Way and Round Trip even when the recommendation changes.
+
+## Export Current Pricing
+
+1. Open LuxRide -> Pricing & Routes.
+2. Click Export pricing backup.
+3. Store the CSV next to the deployment/import evidence.

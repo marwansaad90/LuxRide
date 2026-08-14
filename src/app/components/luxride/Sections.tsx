@@ -22,14 +22,11 @@ import { Link } from "react-router";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import {
   IMAGES,
-  PHONE_DISPLAY,
-  POPULAR_TRANSFERS,
   ROUTES,
-  SELECTABLE_FLEET,
   availablePublicTripTypes,
   isVehicleSelectable,
-  whatsappLink,
 } from "./data";
+import { settingsWhatsappLink, usePopularTransfers, useSiteSettings, useVehicles } from "./cms";
 import { locationLabel, useLang, t } from "./i18n";
 import { WhatsAppIcon } from "./WhatsAppIcon";
 import { CLIENT_ACCENT_TEXT, CLIENT_ACCENT_YELLOW, CLIENT_STEP_NUMBER_BG } from "./brand";
@@ -120,6 +117,7 @@ export function ServiceBenefits() {
 
 export function LastMinute() {
   const lang = useLang();
+  const settings = useSiteSettings();
   const isAR = lang === "AR";
   return (
     <section className="border-y border-[#ffcc00]/35 bg-[#FBF5EF] py-10">
@@ -151,7 +149,7 @@ export function LastMinute() {
           </div>
           <div className="shrink-0 text-center">
             <a
-              href={whatsappLink("Hi LuxRide, I'd like to check last-minute availability for today.")}
+              href={settingsWhatsappLink(settings, "Hi LuxRide, I'd like to check last-minute availability for today.")}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 rounded-full px-7 py-3.5 font-medium transition-all hover:brightness-105"
@@ -160,7 +158,7 @@ export function LastMinute() {
             >
               <WhatsAppIcon className="h-5 w-5" /> {t(lang, "lm_cta")}
             </a>
-            <span className="mt-2 block text-sm font-semibold text-lux-charcoal" dir="ltr">{PHONE_DISPLAY}</span>
+            <span className="mt-2 block text-sm font-semibold text-lux-charcoal" dir="ltr">{settings.phoneDisplay}</span>
           </div>
         </div>
       </div>
@@ -170,6 +168,7 @@ export function LastMinute() {
 
 export function PopularTransfers() {
   const lang = useLang();
+  const popularTransfers = usePopularTransfers();
   const imagePositionFor = (transferId: string, image: string) => {
     if (transferId === "hurghada-city-airport") return "center 72%";
     if (image === IMAGES.hurghada) return "center 72%";
@@ -185,8 +184,8 @@ export function PopularTransfers() {
           subtitle={t(lang, "pop_sub")}
         />
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {POPULAR_TRANSFERS.map((tr) => {
-            const imagePosition = imagePositionFor(tr.id, tr.image);
+          {popularTransfers.map((tr) => {
+            const imagePosition = tr.imagePosition ?? imagePositionFor(tr.id, tr.image);
             return (
             <div
               key={tr.id}
@@ -241,6 +240,7 @@ export function PopularTransfers() {
 
 export function Fleet() {
   const lang = useLang();
+  const vehicles = useVehicles();
 
   return (
     <section id="fleet" className="bg-white py-14 md:py-18">
@@ -255,7 +255,7 @@ export function Fleet() {
           className="flex snap-x gap-5 overflow-x-auto pb-4 [scrollbar-width:thin] [scrollbar-color:var(--lux-green)_transparent] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-lux-green/45 [&::-webkit-scrollbar-track]:bg-transparent"
           data-homepage-fleet-feed="horizontal"
         >
-          {SELECTABLE_FLEET.map((v) => (
+          {vehicles.map((v) => (
             <div
               key={v.id}
               dir={lang === "AR" ? "rtl" : "ltr"}
@@ -367,6 +367,7 @@ export function WhyChoose() {
 
 export function About() {
   const lang = useLang();
+  const settings = useSiteSettings();
 
   return (
     <section id="about" className="bg-lux-dark py-20 md:py-28">
@@ -408,7 +409,7 @@ export function About() {
               {t(lang, "about_book")}
             </Link>
             <a
-              href={whatsappLink("Hi LuxRide, I have a question about your services.")}
+              href={settingsWhatsappLink(settings, "Hi LuxRide, I have a question about your services.")}
               target="_blank"
               rel="noreferrer"
               className="flex items-center gap-2 rounded-full border border-lux-beige/25 px-7 py-3 text-lux-beige transition-all hover:border-lux-client-accent hover:text-lux-client-accent"
@@ -577,6 +578,7 @@ export function HowItWorks() {
 
 export function FinalCTA() {
   const lang = useLang();
+  const settings = useSiteSettings();
 
   return (
     <section className="relative overflow-hidden bg-lux-dark py-24">
@@ -607,7 +609,7 @@ export function FinalCTA() {
             {t(lang, "cta_calc")}
           </Link>
           <a
-            href={whatsappLink("Hello LuxRide, I'd like to book a transfer.")}
+            href={settingsWhatsappLink(settings, "Hello LuxRide, I'd like to book a transfer.")}
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-2 rounded-full border border-lux-beige/30 px-8 py-3.5 text-lux-beige transition-all hover:border-lux-client-accent hover:text-lux-client-accent"

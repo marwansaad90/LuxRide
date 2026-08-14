@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Menu, Phone, X } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { LuxRideLogo } from "./LuxRideLogo";
-import { PHONE_DISPLAY } from "./data";
+import { settingsTelHref, useSiteSettings } from "./cms";
 import { useLang, t } from "./i18n";
 import type { Lang, TKey } from "./i18n";
 
@@ -28,6 +28,7 @@ export function Header({
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const settings = useSiteSettings();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 48);
@@ -99,14 +100,14 @@ export function Header({
           </div>
 
           <a
-            href={`tel:${PHONE_DISPLAY.replace(/\s/g, "")}`}
+            href={settingsTelHref(settings)}
             dir="ltr"
             className={`hidden items-center gap-2 text-sm transition-colors lg:flex ${
               scrolled ? "text-lux-charcoal hover:text-lux-green" : "text-white/90 hover:text-white"
             }`}
           >
             <Phone className={`h-4 w-4 ${scrolled ? "text-lux-green" : "text-white"}`} />
-            <span style={{ unicodeBidi: "isolate" }}>{PHONE_DISPLAY}</span>
+            <span style={{ unicodeBidi: "isolate" }}>{settings.phoneDisplay}</span>
           </a>
 
           <Link

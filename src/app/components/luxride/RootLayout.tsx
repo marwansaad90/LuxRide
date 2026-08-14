@@ -5,7 +5,7 @@ import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { LangContext, t } from "./i18n";
 import type { Lang } from "./i18n";
-import { whatsappLink } from "./data";
+import { LuxRideContentProvider, settingsWhatsappLink, useSiteSettings } from "./cms";
 import { WhatsAppIcon } from "./WhatsAppIcon";
 import { useLuxRideSeo } from "./seo";
 
@@ -18,10 +18,19 @@ function ScrollToTop() {
 }
 
 export function RootLayout() {
-  const [lang, setLang] = useState<Lang>("EN");
+  const [lang, setLangState] = useState<Lang>(() => {
+    if (typeof window === "undefined") return "EN";
+    const queryLang = new URLSearchParams(window.location.search).get("lang");
+    const storedLang = window.localStorage.getItem("luxride_lang");
+    return queryLang === "AR" || storedLang === "AR" ? "AR" : "EN";
+  });
   const [showMobileActions, setShowMobileActions] = useState(false);
   const { pathname } = useLocation();
-  useLuxRideSeo(lang);
+
+  const setLang = (nextLang: Lang) => {
+    setLangState(nextLang);
+    window.localStorage.setItem("luxride_lang", nextLang);
+  };
 
   useEffect(() => {
     document.documentElement.lang = lang === "AR" ? "ar" : "en";
@@ -45,6 +54,26 @@ export function RootLayout() {
 
   return (
     <LangContext.Provider value={lang}>
+      <LuxRideContentProvider>
+        <RootLayoutChrome lang={lang} setLang={setLang} showMobileActions={showMobileActions} />
+      </LuxRideContentProvider>
+    </LangContext.Provider>
+  );
+}
+
+function RootLayoutChrome({
+  lang,
+  setLang,
+  showMobileActions,
+}: {
+  lang: Lang;
+  setLang: (lang: Lang) => void;
+  showMobileActions: boolean;
+}) {
+  const settings = useSiteSettings();
+  useLuxRideSeo(lang);
+
+  return (
       <div
         dir={lang === "AR" ? "rtl" : "ltr"}
         className="luxride-shell min-h-screen w-full overflow-x-hidden bg-white"
@@ -64,7 +93,7 @@ export function RootLayout() {
 
         {/* Floating WhatsApp button (desktop / tablet) */}
         <a
-          href={whatsappLink("Hello LuxRide, I'd like to book a transfer.")}
+          href={settingsWhatsappLink(settings, "Hello LuxRide, I'd like to book a transfer.")}
           target="_blank"
           rel="noreferrer"
           aria-label="Chat on WhatsApp"
@@ -88,7 +117,7 @@ export function RootLayout() {
             {t(lang, "sticky_book")}
           </Link>
           <a
-            href={whatsappLink("Hello LuxRide, I'd like to book a transfer.")}
+            href={settingsWhatsappLink(settings, "Hello LuxRide, I'd like to book a transfer.")}
             target="_blank"
             rel="noreferrer"
             className="flex items-center justify-center gap-2 rounded-full border border-lux-green/40 px-5 py-3 text-sm text-lux-beige"
@@ -97,6 +126,5 @@ export function RootLayout() {
           </a>
         </div>
       </div>
-    </LangContext.Provider>
   );
 }

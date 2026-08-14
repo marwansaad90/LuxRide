@@ -2,17 +2,23 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, CalendarDays, Clock, Luggage, MapPin, Users } from "lucide-react";
 import { useNavigate } from "react-router";
 import {
-  SELECTABLE_FLEET,
   PublicTripType,
+  ROUTES,
+  Route,
   VehicleId,
   availablePublicTripTypes,
   computePrice,
   destinationsFor,
+  destinationsForRoutes,
   findRoute,
+  findRouteIn,
+  pickupLocationsFor,
+  routeFromApiRoute,
   pickupLocations,
   resolveTripType,
   tripRulesFor,
 } from "./data";
+import { useVehicles } from "./cms";
 import { formatEur } from "./bookingState";
 import { locationLabel, useLang } from "./i18n";
 import { VehicleSegmentedSelector } from "./VehicleSegmentedSelector";
@@ -34,9 +40,12 @@ export function EstimateYourTrip() {
   const [pax, setPax] = useState("2");
   const [luggage, setLuggage] = useState("2");
   const [notice, setNotice] = useState("");
+  const [routes, setRoutes] = useState<Route[]>(ROUTES);
+  const vehicles = useVehicles();
 
-  const vehicle = SELECTABLE_FLEET.find((v) => v.id === vehicleId) ?? SELECTABLE_FLEET[0];
-  const route = findRoute(from, to);
+  const pickups = useMemo(() => pickupLocationsFor(routes), [routes]);
+  const vehicle = vehicles.find((v) => v.id === vehicleId) ?? vehicles[0];
+  const route = findRouteIn(routes, from, to) ?? findRoute(from, to);
   const supportedTrips = useMemo(() => availablePublicTripTypes(route), [route]);
   const trip = useMemo(() => resolveTripType(route, publicTrip), [route, publicTrip]);
   const tripRules = useMemo(() => tripRulesFor(route), [route]);
@@ -50,6 +59,31 @@ export function EstimateYourTrip() {
   }, []);
 
   useEffect(() => {
+    let active = true;
+    fetch("/wp-json/luxride/v1/routes", { headers: { Accept: "application/json" } })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload) => {
+        if (!active || !Array.isArray(payload?.routes) || payload.routes.length === 0) return;
+        setRoutes(payload.routes.map(routeFromApiRoute));
+      })
+      .catch(() => {
+        // Local Vite and static previews do not serve WordPress REST. Keep the compiled workbook fallback.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!pickups.length || pickups.includes(from)) return;
+    const nextFrom = pickups[0];
+    const nextDests = destinationsForRoutes(routes, nextFrom);
+    setFrom(nextFrom);
+    setDests(nextDests);
+    setTo(nextDests[0] ?? "");
+  }, [from, pickups, routes]);
+
+  useEffect(() => {
     if (!route || supportedTrips.includes(publicTrip)) return;
     const nextTrip = supportedTrips[0] ?? "oneWay";
     setPublicTrip(nextTrip);
@@ -57,7 +91,7 @@ export function EstimateYourTrip() {
   }, [isAR, publicTrip, route, supportedTrips]);
 
   function clampForVehicle(id: VehicleId) {
-    const nextVehicle = SELECTABLE_FLEET.find((v) => v.id === id);
+    const nextVehicle = vehicles.find((v) => v.id === id);
     if (!nextVehicle) return;
     const nextPax = Math.min(Number(pax), nextVehicle.pax);
     const nextLuggage = Math.min(Number(luggage), nextVehicle.luggage);
@@ -75,7 +109,7 @@ export function EstimateYourTrip() {
 
   function handlePickup(value: string) {
     setFrom(value);
-    const nextDests = destinationsFor(value);
+    const nextDests = destinationsForRoutes(routes, value);
     setDests(nextDests);
     setTo(nextDests.includes(to) ? to : nextDests[0]);
   }
@@ -171,7 +205,7 @@ export function EstimateYourTrip() {
               {isAR ? "موقع الانطلاق" : "Pickup"}
             </label>
             <select id="estimate-from" value={from} onChange={(event) => handlePickup(event.target.value)} className={inputCls}>
-              {PICKUPS.map((pickup) => (
+              {pickups.map((pickup) => (
                 <option key={pickup} value={pickup}>{locationLabel(lang, pickup)}</option>
               ))}
             </select>

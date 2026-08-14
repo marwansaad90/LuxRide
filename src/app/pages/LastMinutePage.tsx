@@ -1,12 +1,13 @@
 import { Clock, Zap } from "lucide-react";
 import { PageShell } from "../components/luxride/PageShell";
-import { PHONE_DISPLAY, whatsappLink } from "../components/luxride/data";
+import { settingsWhatsappLink, useSiteSettings } from "../components/luxride/cms";
 import { useL } from "../components/luxride/i18n";
 import { WhatsAppIcon } from "../components/luxride/WhatsAppIcon";
 import { CLIENT_ACCENT_TEXT, CLIENT_ACCENT_YELLOW } from "../components/luxride/brand";
 
 export function LastMinutePage() {
   const L = useL();
+  const settings = useSiteSettings();
 
   const steps = [
     { t: L("Message us on WhatsApp", "راسلنا على واتساب"), d: L("Tell us your route, time and number of passengers for today.", "أخبرنا بمسارك ووقتك وعدد الركاب لليوم.") },
@@ -31,10 +32,10 @@ export function LastMinutePage() {
             </div>
             <h2 className="mt-5 text-lux-charcoal" style={{ fontSize: "1.75rem", fontWeight: 700 }}>{L("Need a transfer today?", "تحتاج توصيلة اليوم؟")}</h2>
             <p className="mx-auto mt-2 max-w-lg text-neutral-600">{L("If you wish to book a transfer or any other service for today, please contact us directly on WhatsApp to check availability.", "إذا كنت ترغب في حجز توصيلة أو أي خدمة أخرى لليوم، يرجى التواصل معنا مباشرةً عبر واتساب للتحقق من التوفر.")}</p>
-            <a href={whatsappLink("Hi LuxRide, I'd like to check last-minute availability for today.")} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-sm transition-all hover:brightness-105" style={{ backgroundColor: CLIENT_ACCENT_YELLOW, color: CLIENT_ACCENT_TEXT }} data-last-minute-accent="button">
+            <a href={settingsWhatsappLink(settings, "Hi LuxRide, I'd like to check last-minute availability for today.")} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-sm transition-all hover:brightness-105" style={{ backgroundColor: CLIENT_ACCENT_YELLOW, color: CLIENT_ACCENT_TEXT }} data-last-minute-accent="button">
               <WhatsAppIcon className="h-5 w-5" /> {L("Check Last-minute Availability on WhatsApp", "تحقق من التوفر اللحظي عبر واتساب")}
             </a>
-            <p className="mt-3 font-semibold text-lux-charcoal" dir="ltr">{PHONE_DISPLAY}</p>
+            <p className="mt-3 font-semibold text-lux-charcoal" dir="ltr">{settings.phoneDisplay}</p>
           </div>
 
           <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-3">

@@ -1,7 +1,7 @@
 import { CheckCircle2 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 import { PageShell } from "../components/luxride/PageShell";
-import { whatsappLink } from "../components/luxride/data";
+import { settingsWhatsappLink, useSiteSettings } from "../components/luxride/cms";
 import { LuxRideLogo } from "../components/luxride/LuxRideLogo";
 import { WhatsAppIcon } from "../components/luxride/WhatsAppIcon";
 import { useL } from "../components/luxride/i18n";
@@ -21,6 +21,7 @@ interface BookingSuccessState {
 
 export function BookingSuccessPage() {
   const L = useL();
+  const settings = useSiteSettings();
   const booking = useLocation().state as BookingSuccessState | null;
 
   if (!booking?.route || !booking.vehicleName || !booking.total) {
@@ -49,7 +50,7 @@ export function BookingSuccessPage() {
         <img src={booking.vehicleImage} alt={booking.vehicleName} className="mx-auto mt-5 h-36 w-full rounded-2xl bg-neutral-50 object-contain p-3" style={{ direction: "ltr" }} />
         <div className="mt-6 overflow-hidden rounded-2xl border border-lux-charcoal/10 text-start">{summary.map((row, index) => <div key={row.k} className={`flex items-center justify-between gap-4 px-5 py-3 text-sm ${index > 0 ? "border-t border-lux-charcoal/10" : ""} ${row.k === L("Final total", "الإجمالي النهائي") ? "bg-lux-green/5" : ""}`}><span className="text-neutral-500">{row.k}</span><span className="break-words text-end text-lux-charcoal">{row.v}</span></div>)}</div>
         <p className="mt-5 text-start text-sm text-neutral-600">{L("Full refund when cancelled at least 24 hours before the experience start time in the local timezone. No refund for cancellation less than 24 hours before the start time.", "استرداد كامل عند الإلغاء قبل 24 ساعة على الأقل من وقت بدء التجربة بالتوقيت المحلي. لا استرداد عند الإلغاء قبل أقل من 24 ساعة.")}</p>
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row"><a href={whatsappLink("Hi LuxRide, I just submitted a booking request.")} target="_blank" rel="noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-full bg-lux-green py-3 text-sm text-white transition-all hover:brightness-110"><WhatsAppIcon className="h-4 w-4" /> {L("Message us on WhatsApp", "راسلنا على واتساب")}</a><Link to="/" className="flex flex-1 items-center justify-center rounded-full border border-lux-charcoal/15 py-3 text-sm text-lux-charcoal">{L("Back to Home", "العودة للرئيسية")}</Link></div>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row"><a href={settingsWhatsappLink(settings, "Hi LuxRide, I just submitted a booking request.")} target="_blank" rel="noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-full bg-lux-green py-3 text-sm text-white transition-all hover:brightness-110"><WhatsAppIcon className="h-4 w-4" /> {L("Message us on WhatsApp", "راسلنا على واتساب")}</a><Link to="/" className="flex flex-1 items-center justify-center rounded-full border border-lux-charcoal/15 py-3 text-sm text-lux-charcoal">{L("Back to Home", "العودة للرئيسية")}</Link></div>
       </div></div></section>
     </PageShell>
   );

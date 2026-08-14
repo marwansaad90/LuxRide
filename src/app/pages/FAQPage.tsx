@@ -6,13 +6,13 @@ import {
   AccordionTrigger,
 } from "../components/ui/accordion";
 import { PageShell } from "../components/luxride/PageShell";
-import { FAQ_PAGE_ITEMS } from "../components/luxride/faqPageData";
+import { useFaqItems } from "../components/luxride/cms";
 import { useL, useLang } from "../components/luxride/i18n";
 
 export function FAQPage() {
   const L = useL();
   const lang = useLang();
-  const faqs = FAQ_PAGE_ITEMS[lang];
+  const faqs = useFaqItems("page");
 
   return (
     <PageShell
@@ -26,8 +26,8 @@ export function FAQPage() {
           <Accordion type="single" collapsible className="space-y-3">
             {faqs.map((f, i) => (
               <AccordionItem key={i} value={`item-${i}`} className="rounded-xl border border-lux-charcoal/10 bg-white px-5">
-                <AccordionTrigger className="text-start text-lux-charcoal hover:no-underline">{f.q}</AccordionTrigger>
-                <AccordionContent className="text-neutral-500">{f.a}</AccordionContent>
+                <AccordionTrigger className="text-start text-lux-charcoal hover:no-underline">{f.q[lang]}</AccordionTrigger>
+                <AccordionContent className="text-neutral-500">{f.a[lang]}</AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
