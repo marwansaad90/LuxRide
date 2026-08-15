@@ -24,6 +24,12 @@ final class LuxRide_Booking_Rest
             'callback' => [self::class, 'quote'],
             'permission_callback' => '__return_true',
         ]);
+
+        register_rest_route('luxride/v1', '/bookings', [
+            'methods' => WP_REST_Server::CREATABLE,
+            'callback' => [self::class, 'booking'],
+            'permission_callback' => '__return_true',
+        ]);
     }
 
     public static function routes(WP_REST_Request $request): WP_REST_Response
@@ -89,15 +95,33 @@ final class LuxRide_Booking_Rest
         $quote = LuxRide_Booking_Pricing_Engine::quote($input);
 
         if (is_wp_error($quote)) {
-            $data = $quote->get_error_data();
-            $status = is_array($data) && isset($data['status']) ? (int) $data['status'] : 400;
-            return new WP_REST_Response([
-                'code' => $quote->get_error_code(),
-                'message' => $quote->get_error_message(),
-                'details' => is_array($data) ? array_diff_key($data, ['status' => true]) : $data,
-            ], $status);
+            return self::error_response($quote);
         }
 
         return rest_ensure_response($quote);
+    }
+
+    public static function booking(WP_REST_Request $request): WP_REST_Response
+    {
+        $input = (array) $request->get_json_params();
+        $booking = LuxRide_Booking_Bookings::create($input);
+
+        if (is_wp_error($booking)) {
+            return self::error_response($booking);
+        }
+
+        return new WP_REST_Response($booking, !empty($booking['idempotent_replay']) ? 200 : 201);
+    }
+
+    private static function error_response(WP_Error $error): WP_REST_Response
+    {
+        $data = $error->get_error_data();
+        $status = is_array($data) && isset($data['status']) ? (int) $data['status'] : 400;
+
+        return new WP_REST_Response([
+            'code' => $error->get_error_code(),
+            'message' => $error->get_error_message(),
+            'details' => is_array($data) ? array_diff_key($data, ['status' => true]) : $data,
+        ], $status);
     }
 }

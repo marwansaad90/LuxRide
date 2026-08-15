@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LuxRide Booking Engine
  * Description: Server-side route pricing, quotes, and booking records for LuxRide Phase 2.
- * Version: 0.2.0
+ * Version: 0.3.0
  * Author: LuxRide
  * Text Domain: luxride-booking-engine
  */
@@ -11,13 +11,14 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('LUXRIDE_BOOKING_ENGINE_VERSION', '0.2.0');
+define('LUXRIDE_BOOKING_ENGINE_VERSION', '0.3.0');
 define('LUXRIDE_BOOKING_ENGINE_FILE', __FILE__);
 define('LUXRIDE_BOOKING_ENGINE_DIR', plugin_dir_path(__FILE__));
 
 require_once LUXRIDE_BOOKING_ENGINE_DIR . 'includes/class-luxride-booking-schema.php';
 require_once LUXRIDE_BOOKING_ENGINE_DIR . 'includes/class-luxride-booking-settings.php';
 require_once LUXRIDE_BOOKING_ENGINE_DIR . 'includes/class-luxride-booking-pricing-engine.php';
+require_once LUXRIDE_BOOKING_ENGINE_DIR . 'includes/class-luxride-booking-bookings.php';
 require_once LUXRIDE_BOOKING_ENGINE_DIR . 'includes/class-luxride-booking-rest.php';
 require_once LUXRIDE_BOOKING_ENGINE_DIR . 'includes/class-luxride-booking-admin.php';
 require_once LUXRIDE_BOOKING_ENGINE_DIR . 'includes/class-luxride-booking-importer.php';

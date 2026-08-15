@@ -1,6 +1,6 @@
 # LuxRide Phase 2 Workbook Dry Run
 
-Generated: 2026-08-14
+Generated: 2026-08-15
 
 ## Workbook Identity
 
@@ -57,7 +57,7 @@ Covered pair group:
 
 Dry run status: `CLEAN`.
 
-This workbook supersedes the 2026-08-13 blocked dry run. It is eligible for guarded apply mode after:
+This workbook supersedes the 2026-08-13 blocked dry run. It has already passed guarded apply mode in production. For future imports, repeat the same guardrails:
 
 - plugin PHP syntax is checked on the server PHP runtime,
 - a fresh production backup is created,

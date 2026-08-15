@@ -210,10 +210,48 @@ final class LuxRide_Booking_Importer
              ORDER BY r.display_order ASC, r.pickup_label ASC, r.destination_label ASC, p.vehicle_key ASC',
             ARRAY_A
         );
+        $routes = [];
+
+        foreach ($rows as $row) {
+            $route_id = (int) $row['id'];
+            if (!isset($routes[$route_id])) {
+                $routes[$route_id] = $row;
+                $routes[$route_id]['prices'] = [];
+            }
+            if ($row['vehicle_key']) {
+                $routes[$route_id]['prices'][$row['vehicle_key']] = [
+                    'one_way' => $row['one_way_price_eur'],
+                    'round_trip' => $row['round_trip_price_eur'],
+                ];
+            }
+        }
 
         $handle = fopen('php://temp', 'r+');
-        fputcsv($handle, ['route_code', 'pickup', 'destination', 'pickup_ar', 'destination_ar', 'enabled', 'recommended_trip_type', 'round_trip_classification', 'airport_fee_applicable', 'permit_required', 'vehicle_key', 'one_way_price_eur', 'round_trip_price_eur']);
-        foreach ($rows as $row) {
+        fputcsv($handle, [
+            'route_code',
+            'pickup',
+            'destination',
+            'pickup_ar',
+            'destination_ar',
+            'enabled',
+            'recommended_trip_type',
+            'round_trip_classification',
+            'airport_fee_applicable',
+            'permit_required',
+            'accommodation_applicable',
+            'accommodation_fee_eur',
+            'sedan_one_way_eur',
+            'sedan_round_trip_eur',
+            'mpv_one_way_eur',
+            'mpv_round_trip_eur',
+            'minivan_one_way_eur',
+            'minivan_round_trip_eur',
+            'source_row',
+            'source_checksum',
+            'updated_at',
+        ]);
+        foreach ($routes as $row) {
+            $prices = $row['prices'];
             fputcsv($handle, [
                 $row['route_code'],
                 $row['pickup_label'],
@@ -225,9 +263,17 @@ final class LuxRide_Booking_Importer
                 $row['round_trip_classification'],
                 $row['airport_fee_applicable'],
                 $row['permit_required'],
-                $row['vehicle_key'],
-                $row['one_way_price_eur'],
-                $row['round_trip_price_eur'],
+                $row['accommodation_applicable'],
+                $row['accommodation_fee_eur'],
+                $prices['sedan']['one_way'] ?? '',
+                $prices['sedan']['round_trip'] ?? '',
+                $prices['mpv']['one_way'] ?? '',
+                $prices['mpv']['round_trip'] ?? '',
+                $prices['minivan']['one_way'] ?? '',
+                $prices['minivan']['round_trip'] ?? '',
+                $row['source_row'],
+                $row['source_checksum'],
+                $row['updated_at'],
             ]);
         }
         rewind($handle);

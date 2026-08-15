@@ -152,10 +152,10 @@ export function EstimateYourTrip() {
     >
       <div className="mb-3">
         <p className="text-xs uppercase tracking-[0.16em] text-lux-green">
-          {isAR ? "حاسبة السعر" : "Quick Price Estimate"}
+          {isAR ? "حاسبة السعر" : "Fare Calculator"}
         </p>
         <h2 className="mt-0.5 text-lux-charcoal" style={{ fontSize: "1.32rem", fontWeight: 800, lineHeight: 1.1 }}>
-          {isAR ? "قدّر توصيلتك" : "Estimate Your Trip"}
+          {isAR ? "احسب توصيلتك" : "Calculate Your Transfer"}
         </h2>
       </div>
 

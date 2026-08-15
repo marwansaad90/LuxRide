@@ -1,6 +1,6 @@
 # LuxRide Pricing Admin Guide
 
-Generated: 2026-08-14
+Generated: 2026-08-15
 
 ## Current Phase 2 Status
 
@@ -8,22 +8,28 @@ The live `luxride-booking-engine` plugin now includes the guarded Pricing & Rout
 
 - fee/rule settings,
 - route search and status filters,
+- pickup and destination filters,
 - route editor for prices, recommended trip, classifications, enabled state, and fee flags,
 - JSON dry-run/apply import,
 - import history,
 - CSV pricing export.
+- Bookings admin list/detail/status updates.
 
 Production activation, import, and quote validation are complete.
 
 Live state:
 
-- Fresh backup: `/home/u163097036/backups/luxride-phase2-continue-20260814-150534`
-- Active plugin version: `0.2.0`
-- Schema version: `0.2.0`
+- Fresh backup: `/home/u163097036/backups/luxride-phase2-booking-20260814-211014`
+- Active plugin version: `0.3.0`
+- Active schema version: `0.3.0`
+- Live frontend bundle: `index-DiQc_HbZ.js` and `index-DZ32_PlR.css`
 - Imported routes: 320
 - Imported vehicle price records: 960
 - Exact workbook/DB mismatches: 0
 - WordPress timezone: `Africa/Cairo`
+- Public booking verification: `LXR-20260815-TB6I`, server total EUR 80 from tampered client total `1`, idempotent replay passed.
+- Pricing export verification: 21-column route-level CSV with all three vehicle one-way and round-trip price columns.
+- Final WordPress admin UI/status-change verification passed for QA booking `LXR-20260815-LVDS`; the two explicit Phase 2.2 QA bookings were removed afterward.
 
 ## Find Pricing & Routes
 
@@ -96,3 +102,20 @@ Supported customer trip types remain One Way and Round Trip even when the recomm
 1. Open LuxRide -> Pricing & Routes.
 2. Click Export pricing backup.
 3. Store the CSV next to the deployment/import evidence.
+
+The export is one route per row and includes route code, bilingual labels, enabled/recommended/classification fields, airport/permit/accommodation flags, accommodation override, sedan/MPV/minivan one-way and round-trip price columns, and workbook source metadata.
+
+## Manage Bookings
+
+Open LuxRide -> Bookings.
+
+The screen lists the customer, route, trip classification, final server total, status, and created date. Open a booking to review stored route/customer/conditional/price snapshots.
+
+Allowed booking statuses:
+
+- `new`
+- `confirmed`
+- `cancelled`
+- `completed`
+
+Phase 2.2 live QA booking references used for verification were `LXR-20260815-TB6I` and `LXR-20260815-LVDS`; remove only those explicit QA rows during close-out if they are still present.

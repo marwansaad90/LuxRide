@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import {
   AlertTriangle,
@@ -16,12 +16,17 @@ import {
   BOOKING_CUTOFF_HOURS,
   FLEET,
   PublicTripType,
+  ROUTES,
+  Route,
   VehicleId,
   availablePublicTripTypes,
   computePrice,
   destinationsFor,
+  destinationsForRoutes,
   findRoute,
-  pickupLocations,
+  findRouteIn,
+  pickupLocationsFor,
+  routeFromApiRoute,
   resolveTripType,
   tripRulesFor,
 } from "../components/luxride/data";
@@ -32,8 +37,36 @@ import { PageShell } from "../components/luxride/PageShell";
 import { VehicleSegmentedSelector } from "../components/luxride/VehicleSegmentedSelector";
 import { WhatsAppIcon } from "../components/luxride/WhatsAppIcon";
 
-const PICKUPS = pickupLocations();
 type Step = 1 | 2 | 3;
+
+interface ServerQuote {
+  route: {
+    pickup: { label: string; ar?: string };
+    destination: { label: string; ar?: string };
+    recommended_trip_type?: string;
+  };
+  trip_type: "one_way" | "round_trip";
+  classification: "one_way" | "overday" | "overnight";
+  vehicle: { key: string; label: string };
+  pricing: {
+    base: number;
+    discount: number;
+    airport_fee: number;
+    permit_fee: number;
+    accommodation: { nights: number; price_per_night: number; total: number };
+    accommodation_fee: number;
+    child_seat: { requested: boolean; price: number; label: string; label_ar: string };
+    total: number;
+    currency: string;
+    taxes_included: boolean;
+  };
+  required_fields: string[];
+}
+
+function makeIdempotencyKey() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return `lxr-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 export function BookingPage() {
   const lang = useLang();
@@ -43,6 +76,7 @@ export function BookingPage() {
   const settings = useSiteSettings();
   const vehicles = useVehicles();
   const initial = useMemo(() => readInitialBookingState(searchParams), [searchParams]);
+  const [routes, setRoutes] = useState<Route[]>(ROUTES);
 
   // ── Step 1 state (pre-filled from URL params) ──────────────────────────────
   const [step, setStep] = useState<Step>(1);
@@ -69,10 +103,19 @@ export function BookingPage() {
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
   const [tripNotice, setTripNotice] = useState("");
+  const [childSeat, setChildSeat] = useState(false);
+  const [serverQuote, setServerQuote] = useState<ServerQuote | null>(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+  const [quoteError, setQuoteError] = useState("");
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [priceChangedNotice, setPriceChangedNotice] = useState("");
+  const [idempotencyKey] = useState(makeIdempotencyKey);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
+  const pickups = useMemo(() => pickupLocationsFor(routes), [routes]);
   const vehicle = vehicles.find((v) => v.id === vehicleId) ?? vehicles[0] ?? FLEET[0];
-  const route = findRoute(from, to);
+  const route = findRouteIn(routes, from, to) ?? findRoute(from, to);
   const trip = useMemo(() => resolveTripType(route, publicTrip), [route, publicTrip]);
   const tripRules = useMemo(() => tripRulesFor(route), [route]);
   const breakdown = useMemo(
@@ -95,9 +138,108 @@ export function BookingPage() {
     return departure.getTime() - Date.now() < BOOKING_CUTOFF_HOURS * 3600_000;
   }, [date, time]);
 
+  const hasValidReturn = trip ? isValidReturn(trip, date, time, returnDate, returnTime) : false;
+  const step1Valid = !!(from && to && date && time && breakdown);
+  const step2Valid =
+    hotel.trim().length > 0 &&
+    name.trim().length > 0 &&
+    phone.trim().length > 0 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) &&
+    (!isAirportArrival || flight.trim().length > 0) &&
+    (!needsPermit || passport.trim().length > 0) &&
+    hasValidReturn;
+
+  const quotePayload = useCallback(() => ({
+    pickup: from,
+    destination: to,
+    trip_type: publicTrip === "roundTrip" ? "round_trip" : "one_way",
+    vehicle: vehicleId,
+    passengers: Number(pax),
+    bags: Number(luggage),
+    outbound_datetime: date && time ? `${date} ${time}` : "",
+    return_datetime: needsReturn && returnDate && returnTime ? `${returnDate} ${returnTime}` : "",
+    child_seat: childSeat,
+  }), [childSeat, date, from, luggage, needsReturn, pax, publicTrip, returnDate, returnTime, time, to, vehicleId]);
+
+  const requestQuote = useCallback(async (showErrors = true) => {
+    if (!step1Valid || (needsReturn && !hasValidReturn)) return null;
+    setQuoteLoading(true);
+    setQuoteError("");
+    try {
+      const response = await fetch("/wp-json/luxride/v1/quote", {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify(quotePayload()),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        const code = payload?.code;
+        const message =
+          code === "luxride_last_minute" || code === "last_minute_required"
+            ? (isAR
+              ? "الحجز القياسي يتطلب ثلاث ساعات على الأقل قبل الانطلاق. تواصل معنا للتوفر العاجل."
+              : "Standard booking requires at least 3 hours before departure. Contact us for last-minute availability.")
+            : (payload?.message ?? (isAR ? "تعذر تحديث السعر من الخادم." : "Could not refresh the server price."));
+        if (showErrors) setQuoteError(message);
+        setServerQuote(null);
+        return null;
+      }
+      setServerQuote(payload as ServerQuote);
+      return payload as ServerQuote;
+    } catch {
+      if (showErrors) setQuoteError(isAR ? "تعذر الاتصال بخادم التسعير." : "Could not reach the pricing server.");
+      setServerQuote(null);
+      return null;
+    } finally {
+      setQuoteLoading(false);
+    }
+  }, [hasValidReturn, isAR, needsReturn, quotePayload, step1Valid]);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/wp-json/luxride/v1/routes", { headers: { Accept: "application/json" } })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload) => {
+        if (!active || !Array.isArray(payload?.routes) || payload.routes.length === 0) return;
+        setRoutes(payload.routes.map(routeFromApiRoute));
+      })
+      .catch(() => {
+        // Static and Vite previews use the compiled workbook fallback.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!pickups.length || pickups.includes(from)) return;
+    const nextFrom = pickups[0];
+    const nextDests = destinationsForRoutes(routes, nextFrom);
+    setFrom(nextFrom);
+    setDests(nextDests);
+    setTo(nextDests[0] ?? "");
+  }, [from, pickups, routes]);
+
+  useEffect(() => {
+    const nextDests = destinationsForRoutes(routes, from);
+    if (!nextDests.length) return;
+    setDests(nextDests);
+    if (!nextDests.includes(to)) setTo(nextDests[0]);
+  }, [from, routes, to]);
+
+  useEffect(() => {
+    setServerQuote(null);
+    setQuoteError("");
+    setPriceChangedNotice("");
+  }, [childSeat, date, from, luggage, pax, publicTrip, returnDate, returnTime, time, to, vehicleId]);
+
+  useEffect(() => {
+    if (step === 3) void requestQuote(false);
+  }, [requestQuote, step]);
+
   function handlePickup(value: string) {
     setFrom(value);
-    const d = destinationsFor(value);
+    const d = destinationsForRoutes(routes, value);
     setDests(d);
     if (!d.includes(to)) setTo(d[0]);
   }
@@ -141,36 +283,83 @@ export function BookingPage() {
       ? (isAR ? "مبيت" : "Overnight")
       : "";
 
-  const hasValidReturn = trip ? isValidReturn(trip, date, time, returnDate, returnTime) : false;
-  const step1Valid = !!(from && to && date && time && breakdown);
-  const step2Valid =
-    hotel.trim().length > 0 &&
-    name.trim().length > 0 &&
-    phone.trim().length > 0 &&
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) &&
-    (!isAirportArrival || flight.trim().length > 0) &&
-    (!needsPermit || passport.trim().length > 0) &&
-    hasValidReturn;
-
-  function handleSubmit() {
-    if (!step1Valid || !step2Valid || tooSoon || !breakdown) {
-      setStep(step1Valid && !tooSoon ? 2 : 1);
+  async function handleSubmit() {
+    if (!step1Valid || !step2Valid) {
+      setStep(step1Valid ? 2 : 1);
       return;
     }
-    navigate("/booking-success", {
-      state: {
-        tripLabel,
-        tripClassification,
-        route: `${locationLabel(lang, from)} → ${locationLabel(lang, to)}`,
-        vehicleName: vehicle.name,
-        vehicleCategory: isAR ? vehicle.categoryAr : vehicle.category,
-        vehicleImage: vehicle.image,
-        departure: `${date} · ${time}`,
-        passengers: pax,
-        luggage,
-        total: formatEur(breakdown.total),
-      },
-    });
+
+    setSubmitError("");
+    setPriceChangedNotice("");
+    const quote = serverQuote ?? await requestQuote(true);
+    if (!quote) {
+      return;
+    }
+
+    setSubmitLoading(true);
+    try {
+      const response = await fetch("/wp-json/luxride/v1/bookings", {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...quotePayload(),
+          language: lang,
+          idempotency_key: idempotencyKey,
+          review_total: quote.pricing.total,
+          customer: { full_name: name, phone, email },
+          details: {
+            exact_location: hotel,
+            room_number: room,
+            flight_number: flight,
+            passport_or_id: passport,
+            notes,
+            child_seat: childSeat,
+          },
+        }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        if (payload?.code === "price_changed" && payload?.details?.quote) {
+          setServerQuote(payload.details.quote as ServerQuote);
+          setPriceChangedNotice(
+            isAR
+              ? `تغير السعر إلى ${formatEur(Number(payload.details.new_total ?? 0))}. راجع السعر ثم أرسل مرة أخرى.`
+              : `The fare changed to ${formatEur(Number(payload.details.new_total ?? 0))}. Please review it, then submit again.`,
+          );
+          return;
+        }
+        const message =
+          payload?.code === "last_minute_required"
+            ? (isAR
+              ? "الحجز القياسي يتطلب ثلاث ساعات على الأقل قبل الانطلاق. تواصل معنا للتوفر العاجل."
+              : "Standard booking requires at least 3 hours before departure. Contact us for last-minute availability.")
+            : (payload?.message ?? (isAR ? "تعذر إرسال طلب الحجز." : "Could not submit the booking request."));
+        setSubmitError(message);
+        return;
+      }
+
+      const saved = payload?.booking;
+      navigate("/booking-success", {
+        state: {
+          bookingReference: saved?.reference,
+          tripLabel,
+          tripClassification,
+          route: `${locationLabel(lang, from)} → ${locationLabel(lang, to)}`,
+          vehicleName: vehicle.name,
+          vehicleCategory: isAR ? vehicle.categoryAr : vehicle.category,
+          vehicleImage: vehicle.image,
+          departure: `${date} · ${time}`,
+          passengers: pax,
+          luggage,
+          childSeat,
+          total: formatEur(Number(saved?.final_total_eur ?? quote.pricing.total)),
+        },
+      });
+    } catch {
+      setSubmitError(isAR ? "تعذر الاتصال بخادم الحجز." : "Could not reach the booking server.");
+    } finally {
+      setSubmitLoading(false);
+    }
   }
 
   const hFamily = isAR ? "Cairo, sans-serif" : "'Barlow Condensed', sans-serif";
@@ -184,7 +373,7 @@ export function BookingPage() {
   ];
 
   const stepLabels: Record<Step, string> = {
-    1: isAR ? "قدّر توصيلتك" : "Estimate Your Trip",
+    1: isAR ? "احسب توصيلتك" : "Calculate Your Transfer",
     2: isAR ? "بياناتك" : "Your Details",
     3: isAR ? "المراجعة والإرسال" : "Review & Send",
   };
@@ -240,7 +429,7 @@ export function BookingPage() {
           <div className="space-y-6">
             <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100 md:p-8">
               <h2 className="text-lux-charcoal mb-6" style={{ fontFamily: hFamily, fontSize: "1.4rem", fontWeight: 700 }}>
-                {isAR ? "قدّر توصيلتك" : "Estimate Your Trip"}
+                {isAR ? "احسب توصيلتك" : "Calculate Your Transfer"}
               </h2>
 
               {/* Transfer type */}
@@ -287,7 +476,7 @@ export function BookingPage() {
                 <div>
                   <label htmlFor="booking-from" className={labelCls}><MapPin className="h-4 w-4 text-lux-green" />{isAR ? "موقع الانطلاق" : "Pickup"}</label>
                   <select id="booking-from" value={from} onChange={(e) => handlePickup(e.target.value)} className={inputCls}>
-                    {PICKUPS.map((p) => <option key={p} value={p}>{locationLabel(lang, p)}</option>)}
+                    {pickups.map((p) => <option key={p} value={p}>{locationLabel(lang, p)}</option>)}
                   </select>
                 </div>
                 <div>
@@ -380,7 +569,7 @@ export function BookingPage() {
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                disabled={!step1Valid || tooSoon}
+                disabled={!step1Valid}
                 className="flex items-center gap-2 rounded-full bg-lux-green px-8 py-3.5 text-white font-medium shadow-md shadow-lux-green/25 transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ fontFamily: hFamily, fontWeight: 700, fontSize: "1.05rem" }}
               >
@@ -442,6 +631,13 @@ export function BookingPage() {
                 <Field label={isAR ? "رقم الغرفة (اختياري)" : "Room Number (optional)"} labelCls={labelCls} note={isAR ? "إضافة رقم الغرفة يساعد على تنسيق الاستلام." : "Adding your room number helps us coordinate your pickup."}>
                   <input type="text" value={room} onChange={(e) => setRoom(e.target.value)} placeholder={isAR ? "مثال: 214" : "e.g. 214"} className={inputCls} />
                 </Field>
+                <label className="flex items-center justify-between gap-4 rounded-xl border border-lux-green/20 bg-lux-green/5 px-4 py-3 text-sm text-lux-charcoal">
+                  <span>
+                    <span className="block font-semibold">{isAR ? "كرسي أطفال مجاني" : "Free Child Seat"}</span>
+                    <span className="block text-xs text-gray-500">{isAR ? "اختياري ومجاني لأي حجز." : "Optional and free for any booking."}</span>
+                  </span>
+                  <input type="checkbox" checked={childSeat} onChange={(event) => setChildSeat(event.target.checked)} className="h-5 w-5 accent-lux-green" />
+                </label>
                 {isAirportArrival && (
                   <Field label={isAR ? "رقم الرحلة الجوية *" : "Flight Number *"} labelCls={labelCls} note={isAR ? "نتابع رحلتك في الوقت الفعلي." : "We monitor your flight and adjust pickup time for delays."}>
                     <input type="text" value={flight} onChange={(e) => setFlight(e.target.value)} placeholder="e.g. MS763" className={inputCls} dir="ltr" />
@@ -500,6 +696,7 @@ export function BookingPage() {
                 {needsReturn && <ReviewRow label={isAR ? "العودة" : "Return"} value={`${returnDate || "-"} at ${returnTime || "-"}`} />}
                 <ReviewRow label={isAR ? "السيارة" : "Vehicle"} value={`${vehicle.name} (${isAR ? vehicle.categoryAr : vehicle.category})`} />
                 <ReviewRow label={isAR ? "ركاب / حقائب" : "Pax / Bags"} value={`${pax} / ${luggage}`} />
+                <ReviewRow label={isAR ? "كرسي أطفال" : "Child seat"} value={childSeat ? (isAR ? "نعم، مجاني" : "Yes, free") : (isAR ? "لا" : "No")} />
                 <img src={vehicle.image} alt={vehicle.name} className="mt-3 h-28 w-full rounded-xl bg-white object-contain p-2" style={{ direction: "ltr" }} />
               </ReviewSection>
 
@@ -513,14 +710,26 @@ export function BookingPage() {
                 {notes && <ReviewRow label={isAR ? "ملاحظات" : "Notes"} value={notes} />}
               </ReviewSection>
 
-              {breakdown && (
-                <div className="mt-4 rounded-xl bg-lux-green/5 border border-lux-green/20 p-5">
-                  <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-3" style={{ fontFamily: hFamily }}>
-                    {isAR ? "تفصيل السعر" : "Price Breakdown"}
-                  </h3>
-                  <PriceTable breakdown={breakdown} route={route} isAR={isAR} hFamily={hFamily} />
-                </div>
-              )}
+              <div className="mt-4 rounded-xl bg-lux-green/5 border border-lux-green/20 p-5">
+                <h3 className="text-xs uppercase tracking-wider text-gray-500 mb-3" style={{ fontFamily: hFamily }}>
+                  {isAR ? "تفصيل السعر" : "Price Breakdown"}
+                </h3>
+                {quoteLoading && <p className="text-sm text-gray-600">{isAR ? "يتم تحديث السعر من الخادم..." : "Refreshing server price..."}</p>}
+                {quoteError && <p role="alert" className="text-sm text-red-600">{quoteError}</p>}
+                {!quoteLoading && !quoteError && serverQuote && (
+                  <QuotePriceTable quote={serverQuote} isAR={isAR} hFamily={hFamily} />
+                )}
+                {!quoteLoading && !quoteError && !serverQuote && (
+                  <p className="text-sm text-gray-600">{isAR ? "اضغط تحديث السعر قبل الإرسال." : "Refresh the server price before submitting."}</p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => void requestQuote(true)}
+                  className="mt-4 inline-flex rounded-full border border-lux-green/30 px-4 py-2 text-sm font-semibold text-lux-green transition-all hover:bg-lux-green hover:text-white"
+                >
+                  {isAR ? "تحديث السعر" : "Refresh Price"}
+                </button>
+              </div>
 
               <div className="mt-4 rounded-xl bg-blue-50 p-4 text-sm text-gray-600">
                 <p className="font-medium text-gray-700 mb-1">{isAR ? "سياسة الإلغاء" : "Cancellation Policy"}</p>
@@ -532,17 +741,20 @@ export function BookingPage() {
             <div className="rounded-2xl bg-white p-8 shadow-sm border border-gray-100 text-center">
               <p className="text-gray-500 mb-5">
                 {isAR
-                  ? "سيتم إرسال طلب الحجز إلى LuxRide عبر واتساب والبريد الإلكتروني."
-                  : "Your booking request will be sent to LuxRide through WhatsApp and email."}
+                  ? "سيتم حفظ طلب الحجز لدى LuxRide ومراجعته قبل التأكيد."
+                  : "Your booking request will be saved for LuxRide review before confirmation."}
               </p>
+              {priceChangedNotice && <p role="alert" className="mb-4 rounded-xl border border-lux-orange/40 bg-orange-50 px-4 py-3 text-sm text-gray-700">{priceChangedNotice}</p>}
+              {submitError && <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{submitError}</p>}
               <button
                 type="button"
                 onClick={handleSubmit}
-                className="inline-flex items-center justify-center gap-3 rounded-full bg-lux-green px-10 py-4 text-white shadow-lg shadow-lux-green/30 transition-all hover:brightness-110"
+                disabled={submitLoading || quoteLoading || !serverQuote}
+                className="inline-flex items-center justify-center gap-3 rounded-full bg-lux-green px-10 py-4 text-white shadow-lg shadow-lux-green/30 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ fontFamily: hFamily, fontWeight: 800, fontSize: "1.15rem" }}
               >
                 <Send className="h-5 w-5" />
-                {isAR ? "إرسال طلب الحجز" : "Send Booking Request"}
+                {submitLoading ? (isAR ? "جارٍ الإرسال..." : "Submitting...") : (isAR ? "إرسال طلب الحجز" : "Send Booking Request")}
               </button>
               <p className="mt-3 text-xs text-gray-400">
                 {isAR ? "سيتواصل معك فريق LuxRide لتأكيد التفاصيل قريباً." : "LuxRide will contact you to confirm the details shortly."}
@@ -663,6 +875,57 @@ function PriceTable({
         <span className="font-semibold text-lux-charcoal">{isAR ? "الإجمالي النهائي" : "Final Total"}</span>
         <span className="text-lux-green" style={{ fontFamily: hFamily, fontSize: "1.4rem", fontWeight: 700 }}>
           {formatEur(breakdown.total)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function QuotePriceTable({ quote, isAR, hFamily }: { quote: ServerQuote; isAR: boolean; hFamily: string }) {
+  const pricing = quote.pricing;
+  return (
+    <div className="space-y-2 text-sm">
+      <div className="flex justify-between text-gray-600">
+        <span>{isAR ? "السعر الأساسي" : "Base price"}</span>
+        <span>{formatEur(Number(pricing.base))}</span>
+      </div>
+      {Number(pricing.discount) > 0 && (
+        <div className="flex justify-between text-lux-orange">
+          <span>{isAR ? "خصم" : "Discount"}</span>
+          <span>-{formatEur(Number(pricing.discount))}</span>
+        </div>
+      )}
+      {Number(pricing.airport_fee) > 0 && (
+        <div className="flex justify-between text-gray-600">
+          <span>{isAR ? "رسوم المطار" : "Airport surcharge"}</span>
+          <span>{formatEur(Number(pricing.airport_fee))}</span>
+        </div>
+      )}
+      {Number(pricing.permit_fee) > 0 && (
+        <div className="flex justify-between text-gray-600">
+          <span>{isAR ? "تصريح السفر" : "Travel permit"}</span>
+          <span>{formatEur(Number(pricing.permit_fee))}</span>
+        </div>
+      )}
+      {Number(pricing.accommodation_fee) > 0 && (
+        <div className="flex justify-between text-gray-600">
+          <span>
+            {isAR ? "مبيت السائق" : "Driver overnight accommodation"}
+            {pricing.accommodation?.nights ? ` (${pricing.accommodation.nights} x ${formatEur(Number(pricing.accommodation.price_per_night))})` : ""}
+          </span>
+          <span>{formatEur(Number(pricing.accommodation_fee))}</span>
+        </div>
+      )}
+      {pricing.child_seat?.requested && (
+        <div className="flex justify-between text-gray-600">
+          <span>{isAR ? pricing.child_seat.label_ar : pricing.child_seat.label}</span>
+          <span>{formatEur(Number(pricing.child_seat.price))}</span>
+        </div>
+      )}
+      <div className="flex justify-between border-t border-gray-200 pt-3">
+        <span className="font-semibold text-lux-charcoal">{isAR ? "الإجمالي النهائي" : "Final Total"}</span>
+        <span className="text-lux-green" style={{ fontFamily: hFamily, fontSize: "1.4rem", fontWeight: 700 }}>
+          {formatEur(Number(pricing.total))}
         </span>
       </div>
     </div>

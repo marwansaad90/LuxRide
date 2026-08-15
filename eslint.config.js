@@ -22,4 +22,14 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
     },
   },
+  {
+    files: ["scripts/**/*.{js,mjs}"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: {
+        ...globals.node,
+        fetch: "readonly",
+      },
+    },
+  },
 );

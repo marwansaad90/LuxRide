@@ -1,6 +1,6 @@
 # LuxRide Phase 2 Calculator Architecture
 
-Generated: 2026-08-14
+Generated: 2026-08-15
 
 ## Source Of Truth
 
@@ -24,10 +24,11 @@ The plugin owns:
 - server-side quote calculation,
 - capacity validation,
 - time validation,
-- future booking records,
+- booking records,
 - Pricing & Routes admin entry.
+- Bookings admin entry.
 
-The current production calculator remains untouched until import and quote validation are clean.
+The production calculator uses WordPress REST routes and quotes when available, with the compiled workbook as a local/static fallback.
 
 ## Database Schema
 
@@ -50,6 +51,7 @@ The current production calculator remains untouched until import and quote valid
 `wp_luxride_bookings`
 
 - human-readable booking reference,
+- idempotency key,
 - route/customer/conditional/price snapshots,
 - server-calculated final total,
 - status and notification fields.
@@ -110,6 +112,16 @@ Input concept:
 
 Output includes route, vehicle, classification, fee breakdown, total, required fields, and validation state.
 
+`POST /wp-json/luxride/v1/bookings`
+
+- Recalculates the quote server-side immediately before insert.
+- Ignores client-provided `total`.
+- Compares explicit `review_total` against the recalculated quote and returns `price_changed` when it differs.
+- Returns `last_minute_required` for normal booking attempts inside the minimum lead window.
+- Stores snapshots in `wp_luxride_bookings`.
+- Returns a customer-facing reference like `LXR-YYYYMMDD-XXXX`.
+- Fires `do_action('luxride_booking_created', $booking_id, $booking)` for Phase 3 notifications.
+
 ## Import Workflow
 
 Read-only workbook parser:
@@ -132,13 +144,13 @@ The admin import screen consumes the generated JSON payload. Use dry-run/validat
 
 ## Time Logic
 
-The quote engine uses `wp_timezone()` and enforces a 3-hour standard booking cutoff server-side. Production previously reported WordPress timezone as `+00:00`; target setting is `Africa/Cairo` after fresh backup access is restored.
+The quote engine uses `wp_timezone()` and enforces a 3-hour standard booking cutoff server-side. Production WordPress timezone was changed to `Africa/Cairo` during Phase 2, and booking references use the same timezone.
 
 ## Rollback
 
-Phase 2 backup:
+Phase 2.2 backup:
 
-`/home/u163097036/backups/luxride-phase2-20260813-170202`
+`/home/u163097036/backups/luxride-phase2-booking-20260814-211014`
 
 It includes:
 
@@ -150,9 +162,12 @@ The plugin is live after fresh backup, server PHP lint, guarded import, and live
 
 Live verification:
 
-- Active plugin version: `0.2.0`
-- Schema version: `0.2.0`
+- Active plugin version: `0.3.0`
+- Schema version: `0.3.0`
+- Live frontend bundle: `index-DiQc_HbZ.js` and `index-DZ32_PlR.css`
 - Imported routes: 320
 - Imported vehicle price records: 960
 - Exact workbook/DB mismatch count: 0
 - Public quote checks passed for Wadi Lahmy, Luxor permit, Alexandria overnight accommodation, free child seat, and capacity overflow.
+- Public booking checks passed for server recalculation, tampered total protection, idempotency, `price_changed`, `last_minute_required`, airport departure flight validation, and permit missing-field validation.
+- Normal-browser live QA passed for desktop English, desktop Arabic, mobile English, and mobile Arabic.

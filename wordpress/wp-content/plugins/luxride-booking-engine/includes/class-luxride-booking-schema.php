@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
 
 final class LuxRide_Booking_Schema
 {
-    public const SCHEMA_VERSION = '0.2.0';
+    public const SCHEMA_VERSION = '0.3.0';
 
     public static function table(string $name): string
     {
@@ -82,6 +82,7 @@ CREATE TABLE {$prices} (
 CREATE TABLE {$bookings} (
   id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   booking_reference varchar(40) NOT NULL,
+  idempotency_key varchar(80) DEFAULT NULL,
   status varchar(30) NOT NULL DEFAULT 'new',
   language varchar(5) NOT NULL DEFAULT 'EN',
   route_id bigint(20) unsigned NOT NULL,
@@ -103,6 +104,7 @@ CREATE TABLE {$bookings} (
   updated_at datetime NOT NULL,
   PRIMARY KEY  (id),
   UNIQUE KEY booking_reference (booking_reference),
+  UNIQUE KEY idempotency_key (idempotency_key),
   KEY status (status),
   KEY route_id (route_id),
   KEY outbound_datetime (outbound_datetime)

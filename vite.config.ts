@@ -21,6 +21,7 @@ function figmaAssetResolver(): Plugin {
 }
 
 export default defineConfig({
+  base: '/wp-content/themes/luxride/',
   plugins: [
     figmaAssetResolver(),
     // The React and Tailwind plugins are both required for Make, even if

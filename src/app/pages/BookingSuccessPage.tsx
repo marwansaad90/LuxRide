@@ -7,6 +7,7 @@ import { WhatsAppIcon } from "../components/luxride/WhatsAppIcon";
 import { useL } from "../components/luxride/i18n";
 
 interface BookingSuccessState {
+  bookingReference?: string;
   tripLabel: string;
   tripClassification?: string;
   route: string;
@@ -16,6 +17,7 @@ interface BookingSuccessState {
   departure: string;
   passengers: string;
   luggage: string;
+  childSeat?: boolean;
   total: string;
 }
 
@@ -33,12 +35,14 @@ export function BookingSuccessPage() {
   }
 
   const summary = [
+    ...(booking.bookingReference ? [{ k: L("Booking reference", "رقم الحجز"), v: booking.bookingReference }] : []),
     { k: L("Transfer type", "نوع التوصيلة"), v: booking.tripLabel },
     ...(booking.tripClassification ? [{ k: L("Route classification", "تصنيف المسار"), v: booking.tripClassification }] : []),
     { k: L("Route", "المسار"), v: booking.route },
     { k: L("Vehicle", "السيارة"), v: `${booking.vehicleName} (${booking.vehicleCategory})` },
     { k: L("Departure", "المغادرة"), v: booking.departure },
     { k: L("Passengers / bags", "الركاب / الحقائب"), v: `${booking.passengers} / ${booking.luggage}` },
+    { k: L("Child seat", "كرسي أطفال"), v: booking.childSeat ? L("Yes, free", "نعم، مجاني") : L("No", "لا") },
     { k: L("Final total", "الإجمالي النهائي"), v: booking.total },
   ];
 
