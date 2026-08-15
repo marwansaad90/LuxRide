@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import {
   AlertTriangle,
@@ -29,7 +29,7 @@ import {
   routeFromApiRoute,
   resolveTripType,
 } from "../components/luxride/data";
-import { addDays, formatEur, isValidReturn, normalizeReturnFields, readInitialBookingState } from "../components/luxride/bookingState";
+import { addDays, formatEur, isValidReturn, isWithinLeadTime, normalizeReturnFields, readInitialBookingState, todayInBookingTimeZone } from "../components/luxride/bookingState";
 import { settingsWhatsappLink, useSiteSettings, useVehicles } from "../components/luxride/cms";
 import { locationLabel, useLang } from "../components/luxride/i18n";
 import { PageShell } from "../components/luxride/PageShell";
@@ -110,6 +110,9 @@ export function BookingPage() {
   const [submitError, setSubmitError] = useState("");
   const [priceChangedNotice, setPriceChangedNotice] = useState("");
   const [idempotencyKey] = useState(makeIdempotencyKey);
+  const [step1Errors, setStep1Errors] = useState<{ date?: string; time?: string; leadTime?: string }>({});
+  const dateRef = useRef<HTMLInputElement>(null);
+  const timeRef = useRef<HTMLInputElement>(null);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
   const pickups = useMemo(() => pickupLocationsFor(routes), [routes]);
@@ -124,16 +127,11 @@ export function BookingPage() {
   const needsPermit = !!route?.permit;
   const needsReturn = trip === "overday" || trip === "overnight";
   const supportedTrips = useMemo(() => availablePublicTripTypes(route), [route]);
-  const todayLocal = useMemo(() => {
-    const now = new Date();
-    return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().split("T")[0];
-  }, []);
+  const todayLocal = useMemo(() => todayInBookingTimeZone(), []);
 
   const tooSoon = useMemo(() => {
     if (!date || !time) return false;
-    const departure = new Date(`${date}T${time}`);
-    if (isNaN(departure.getTime())) return false;
-    return departure.getTime() - Date.now() < BOOKING_CUTOFF_HOURS * 3600_000;
+    return isWithinLeadTime(date, time, BOOKING_CUTOFF_HOURS);
   }, [date, time]);
 
   const hasValidReturn = trip ? isValidReturn(trip, date, time, returnDate, returnTime) : false;
@@ -235,6 +233,14 @@ export function BookingPage() {
     if (step === 3) void requestQuote(false);
   }, [requestQuote, step]);
 
+  useEffect(() => {
+    if (step !== 2 || tooSoon || !step1Valid || (needsReturn && !hasValidReturn)) return;
+    const timer = window.setTimeout(() => {
+      void requestQuote(false);
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [hasValidReturn, needsReturn, requestQuote, step, step1Valid, tooSoon]);
+
   function handlePickup(value: string) {
     setFrom(value);
     const d = destinationsForRoutes(routes, value);
@@ -274,6 +280,30 @@ export function BookingPage() {
   }, [step]);
 
   const tripLabel = publicTrip === "roundTrip" ? (isAR ? "ذهاب وعودة" : "Round Trip") : (isAR ? "ذهاب فقط" : "One Way");
+
+  function handleStep1Next() {
+    const nextErrors: typeof step1Errors = {};
+    if (!date) nextErrors.date = isAR ? "يرجى اختيار تاريخ المغادرة." : "Please select a departure date.";
+    if (!time) nextErrors.time = isAR ? "يرجى اختيار وقت الانطلاق." : "Please select a pickup time.";
+    if (date && time && tooSoon) {
+      nextErrors.leadTime = isAR
+        ? "الحجز القياسي يتطلب ثلاث ساعات على الأقل قبل الانطلاق بتوقيت القاهرة."
+        : "Standard booking requires at least 3 hours before departure in Cairo time.";
+    }
+    setStep1Errors(nextErrors);
+    if (nextErrors.date) {
+      dateRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      dateRef.current?.focus();
+      return;
+    }
+    if (nextErrors.time) {
+      timeRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      timeRef.current?.focus();
+      return;
+    }
+    if (nextErrors.leadTime || !breakdown) return;
+    setStep(2);
+  }
 
   async function handleSubmit() {
     if (!step1Valid || !step2Valid) {
@@ -473,11 +503,38 @@ export function BookingPage() {
                 </div>
                 <div>
                   <label htmlFor="booking-date" className={labelCls}><CalendarDays className="h-4 w-4 text-lux-green" />{isAR ? "تاريخ المغادرة" : "Departure Date"}</label>
-                  <input id="booking-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} min={todayLocal} />
+                  <input
+                    id="booking-date"
+                    ref={dateRef}
+                    type="date"
+                    value={date}
+                    onChange={(e) => {
+                      setDate(e.target.value);
+                      setStep1Errors((current) => ({ ...current, date: undefined, leadTime: undefined }));
+                    }}
+                    className={inputCls}
+                    min={todayLocal}
+                    aria-invalid={Boolean(step1Errors.date)}
+                    aria-describedby={step1Errors.date ? "booking-date-error" : undefined}
+                  />
+                  {step1Errors.date && <p id="booking-date-error" role="alert" className="mt-1 text-sm text-red-600">{step1Errors.date}</p>}
                 </div>
                 <div>
                   <label htmlFor="booking-time" className={labelCls}><Clock className="h-4 w-4 text-lux-green" />{isAR ? "وقت الانطلاق" : "Pickup Time"}</label>
-                  <input id="booking-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} className={inputCls} />
+                  <input
+                    id="booking-time"
+                    ref={timeRef}
+                    type="time"
+                    value={time}
+                    onChange={(e) => {
+                      setTime(e.target.value);
+                      setStep1Errors((current) => ({ ...current, time: undefined, leadTime: undefined }));
+                    }}
+                    className={inputCls}
+                    aria-invalid={Boolean(step1Errors.time)}
+                    aria-describedby={step1Errors.time ? "booking-time-error" : undefined}
+                  />
+                  {step1Errors.time && <p id="booking-time-error" role="alert" className="mt-1 text-sm text-red-600">{step1Errors.time}</p>}
                 </div>
               </div>
 
@@ -522,7 +579,7 @@ export function BookingPage() {
                 <h3 className="text-lux-charcoal mb-4" style={{ fontFamily: hFamily, fontSize: "1.1rem", fontWeight: 700 }}>
                   {isAR ? "معاينة السعر" : "Price Preview"}
                 </h3>
-                <PriceTable breakdown={breakdown} route={route} isAR={isAR} hFamily={hFamily} />
+                <PriceTable breakdown={breakdown} route={route} isAR={isAR} hFamily={hFamily} preliminaryOvernight={trip === "overnight" && !hasValidReturn} />
               </div>
             )}
 
@@ -550,12 +607,17 @@ export function BookingPage() {
                 </div>
               </div>
             )}
+            {step1Errors.leadTime && (
+              <p role="alert" className="rounded-xl border border-lux-orange/40 bg-orange-50 px-4 py-3 text-sm text-gray-700">
+                {step1Errors.leadTime}
+              </p>
+            )}
 
             <div className="flex justify-end">
               <button
                 type="button"
-                onClick={() => setStep(2)}
-                disabled={!step1Valid}
+                onClick={handleStep1Next}
+                aria-disabled={!step1Valid || tooSoon}
                 className="flex items-center gap-2 rounded-full bg-lux-green px-8 py-3.5 text-white font-medium shadow-md shadow-lux-green/25 transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ fontFamily: hFamily, fontWeight: 700, fontSize: "1.05rem" }}
               >
@@ -611,8 +673,8 @@ export function BookingPage() {
                     )}
                   </div>
                 )}
-                <Field label={isAR ? "الفندق أو الوجهة الدقيقة *" : "Hotel or Exact Destination *"} labelCls={labelCls}>
-                  <input type="text" value={hotel} onChange={(e) => setHotel(e.target.value)} placeholder={isAR ? "مثال: فندق ستيجنبرجر الداو" : "e.g. Steigenberger Al Dau, El Gouna"} className={inputCls} />
+                <Field label={isAR ? "اسم الفندق أو موقع الوصول بالتحديد *" : "Hotel name or exact destination *"} labelCls={labelCls}>
+                  <input type="text" value={hotel} onChange={(e) => setHotel(e.target.value)} placeholder={isAR ? "مثال: اسم الفندق أو العنوان بالتحديد" : "e.g. Hotel name or exact address"} className={inputCls} />
                 </Field>
                 <Field label={isAR ? "رقم الغرفة (اختياري)" : "Room Number (optional)"} labelCls={labelCls} note={isAR ? "إضافة رقم الغرفة يساعد على تنسيق الاستلام." : "Adding your room number helps us coordinate your pickup."}>
                   <input type="text" value={room} onChange={(e) => setRoom(e.target.value)} placeholder={isAR ? "مثال: 214" : "e.g. 214"} className={inputCls} />
@@ -814,12 +876,15 @@ function PriceTable({
   route,
   isAR,
   hFamily,
+  preliminaryOvernight,
 }: {
   breakdown: NonNullable<ReturnType<typeof computePrice>>;
   route: ReturnType<typeof findRoute>;
   isAR: boolean;
   hFamily: string;
+  preliminaryOvernight: boolean;
 }) {
+  const visibleTotal = preliminaryOvernight ? breakdown.total - breakdown.overnight : breakdown.total;
   return (
     <div className="space-y-2 text-sm">
       <div className="flex justify-between text-gray-600">
@@ -850,24 +915,56 @@ function PriceTable({
           <span>{formatEur(breakdown.permit)}</span>
         </div>
       )}
-      {breakdown.overnight > 0 && (
+      {breakdown.overnight > 0 && preliminaryOvernight && (
+        <div className="flex justify-between gap-4 text-gray-600">
+          <span>{isAR ? "مبيت السائق" : "Driver accommodation"}</span>
+          <span className="text-end">
+            {isAR
+              ? `${formatEur(breakdown.overnight)} / ليلة — يُحسب بعد تاريخ العودة`
+              : `${formatEur(breakdown.overnight)} / night — calculated after return date`}
+          </span>
+        </div>
+      )}
+      {breakdown.overnight > 0 && !preliminaryOvernight && (
         <div className="flex justify-between text-gray-600">
-          <span>{isAR ? "مبيت السائق" : "Driver overnight"}</span>
+          <span>{isAR ? "مبيت السائق" : "Driver accommodation"}</span>
           <span>{formatEur(breakdown.overnight)}</span>
         </div>
       )}
       <div className="flex justify-between border-t border-gray-200 pt-3">
-        <span className="font-semibold text-lux-charcoal">{isAR ? "الإجمالي النهائي" : "Final Total"}</span>
+        <span className="font-semibold text-lux-charcoal">
+          {preliminaryOvernight
+            ? (isAR ? "تقدير التوصيلة قبل تفاصيل العودة" : "Base transfer estimate")
+            : (isAR ? "الإجمالي النهائي" : "Final Total")}
+        </span>
         <span className="text-lux-green" style={{ fontFamily: hFamily, fontSize: "1.4rem", fontWeight: 700 }}>
-          {formatEur(breakdown.total)}
+          {formatEur(visibleTotal)}
         </span>
       </div>
+      {preliminaryOvernight && (
+        <p className="text-xs leading-5 text-gray-500">
+          {isAR
+            ? "يظهر الإجمالي النهائي بعد إدخال تاريخ ووقت العودة."
+            : "Final total is calculated after you enter the return date and time."}
+        </p>
+      )}
     </div>
   );
 }
 
+function nightLabel(nights: number, isAR: boolean): string {
+  if (!isAR) return `${nights} ${nights === 1 ? "night" : "nights"}`;
+  if (nights === 1) return "ليلة واحدة";
+  if (nights === 2) return "ليلتين";
+  if (nights >= 3 && nights <= 10) return `${nights} ليالٍ`;
+  return `${nights} ليلة`;
+}
+
 function QuotePriceTable({ quote, isAR, hFamily }: { quote: ServerQuote; isAR: boolean; hFamily: string }) {
   const pricing = quote.pricing;
+  const nights = Number(pricing.accommodation?.nights ?? 0);
+  const accommodationPerNight = Number(pricing.accommodation?.price_per_night ?? 0);
+  const accommodationFee = Number(pricing.accommodation_fee);
   return (
     <div className="space-y-2 text-sm">
       <div className="flex justify-between text-gray-600">
@@ -892,13 +989,17 @@ function QuotePriceTable({ quote, isAR, hFamily }: { quote: ServerQuote; isAR: b
           <span>{formatEur(Number(pricing.permit_fee))}</span>
         </div>
       )}
-      {Number(pricing.accommodation_fee) > 0 && (
-        <div className="flex justify-between text-gray-600">
-          <span>
-            {isAR ? "مبيت السائق" : "Driver overnight accommodation"}
-            {pricing.accommodation?.nights ? ` (${pricing.accommodation.nights} x ${formatEur(Number(pricing.accommodation.price_per_night))})` : ""}
+      {accommodationFee > 0 && (
+        <div className="flex justify-between gap-4 text-gray-600">
+          <span className="min-w-0">
+            <span className="block">{isAR ? "مبيت السائق" : "Driver Accommodation"}</span>
+            {nights > 0 && accommodationPerNight > 0 && (
+              <span className="block text-xs text-gray-500">
+                {formatEur(accommodationPerNight)} × {nightLabel(nights, isAR)} = {formatEur(accommodationFee)}
+              </span>
+            )}
           </span>
-          <span>{formatEur(Number(pricing.accommodation_fee))}</span>
+          <span className="shrink-0">{formatEur(accommodationFee)}</span>
         </div>
       )}
       {pricing.child_seat?.requested && (

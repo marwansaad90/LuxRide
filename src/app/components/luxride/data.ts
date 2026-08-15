@@ -119,8 +119,8 @@ export type VehicleId = "xpander" | "corolla" | "hiace";
 export interface Vehicle {
   id: VehicleId;
   name: string;
-  category: "Sedan" | "MPV" | "Minivan";
-  categoryAr: "سيدان" | "MPV" | "ميني فان";
+  category: "Sedan" | "Family Car" | "Minivan";
+  categoryAr: "سيدان" | "سيارة عائلية" | "ميني فان";
   image: string;
   pax: number;
   luggage: number;
@@ -137,8 +137,8 @@ export const FLEET: Vehicle[] = [
   {
     id: "xpander",
     name: "Mitsubishi Xpander 2027",
-    category: "MPV",
-    categoryAr: "MPV",
+    category: "Family Car",
+    categoryAr: "سيارة عائلية",
     image: VEHICLE_IMAGES.xpander,
     pax: 4,
     luggage: 4,
@@ -147,8 +147,8 @@ export const FLEET: Vehicle[] = [
     permitTier: "mpv",
     available: true,
     wifi: true,
-    tagline: "Spacious vehicle — ideal for families and small groups",
-    taglineAr: "سيارة واسعة، مثالية للعائلات والمجموعات الصغيرة",
+    tagline: "Ideal for families and small groups",
+    taglineAr: "مثالية للعائلات والمجموعات الصغيرة",
   },
   {
     id: "corolla",
@@ -163,8 +163,8 @@ export const FLEET: Vehicle[] = [
     permitTier: "sedan",
     available: false,
     wifi: true,
-    tagline: "Comfortable sedan for couples and solo travellers",
-    taglineAr: "سيدان مريحة للأزواج والمسافرين بمفردهم",
+    tagline: "Comfortable private car for couples and solo travellers",
+    taglineAr: "سيارة مريحة للأزواج والمسافرين بمفردهم",
   },
   {
     id: "hiace",
@@ -179,8 +179,8 @@ export const FLEET: Vehicle[] = [
     permitTier: "minivan",
     available: false,
     wifi: true,
-    tagline: "Minivan for larger groups and extra luggage",
-    taglineAr: "ميني فان للمجموعات الأكبر والأمتعة الإضافية",
+    tagline: "For larger groups and extra luggage",
+    taglineAr: "للمجموعات الأكبر والأمتعة الإضافية",
   },
 ];
 

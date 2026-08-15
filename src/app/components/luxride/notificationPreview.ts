@@ -15,7 +15,7 @@ export const NOTIFICATION_FIELDS: NotificationPreviewRow[] = [
   { en: "Hotel / Exact Destination", ar: "الفندق / الوجهة الدقيقة", value: "Hotel reception" },
   { en: "Departure Date / Time", ar: "تاريخ / وقت المغادرة", value: "10 Aug 2026 · 08:00" },
   { en: "Return Date / Time", ar: "تاريخ / وقت العودة", value: "10 Aug 2026 · 20:00" },
-  { en: "Vehicle", ar: "السيارة", value: "Mitsubishi Xpander 2027 (MPV)" },
+  { en: "Vehicle", ar: "السيارة", value: "Mitsubishi Xpander 2027" },
   { en: "Passengers", ar: "الركاب", value: "4" },
   { en: "Luggage", ar: "الأمتعة", value: "3" },
   { en: "Flight Number", ar: "رقم الرحلة", value: "Not applicable" },

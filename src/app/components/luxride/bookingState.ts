@@ -32,6 +32,7 @@ export interface InitialBookingState {
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+export const BOOKING_TIME_ZONE = "Africa/Cairo";
 
 export function readInitialBookingState(params: URLSearchParams): InitialBookingState {
   const pickups = pickupLocations();
@@ -102,6 +103,51 @@ export function formatEur(value: number): string {
     minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
     maximumFractionDigits: 2,
   }).format(value);
+}
+
+function datePartsInTimeZone(value: Date, timeZone: string): { year: number; month: number; day: number; hour: number; minute: number } {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(value);
+  const byType = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return {
+    year: Number(byType.year),
+    month: Number(byType.month),
+    day: Number(byType.day),
+    hour: Number(byType.hour === "24" ? "0" : byType.hour),
+    minute: Number(byType.minute),
+  };
+}
+
+function zonedDateTimeToUtcMs(date: string, time: string, timeZone: string): number {
+  if (!DATE_PATTERN.test(date) || !TIME_PATTERN.test(time)) return NaN;
+  const [year, month, day] = date.split("-").map(Number);
+  const [hour, minute] = time.split(":").map(Number);
+  const utcGuess = Date.UTC(year, month - 1, day, hour, minute);
+  const zoneParts = datePartsInTimeZone(new Date(utcGuess), timeZone);
+  const zoneAsUtc = Date.UTC(zoneParts.year, zoneParts.month - 1, zoneParts.day, zoneParts.hour, zoneParts.minute);
+  return utcGuess - (zoneAsUtc - utcGuess);
+}
+
+export function todayInBookingTimeZone(now = new Date()): string {
+  const parts = datePartsInTimeZone(now, BOOKING_TIME_ZONE);
+  return `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
+}
+
+export function isWithinLeadTime(
+  departureDate: string,
+  departureTime: string,
+  leadHours: number,
+  now = new Date(),
+): boolean {
+  const departure = zonedDateTimeToUtcMs(departureDate, departureTime, BOOKING_TIME_ZONE);
+  return Number.isFinite(departure) && departure - now.getTime() < leadHours * 3600_000;
 }
 
 export function isValidReturn(

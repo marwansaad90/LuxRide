@@ -17,8 +17,8 @@ export function FleetPage() {
       crumb={L("Fleet", "الأسطول")}
       title={L("Our Fleet", "أسطولنا")}
       subtitle={L(
-        "Choose the modern, air-conditioned vehicle that best fits your group and luggage.",
-        "اختر السيارة الحديثة والمكيفة التي تناسب مجموعتك وأمتعتك.",
+        "Choose the modern vehicle that best fits your group and luggage.",
+        "اختر السيارة الحديثة التي تناسب مجموعتك وأمتعتك.",
       )}
       tone="brand"
     >

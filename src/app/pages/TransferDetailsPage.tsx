@@ -60,8 +60,8 @@ export function TransferDetailsPage() {
             <h2 className="mt-8 text-lux-charcoal" style={{ fontSize: "1.6rem", fontWeight: 700 }}>{L("About this transfer", "عن هذه التوصيلة")}</h2>
             <p className="mt-3 text-neutral-600" style={{ lineHeight: 1.7 }}>
               {L(
-                `Travel in a private, air-conditioned ${xpander.name} with a professional English-speaking driver. Bottled water, WiFi, and front and rear USB Type-A/C charging are included.`,
-                `تنقّل في سيارة ${xpander.name} خاصة ومكيفة مع سائق محترف يتحدث الإنجليزية. تشمل التوصيلة مياه معبأة وواي فاي وشحن USB نوع A/C أمامياً وخلفياً.`,
+                `Travel in a private ${xpander.name} with a professional English-speaking driver. Bottled water, WiFi, and front and rear USB Type-A/C charging are included.`,
+                `تنقّل في سيارة ${xpander.name} خاصة مع سائق محترف يتحدث الإنجليزية. تشمل التوصيلة مياه معبأة وواي فاي وشحن USB نوع A/C أمامياً وخلفياً.`,
               )}
             </p>
 
@@ -102,7 +102,7 @@ export function TransferDetailsPage() {
               <p className="mt-1 text-sm text-neutral-500">{L("per private vehicle", "لكل سيارة خاصة")}</p>
               <img src={xpander.image} alt={xpander.name} className="mt-4 h-32 w-full object-contain" style={{ direction: "ltr" }} />
               <ul className="mt-5 space-y-2 text-sm text-neutral-600">
-                {[L("Private air-conditioned vehicle", "سيارة خاصة مكيفة"), L("Professional English-speaking driver", "سائق محترف يتحدث الإنجليزية"), L("Bottled water, WiFi & USB charging", "مياه وواي فاي وشحن USB"), L("Fixed transparent price", "سعر ثابت وشفاف")].map((feature) => (
+                {[L("Private vehicle", "سيارة خاصة"), L("Professional English-speaking driver", "سائق محترف يتحدث الإنجليزية"), L("Bottled water, WiFi & USB charging", "مياه وواي فاي وشحن USB"), L("Fixed transparent price", "سعر ثابت وشفاف")].map((feature) => (
                   <li key={feature} className="flex items-center gap-2"><Check className="h-4 w-4 text-lux-green" /> {feature}</li>
                 ))}
               </ul>

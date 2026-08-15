@@ -14,7 +14,7 @@ function luxride_seo_routes(): array
     return [
         '/' => ['LuxRide Taxi | Private Transfers in Hurghada, Egypt', 'Book Hurghada private transfers, airport transfers, fixed-price Red Sea resort rides, and long-distance LuxRide Taxi service in modern air-conditioned vehicles.'],
         '/about' => ['About LuxRide Taxi | Private Transfers in Hurghada', 'Learn about LuxRide Taxi private transfer service for Hurghada, Red Sea resorts, airport pickups, and long-distance destinations across Egypt.'],
-        '/fleet' => ['LuxRide Fleet | Private Transfer Vehicles in Hurghada', 'View LuxRide Taxi vehicles for private transfers in Hurghada, including air-conditioned MPV, sedan, and minivan options matched to passenger and luggage needs.'],
+        '/fleet' => ['LuxRide Fleet | Private Transfer Vehicles in Hurghada', 'View LuxRide Taxi vehicles for private transfers in Hurghada, including family car, sedan, and minivan options matched to passenger and luggage needs.'],
         '/destinations' => ['Private Transfers from Hurghada | LuxRide Taxi', 'Explore fixed-price private transfers from Hurghada to the airport, El Gouna, Makadi Bay, Soma Bay, Luxor, Cairo, Aswan, Marsa Alam, and more.'],
         '/experiences' => ['Unforgettable Transfer Experiences | LuxRide Taxi', 'Browse selected LuxRide Taxi private transfer experiences and book a similar fixed-price transfer from Hurghada with route details prepared.'],
         '/booking' => ['Book a Private Transfer in Hurghada | LuxRide Taxi', 'Calculate and request your LuxRide Taxi private transfer with fixed pricing, route details, vehicle choice, and applicable airport or permit fees shown clearly.'],

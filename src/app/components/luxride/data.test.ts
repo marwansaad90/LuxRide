@@ -187,6 +187,28 @@ describe("vehicle and booking validation", () => {
     expect(assetSize("../../../assets/vehicles/hiace.webp")).toBe(33820);
   });
 
+  it("uses client-approved customer-facing vehicle card copy without removed terms", () => {
+    expect(xpander).toMatchObject({
+      category: "Family Car",
+      categoryAr: "سيارة عائلية",
+      tagline: "Ideal for families and small groups",
+      taglineAr: "مثالية للعائلات والمجموعات الصغيرة",
+    });
+    expect(corolla).toMatchObject({
+      tagline: "Comfortable private car for couples and solo travellers",
+      taglineAr: "سيارة مريحة للأزواج والمسافرين بمفردهم",
+    });
+    expect(hiace).toMatchObject({
+      tagline: "For larger groups and extra luggage",
+      taglineAr: "للمجموعات الأكبر والأمتعة الإضافية",
+    });
+    const fleetCopy = JSON.stringify(FLEET.map(({ category, categoryAr, tagline, taglineAr }) => ({ category, categoryAr, tagline, taglineAr })));
+    expect(fleetCopy).not.toContain("MPV");
+    expect(fleetCopy).not.toContain("مكيفة");
+    expect(fleetCopy).not.toContain("تنفيذية");
+    expect(fleetCopy).not.toContain("رحبة");
+  });
+
   it("provides workbook pickup and destination cascades", () => {
     expect(pickupLocations()).toContain("Hurghada Airport");
     expect(destinationsFor("Hurghada Airport")).toEqual(expect.arrayContaining(["Hurghada City Center", "El Gouna", "Village Road", "Al Ahyaa Subdivisions", "Wadi Lahmy"]));
@@ -248,6 +270,18 @@ describe("vehicle and booking validation", () => {
     expect(isValidReturn("overnight", "2026-08-10", "08:00", "2026-08-10", "20:00")).toBe(false);
     expect(normalizeReturnFields("overday", "2026-08-10", "", "18:00")).toEqual({ returnDate: "2026-08-10", returnTime: "18:00" });
   });
+
+  it("keeps the verified Alexandria overnight examples derived from workbook values", () => {
+    const oneNight = price("Hurghada Airport", "Alexandria", "roundTrip", corolla);
+    expect(oneNight).toMatchObject({
+      base: 385.2,
+      airport: AIRPORT_SURCHARGE,
+      overnight: 42,
+      total: 429.2,
+    });
+    expect(oneNight!.total + 42).toBe(471.2);
+    expect(oneNight!.total + 84).toBe(513.2);
+  });
 });
 
 describe("latest desktop client-review integration", () => {
@@ -287,6 +321,29 @@ describe("latest desktop client-review integration", () => {
     expect(estimate + booking + success + transferDetails + destinations).not.toContain("تصنيف المسار");
     expect(estimate + booking).not.toContain('id: "overday"');
     expect(estimate + booking).not.toContain('id: "overnight"');
+  });
+
+  it("guards the final booking UX closeout copy and validation behavior", () => {
+    const booking = readSource("../../pages/BookingPage.tsx");
+    const translations = readSource("./i18n.ts");
+    const selector = readSource("./VehicleSegmentedSelector.tsx");
+    const seed = readSource("../../../../wordpress/wp-content/themes/luxride/inc/seed-data.php");
+
+    expect(booking).toContain("Base transfer estimate");
+    expect(booking).toContain("calculated after return date");
+    expect(booking).toContain("Please select a pickup time.");
+    expect(booking).toContain("يرجى اختيار وقت الانطلاق.");
+    expect(booking).toContain("Hotel name or exact destination");
+    expect(booking).toContain("e.g. Hotel name or exact address");
+    expect(booking).toContain("Driver Accommodation");
+    expect(booking).toContain("nightLabel");
+    expect(booking).toContain("requestQuote(false)");
+    expect(booking + translations).not.toContain("Steigenberger Al Dau, El Gouna");
+    expect(booking + translations).not.toContain("شتيجنبرجر الداو، الجونة");
+    expect(selector).toContain('xpander: { en: "Family", ar: "عائلية"');
+    expect(seed).toContain("'luxride_vehicle_type' => 'Family Car'");
+    expect(seed).toContain("'luxride_summary_ar' => 'مثالية للعائلات والمجموعات الصغيرة'");
+    expect(seed).not.toContain("'luxride_vehicle_type' => 'MPV'");
   });
 
   it("renders Unforgettable Experiences as a newest-first horizontal feed with card galleries and hidden visible tags", () => {
@@ -529,7 +586,7 @@ describe("latest desktop client-review integration", () => {
     expect(activeCode).not.toContain("workbook-derived");
     expect(activeCode).not.toContain("Workbook-derived");
     expect(html).not.toContain("prototype");
-    expect(readSource("../../pages/AboutPage.tsx")).toContain("all air-conditioned and matched to the passenger and luggage requirements shown during booking");
+    expect(readSource("../../pages/AboutPage.tsx")).toContain("family car, sedan and minivan matched to the passenger and luggage requirements shown during booking");
   });
 
   it("publishes sitemap and robots for public routes only", () => {
