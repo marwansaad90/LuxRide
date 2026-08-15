@@ -109,33 +109,62 @@ function ordered<T>(items: T[] | undefined): T[] {
   });
 }
 
+function decodeHtmlEntities(value: string): string {
+  return value.replace(/&(#x[\da-f]+|#\d+|amp|lt|gt|quot|apos);/gi, (entity, code: string) => {
+    const normalized = code.toLowerCase();
+    if (normalized === "amp") return "&";
+    if (normalized === "lt") return "<";
+    if (normalized === "gt") return ">";
+    if (normalized === "quot") return "\"";
+    if (normalized === "apos") return "'";
+    const numeric = normalized.startsWith("#x")
+      ? parseInt(normalized.slice(2), 16)
+      : normalized.startsWith("#")
+      ? parseInt(normalized.slice(1), 10)
+      : NaN;
+    return Number.isFinite(numeric) ? String.fromCodePoint(numeric) : entity;
+  });
+}
+
+function decodeContentStrings<T>(value: T): T {
+  if (typeof value === "string") return decodeHtmlEntities(value) as T;
+  if (Array.isArray(value)) return value.map((item) => decodeContentStrings(item)) as T;
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, decodeContentStrings(item)]),
+    ) as T;
+  }
+  return value;
+}
+
 function normalizeSettings(settings?: Partial<LuxRideSettings>): LuxRideSettings {
   return { ...DEFAULT_SETTINGS, ...(settings ?? {}) };
 }
 
 export function normalizeLuxRideContent(raw: Partial<LuxRideContent> | undefined): LuxRideContent | null {
   if (!raw) return null;
+  const content = decodeContentStrings(raw);
 
-  const vehicles = ordered(raw.vehicles).filter((vehicle): vehicle is Vehicle => Boolean(vehicle?.id));
-  const popularTransfers = ordered(raw.popularTransfers).filter((transfer): transfer is CmsDestination => Boolean(transfer?.id));
-  const destinationGroups = ordered(raw.destinationGroups as Array<CmsDestinationGroup & { displayOrder?: number }> | undefined)
+  const vehicles = ordered(content.vehicles).filter((vehicle): vehicle is Vehicle => Boolean(vehicle?.id));
+  const popularTransfers = ordered(content.popularTransfers).filter((transfer): transfer is CmsDestination => Boolean(transfer?.id));
+  const destinationGroups = ordered(content.destinationGroups as Array<CmsDestinationGroup & { displayOrder?: number }> | undefined)
     .filter((group) => Boolean(group?.en && group?.ar))
     .map((group) => ({
       en: group.en,
       ar: group.ar,
       routes: ordered(group.routes).filter((route): route is CmsDestination => Boolean(route?.from && route?.to)),
     }));
-  const experiences = ordered(raw.experiences as Array<FeaturedTransfer & { displayOrder?: number }> | undefined)
+  const experiences = ordered(content.experiences as Array<FeaturedTransfer & { displayOrder?: number }> | undefined)
     .filter((item): item is FeaturedTransfer => Boolean(item?.id && item?.images?.length));
-  const faqs = ordered(raw.faqs).filter((item): item is CmsFaqItem => Boolean(item?.id && item?.q && item?.a));
+  const faqs = ordered(content.faqs).filter((item): item is CmsFaqItem => Boolean(item?.id && item?.q && item?.a));
 
   if (!vehicles.length || !popularTransfers.length || !experiences.length || !faqs.length) {
     return null;
   }
 
   return {
-    source: raw.source === "wordpress" ? "wordpress" : "development-fallback",
-    settings: normalizeSettings(raw.settings),
+    source: content.source === "wordpress" ? "wordpress" : "development-fallback",
+    settings: normalizeSettings(content.settings),
     vehicles,
     popularTransfers,
     destinationGroups,

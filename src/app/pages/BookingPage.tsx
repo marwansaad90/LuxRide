@@ -28,7 +28,6 @@ import {
   pickupLocationsFor,
   routeFromApiRoute,
   resolveTripType,
-  tripRulesFor,
 } from "../components/luxride/data";
 import { addDays, formatEur, isValidReturn, normalizeReturnFields, readInitialBookingState } from "../components/luxride/bookingState";
 import { settingsWhatsappLink, useSiteSettings, useVehicles } from "../components/luxride/cms";
@@ -117,7 +116,6 @@ export function BookingPage() {
   const vehicle = vehicles.find((v) => v.id === vehicleId) ?? vehicles[0] ?? FLEET[0];
   const route = findRouteIn(routes, from, to) ?? findRoute(from, to);
   const trip = useMemo(() => resolveTripType(route, publicTrip), [route, publicTrip]);
-  const tripRules = useMemo(() => tripRulesFor(route), [route]);
   const breakdown = useMemo(
     () => (route && trip ? computePrice(route, trip, vehicle) : null),
     [route, trip, vehicle],
@@ -276,12 +274,6 @@ export function BookingPage() {
   }, [step]);
 
   const tripLabel = publicTrip === "roundTrip" ? (isAR ? "ذهاب وعودة" : "Round Trip") : (isAR ? "ذهاب فقط" : "One Way");
-  const tripClassification =
-    publicTrip === "roundTrip" && tripRules?.roundTripMode === "overday"
-      ? (isAR ? "جولة يوم كامل" : "Overday")
-      : publicTrip === "roundTrip" && tripRules?.roundTripMode === "overnight"
-      ? (isAR ? "مبيت" : "Overnight")
-      : "";
 
   async function handleSubmit() {
     if (!step1Valid || !step2Valid) {
@@ -343,7 +335,6 @@ export function BookingPage() {
         state: {
           bookingReference: saved?.reference,
           tripLabel,
-          tripClassification,
           route: `${locationLabel(lang, from)} → ${locationLabel(lang, to)}`,
           vehicleName: vehicle.name,
           vehicleCategory: isAR ? vehicle.categoryAr : vehicle.category,
@@ -369,11 +360,11 @@ export function BookingPage() {
 
   const tripTypes: { id: PublicTripType; label: string; desc: string }[] = [
     { id: "oneWay", label: isAR ? "ذهاب فقط" : "One Way", desc: isAR ? "توصيلة واحدة" : "Single transfer" },
-    { id: "roundTrip", label: isAR ? "ذهاب وعودة" : "Round Trip", desc: isAR ? "عودة حسب تصنيف المسار" : "Return transfer by route rule" },
+    { id: "roundTrip", label: isAR ? "ذهاب وعودة" : "Round Trip", desc: isAR ? "توصيلة ذهاب وعودة" : "Outbound and return transfer" },
   ];
 
   const stepLabels: Record<Step, string> = {
-    1: isAR ? "احسب توصيلتك" : "Calculate Your Transfer",
+    1: isAR ? "احسب تكلفة توصيلتك" : "Calculate Your Transfer",
     2: isAR ? "بياناتك" : "Your Details",
     3: isAR ? "المراجعة والإرسال" : "Review & Send",
   };
@@ -429,7 +420,7 @@ export function BookingPage() {
           <div className="space-y-6">
             <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100 md:p-8">
               <h2 className="text-lux-charcoal mb-6" style={{ fontFamily: hFamily, fontSize: "1.4rem", fontWeight: 700 }}>
-                {isAR ? "احسب توصيلتك" : "Calculate Your Transfer"}
+                {isAR ? "احسب تكلفة توصيلتك" : "Calculate Your Transfer"}
               </h2>
 
               {/* Transfer type */}
@@ -459,11 +450,6 @@ export function BookingPage() {
                     </button>
                   ))}
                 </div>
-                {publicTrip === "roundTrip" && tripClassification && (
-                  <p className="mt-3 rounded-lg border border-lux-green/20 bg-lux-green/5 px-3 py-2 text-sm font-medium text-lux-charcoal">
-                    {isAR ? `تصنيف المسار: ${tripClassification}` : `Route classification: ${tripClassification}`}
-                  </p>
-                )}
                 {tripNotice && (
                   <p role="status" aria-live="polite" className="mt-3 rounded-lg border border-lux-orange/30 bg-orange-50 px-3 py-2 text-sm text-gray-700">
                     {tripNotice}
@@ -690,7 +676,6 @@ export function BookingPage() {
               {/* Trip summary */}
               <ReviewSection title={isAR ? "تفاصيل التوصيلة" : "Transfer Details"} hFamily={hFamily}>
                 <ReviewRow label={isAR ? "نوع التوصيلة" : "Transfer Type"} value={tripLabel} />
-                {tripClassification && <ReviewRow label={isAR ? "تصنيف المسار" : "Route classification"} value={tripClassification} />}
                 <ReviewRow label={isAR ? "مسار" : "Route"} value={`${locationLabel(lang, from)} → ${locationLabel(lang, to)}`} />
                 <ReviewRow label={isAR ? "المغادرة" : "Departure"} value={`${date} at ${time}`} />
                 {needsReturn && <ReviewRow label={isAR ? "العودة" : "Return"} value={`${returnDate || "-"} at ${returnTime || "-"}`} />}

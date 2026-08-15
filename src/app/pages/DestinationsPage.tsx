@@ -2,7 +2,7 @@ import { ArrowRight, Clock } from "lucide-react";
 import { Link } from "react-router";
 import { PageShell } from "../components/luxride/PageShell";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import { IMAGES, availablePublicTripTypes, findRoute, resolveTripType, tripRulesFor, type Route } from "../components/luxride/data";
+import { IMAGES, availablePublicTripTypes, findRoute, resolveTripType, type Route } from "../components/luxride/data";
 import { useDestinationGroups, type CmsDestination } from "../components/luxride/cms";
 import { CLIENT_ACCENT_TEXT, CLIENT_STEP_NUMBER_BG } from "../components/luxride/brand";
 import { locationLabel, useLang, useL } from "../components/luxride/i18n";
@@ -42,7 +42,7 @@ export function DestinationsPage() {
     <PageShell
       crumb={L("Destinations", "الوجهات")}
       title={L("Private Transfers Across Egypt", "توصيلات خاصة عبر مصر")}
-      subtitle={L("Browse a concise presentation of the most useful LuxRide transfer categories. The calculator still supports the confirmed workbook route map.", "تصفّح عرضاً مختصراً لأهم فئات توصيلات LuxRide. ما زالت الحاسبة تدعم خريطة المسارات المؤكدة من ملف الأسعار.")}
+      subtitle={L("Explore private transfers from Hurghada and the Red Sea to popular destinations across Egypt.", "استكشف توصيلات خاصة من الغردقة والبحر الأحمر إلى أشهر الوجهات في مصر.")}
       tone="brand"
     >
       <section className="bg-lux-beige py-16 md:py-24">
@@ -57,9 +57,7 @@ export function DestinationsPage() {
                   const publicTrip = availablePublicTripTypes(routeItem)[0];
                   const trip = resolveTripType(routeItem, publicTrip);
                   const price = trip ? routeItem.prices[trip] : undefined;
-                  const showRouteClassificationBadge = group.en !== "Airport transfers" && group.en !== "Hurghada area transfers";
-                  const classification = tripRulesFor(routeItem)?.roundTripMode;
-                  const classificationLabel = classification === "overday" ? L("Same-day return", "عودة في نفس اليوم") : classification === "overnight" ? L("Overnight", "مبيت") : "";
+                  const showRecommendationBadge = group.en !== "Airport transfers" && group.en !== "Hurghada area transfers";
                   const query = new URLSearchParams({ from: routeItem.from, to: routeItem.to, trip: publicTrip }).toString();
                   const image = routeItem.image ?? IMAGES.hurghada;
                   const fromLabel = routeItem.displayFrom?.[lang] ?? locationLabel(lang, routeItem.from);
@@ -77,7 +75,7 @@ export function DestinationsPage() {
                           <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-lux-green" /> {routeItem.duration}</span>
                           {routeItem.airport && <span className="rounded-full bg-lux-green/10 px-2 py-0.5 text-xs text-lux-green">+€2 {L("airport fee", "رسوم مطار")}</span>}
                           {routeItem.permit && <span className="rounded-full px-2 py-0.5 text-xs" style={{ backgroundColor: CLIENT_STEP_NUMBER_BG, color: CLIENT_ACCENT_TEXT }}>+ {L("travel permit", "تصريح سفر")}</span>}
-                          {showRouteClassificationBadge && classificationLabel && <span className="rounded-full bg-lux-green/10 px-2 py-0.5 text-xs font-medium text-lux-green">{L("Round Trip", "ذهاب وعودة")} · {classificationLabel}</span>}
+                          {showRecommendationBadge && <span className="rounded-full bg-lux-green/10 px-2 py-0.5 text-xs font-medium text-lux-green">{L("Recommended: Round Trip", "موصى به: ذهاب وعودة")}</span>}
                         </div>
                         <div className="mt-5 flex gap-3">
                           <Link to={`/booking?${query}`} className="flex flex-1 items-center justify-center rounded-full bg-lux-green py-2.5 text-sm text-white transition-all hover:brightness-110">{L("Book Now", "احجز الآن")}</Link>

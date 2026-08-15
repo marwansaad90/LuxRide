@@ -9,7 +9,6 @@ import { useL } from "../components/luxride/i18n";
 interface BookingSuccessState {
   bookingReference?: string;
   tripLabel: string;
-  tripClassification?: string;
   route: string;
   vehicleName: string;
   vehicleCategory: string;
@@ -37,7 +36,6 @@ export function BookingSuccessPage() {
   const summary = [
     ...(booking.bookingReference ? [{ k: L("Booking reference", "رقم الحجز"), v: booking.bookingReference }] : []),
     { k: L("Transfer type", "نوع التوصيلة"), v: booking.tripLabel },
-    ...(booking.tripClassification ? [{ k: L("Route classification", "تصنيف المسار"), v: booking.tripClassification }] : []),
     { k: L("Route", "المسار"), v: booking.route },
     { k: L("Vehicle", "السيارة"), v: `${booking.vehicleName} (${booking.vehicleCategory})` },
     { k: L("Departure", "المغادرة"), v: booking.departure },

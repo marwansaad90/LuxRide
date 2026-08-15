@@ -9,7 +9,7 @@ export const NOTIFICATION_FIELDS: NotificationPreviewRow[] = [
   { en: "Email", ar: "البريد الإلكتروني", value: "guest@example.com" },
   { en: "WhatsApp", ar: "واتساب", value: "+20 100 000 0000" },
   { en: "Transfer Type", ar: "نوع التوصيلة", value: "Round Trip" },
-  { en: "Trip Classification", ar: "تصنيف المسار", value: "Overday" },
+  { en: "Return", ar: "العودة", value: "Round Trip" },
   { en: "Pickup", ar: "الاستلام", value: "Hurghada" },
   { en: "Destination", ar: "الوجهة", value: "Luxor" },
   { en: "Hotel / Exact Destination", ar: "الفندق / الوجهة الدقيقة", value: "Hotel reception" },

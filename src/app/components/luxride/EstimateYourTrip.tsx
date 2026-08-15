@@ -16,7 +16,6 @@ import {
   routeFromApiRoute,
   pickupLocations,
   resolveTripType,
-  tripRulesFor,
 } from "./data";
 import { useVehicles } from "./cms";
 import { formatEur } from "./bookingState";
@@ -48,7 +47,6 @@ export function EstimateYourTrip() {
   const route = findRouteIn(routes, from, to) ?? findRoute(from, to);
   const supportedTrips = useMemo(() => availablePublicTripTypes(route), [route]);
   const trip = useMemo(() => resolveTripType(route, publicTrip), [route, publicTrip]);
-  const tripRules = useMemo(() => tripRulesFor(route), [route]);
   const breakdown = useMemo(
     () => (route && vehicle && trip ? computePrice(route, trip, vehicle) : null),
     [route, trip, vehicle],
@@ -131,14 +129,8 @@ export function EstimateYourTrip() {
 
   const tripTypes: { id: PublicTripType; label: string; desc: string }[] = [
     { id: "oneWay", label: isAR ? "ذهاب فقط" : "One Way", desc: isAR ? "توصيلة واحدة" : "Single transfer" },
-    { id: "roundTrip", label: isAR ? "ذهاب وعودة" : "Round Trip", desc: isAR ? "عودة حسب تصنيف المسار" : "Return transfer by route rule" },
+    { id: "roundTrip", label: isAR ? "ذهاب وعودة" : "Round Trip", desc: isAR ? "توصيلة ذهاب وعودة" : "Outbound and return transfer" },
   ];
-  const classificationLabel =
-    tripRules?.roundTripMode === "overday"
-      ? (isAR ? "جولة يوم كامل" : "Overday")
-      : tripRules?.roundTripMode === "overnight"
-      ? (isAR ? "مبيت" : "Overnight")
-      : "";
 
   const inputCls =
     "h-9 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm text-lux-charcoal transition-all focus:border-lux-green focus:outline-none focus:ring-2 focus:ring-lux-green/25";
@@ -155,7 +147,7 @@ export function EstimateYourTrip() {
           {isAR ? "حاسبة السعر" : "Fare Calculator"}
         </p>
         <h2 className="mt-0.5 text-lux-charcoal" style={{ fontSize: "1.32rem", fontWeight: 800, lineHeight: 1.1 }}>
-          {isAR ? "احسب توصيلتك" : "Calculate Your Transfer"}
+          {isAR ? "احسب تكلفة توصيلتك" : "Calculate Your Transfer"}
         </h2>
       </div>
 
@@ -191,11 +183,6 @@ export function EstimateYourTrip() {
               );
             })}
           </div>
-          {publicTrip === "roundTrip" && classificationLabel && (
-            <p className="mt-2 rounded-lg border border-lux-green/20 bg-lux-green/5 px-3 py-1.5 text-xs font-medium text-lux-charcoal">
-              {isAR ? `تصنيف المسار: ${classificationLabel}` : `Route classification: ${classificationLabel}`}
-            </p>
-          )}
         </div>
 
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">

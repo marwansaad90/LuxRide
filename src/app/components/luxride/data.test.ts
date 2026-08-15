@@ -108,6 +108,19 @@ describe("workbook-derived route and pricing model", () => {
     expect(price("Hurghada City Center", "Luxor", "roundTrip", hiace)).toMatchObject({ base: 236, permit: 30, total: 266 });
   });
 
+  it("keeps the verified Hurghada Airport to Hurghada sedan example unchanged", () => {
+    expect(price("Hurghada Airport", "Hurghada City Center", "oneWay", corolla)).toMatchObject({
+      base: 10,
+      airport: AIRPORT_SURCHARGE,
+      total: 12,
+    });
+    expect(price("Hurghada Airport", "Hurghada City Center", "roundTrip", corolla)).toMatchObject({
+      base: 18,
+      airport: AIRPORT_SURCHARGE,
+      total: 20,
+    });
+  });
+
   it("supports One Way and Round Trip for every public workbook transfer while keeping Overday/Overnight internal", () => {
     expect(ROUTES.length).toBe(320);
     for (const route of ROUTES) {
@@ -266,8 +279,12 @@ describe("latest desktop client-review integration", () => {
   it("only exposes One Way and Round Trip in calculator and booking selectors", () => {
     const estimate = readSource("./EstimateYourTrip.tsx");
     const booking = readSource("../../pages/BookingPage.tsx");
+    const success = readSource("../../pages/BookingSuccessPage.tsx");
+    const transferDetails = readSource("../../pages/TransferDetailsPage.tsx");
+    const destinations = readSource("../../pages/DestinationsPage.tsx");
     expect(estimate + booking).toContain('id: "roundTrip"');
-    expect(estimate + booking).toContain("Route classification:");
+    expect(estimate + booking + success + transferDetails + destinations).not.toContain("Route classification");
+    expect(estimate + booking + success + transferDetails + destinations).not.toContain("تصنيف المسار");
     expect(estimate + booking).not.toContain('id: "overday"');
     expect(estimate + booking).not.toContain('id: "overnight"');
   });

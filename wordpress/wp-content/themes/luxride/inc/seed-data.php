@@ -13,8 +13,8 @@ function luxride_seed_records(): array
 {
     $vehicles = [
         ['type' => 'luxride_vehicle', 'slug' => 'corolla', 'title' => 'Toyota Corolla', 'order' => 10, 'meta' => ['luxride_source_id' => 'corolla', 'luxride_vehicle_type' => 'Sedan', 'luxride_vehicle_type_ar' => 'سيدان', 'luxride_image_url' => 'corolla-DapmP377.webp', 'luxride_passengers' => 3, 'luxride_baggage' => 2, 'luxride_features_en' => 'Up to 3 passengers · 2 bags', 'luxride_features_ar' => 'حتى 3 ركاب · حقيبتان', 'luxride_trip_type' => 'sedan', 'luxride_active' => 1, 'luxride_wifi' => 1, 'luxride_summary_en' => 'Comfortable sedan for couples and solo travellers', 'luxride_summary_ar' => 'سيدان مريحة للأزواج والمسافرين بمفردهم']],
-        ['type' => 'luxride_vehicle', 'slug' => 'xpander', 'title' => 'Mitsubishi Xpander 2027', 'order' => 20, 'meta' => ['luxride_source_id' => 'xpander', 'luxride_vehicle_type' => 'MPV', 'luxride_vehicle_type_ar' => 'MPV', 'luxride_image_url' => 'xpander-C6iSlNr2.webp', 'luxride_passengers' => 6, 'luxride_baggage' => 4, 'luxride_features_en' => 'Up to 6 passengers · 4 bags', 'luxride_features_ar' => 'حتى 6 ركاب · 4 حقائب', 'luxride_trip_type' => 'mpv', 'luxride_active' => 1, 'luxride_wifi' => 1, 'luxride_summary_en' => 'Spacious vehicle — ideal for families and small groups', 'luxride_summary_ar' => 'سيارة واسعة، مثالية للعائلات والمجموعات الصغيرة']],
-        ['type' => 'luxride_vehicle', 'slug' => 'hiace', 'title' => 'Toyota HiAce', 'order' => 30, 'meta' => ['luxride_source_id' => 'hiace', 'luxride_vehicle_type' => 'Minivan', 'luxride_vehicle_type_ar' => 'ميني فان', 'luxride_image_url' => 'hiace-C5medIaU.webp', 'luxride_passengers' => 10, 'luxride_baggage' => 10, 'luxride_features_en' => 'Up to 10 passengers · 10 bags', 'luxride_features_ar' => 'حتى 10 ركاب · 10 حقائب', 'luxride_trip_type' => 'minivan', 'luxride_active' => 1, 'luxride_wifi' => 0, 'luxride_summary_en' => 'Minivan for larger groups and extra luggage', 'luxride_summary_ar' => 'ميني فان للمجموعات الأكبر والأمتعة الإضافية']],
+        ['type' => 'luxride_vehicle', 'slug' => 'xpander', 'title' => 'Mitsubishi Xpander 2027', 'order' => 20, 'meta' => ['luxride_source_id' => 'xpander', 'luxride_vehicle_type' => 'MPV', 'luxride_vehicle_type_ar' => 'MPV', 'luxride_image_url' => 'xpander-C6iSlNr2.webp', 'luxride_passengers' => 4, 'luxride_baggage' => 4, 'luxride_features_en' => 'Up to 4 passengers · 4 bags', 'luxride_features_ar' => 'حتى 4 ركاب · 4 حقائب', 'luxride_trip_type' => 'mpv', 'luxride_active' => 1, 'luxride_wifi' => 1, 'luxride_summary_en' => 'Spacious vehicle — ideal for families and small groups', 'luxride_summary_ar' => 'سيارة واسعة، مثالية للعائلات والمجموعات الصغيرة']],
+        ['type' => 'luxride_vehicle', 'slug' => 'hiace', 'title' => 'Toyota HiAce', 'order' => 30, 'meta' => ['luxride_source_id' => 'hiace', 'luxride_vehicle_type' => 'Minivan', 'luxride_vehicle_type_ar' => 'ميني فان', 'luxride_image_url' => 'hiace-C5medIaU.webp', 'luxride_passengers' => 8, 'luxride_baggage' => 8, 'luxride_features_en' => 'Up to 8 passengers · 8 bags', 'luxride_features_ar' => 'حتى 8 ركاب · 8 حقائب', 'luxride_trip_type' => 'minivan', 'luxride_active' => 1, 'luxride_wifi' => 0, 'luxride_summary_en' => 'Minivan for larger groups and extra luggage', 'luxride_summary_ar' => 'ميني فان للمجموعات الأكبر والأمتعة الإضافية']],
     ];
 
     $destinations = luxride_seed_destinations();
@@ -96,31 +96,31 @@ function luxride_seed_faqs(): array
     $home_en = [
         ['How will I meet my driver at Hurghada Airport?', "Your driver will be waiting in the arrivals hall holding a sign with your name. If you can't find them, a quick WhatsApp message connects you instantly."],
         ['Is the displayed transfer price final?', 'Yes. The approved base price and every applicable airport, permit, discount, or accommodation item are shown separately before submission.'],
-        ['Can I book a Round Trip?', 'Yes. LuxRide shows the approved fixed Round Trip price and the route classification clearly before submission.'],
+        ['Can I book a Round Trip?', 'Yes. Every route supports One Way and Round Trip options, with the approved fixed price shown before submission.'],
         ['What happens if my flight is delayed?', 'We monitor your flight in real time and adjust the pickup automatically — at no extra cost to you.'],
-        ['Can I request a child seat?', 'This service is currently unavailable and will be provided soon.'],
+        ['Can I request a child seat?', 'Yes, a child seat can be requested free of charge with any transfer. Please select the child seat option when booking.'],
         ['How can I confirm my booking?', 'Complete the three booking steps and use the single Send Booking Request button. LuxRide will review the details and contact you to confirm availability.'],
         ['What is the cancellation policy?', 'Full refund when cancelled at least 24 hours before the experience start time in the local timezone. No refund for cancellation less than 24 hours before the start time.'],
     ];
     $home_ar = [
         ['كيف سألتقي بسائقي في مطار الغردقة؟', 'سيكون سائقك في انتظارك في صالة الوصول حاملاً لافتة باسمك. إذا لم تجده، رسالة واتساب سريعة تصلك به فوراً.'],
         ['هل السعر المعروض للنقل نهائي؟', 'نعم. يُعرض السعر الأساسي المعتمد وكل رسم مطار أو تصريح أو خصم أو مبيت مطبق بشكل منفصل قبل الإرسال.'],
-        ['هل يمكنني حجز ذهاب وعودة؟', 'نعم. تعرض LuxRide سعر الذهاب والعودة الثابت المعتمد وتصنيف المسار بوضوح قبل الإرسال.'],
+        ['هل يمكنني حجز ذهاب وعودة؟', 'نعم. يدعم كل مسار خياري الذهاب فقط والذهاب والعودة، مع عرض السعر الثابت المعتمد قبل الإرسال.'],
         ['ماذا يحدث إذا تأخرت رحلتي الجوية؟', 'نتابع رحلتك في الوقت الفعلي ونعدّل موعد الاستلام تلقائياً — دون أي تكلفة إضافية.'],
-        ['هل يمكنني طلب كرسي أطفال؟', 'هذه الخدمة غير متاحة حالياً وسيتم توفيرها قريباً.'],
+        ['هل يمكنني طلب كرسي أطفال؟', 'نعم، يمكن طلب كرسي أطفال مجاناً مع أي توصيلة. يرجى اختيار خيار كرسي الأطفال أثناء الحجز.'],
         ['كيف يمكنني تأكيد حجزي؟', 'أكمل خطوات الحجز الثلاث واستخدم زر إرسال طلب الحجز الوحيد. ستراجع LuxRide التفاصيل وتتواصل معك لتأكيد التوفر.'],
         ['ما سياسة الإلغاء؟', 'استرداد كامل عند الإلغاء قبل 24 ساعة على الأقل من وقت بدء التجربة بالتوقيت المحلي. لا استرداد عند الإلغاء قبل أقل من 24 ساعة من وقت البدء.'],
     ];
 
     $page_en = [
         ['Is the displayed transfer price final?', 'Yes. The price displayed in the calculator is fixed and inclusive, with no hidden fees. Airport operating fees and mandatory tourism travel permits are displayed separately and clearly before the booking is submitted.'],
-        ['Can I request a child seat?', 'This service is currently unavailable and will be provided soon.'],
+        ['Can I request a child seat?', 'Yes, a child seat can be requested free of charge with any transfer. Please select the child seat option when booking.'],
         ['How can I confirm my booking?', 'Complete the three booking steps and select the single Send Booking Request button. LuxRide will review the details and contact you to confirm availability.'],
         ['Can I make a booking for today?', 'Standard online bookings must be submitted at least three hours before departure. For last-minute or same-day bookings, contact LuxRide directly through WhatsApp to check availability.'],
         ['What happens if my flight is delayed?', 'LuxRide monitors the flight status in real time and adjusts the airport pickup time accordingly.'],
         ['How long will the driver wait at the airport?', 'The maximum waiting time for airport arrivals is three hours.'],
         ['Do long-distance transfers require travel permits?', 'Yes. Transfers to Luxor, Aswan, Cairo, and Sharm El Sheikh require an official tourism and security permit. The applicable permit fee is displayed clearly in the final booking price.'],
-        ['Can I book a Round Trip?', 'Yes, when the selected route has an approved round-trip price. LuxRide shows the route classification clearly and shows the approved Round Trip price clearly before submission.'],
+        ['Can I book a Round Trip?', 'Yes. Every route supports One Way and Round Trip options, with the approved fixed price shown before submission.'],
         ['Are taxes included?', 'Yes. All prices are shown in EUR and are tax inclusive.'],
         ['Can I change my booking?', 'Yes. Contact us on WhatsApp with your booking details and we will do our best to accommodate changes based on availability.'],
         ['What is the cancellation policy?', 'Full refund when cancelled at least 24 hours before the experience start time in the local timezone. No refund for cancellation less than 24 hours before the start time.'],
@@ -129,13 +129,13 @@ function luxride_seed_faqs(): array
     ];
     $page_ar = [
         ['هل السعر المعروض للنقل نهائي؟', 'نعم. السعر المعروض في الحاسبة ثابت وشامل، بدون رسوم خفية. تُعرض رسوم تشغيل المطار وتصاريح السفر السياحي الإلزامية بشكل منفصل وواضح قبل إرسال الحجز.'],
-        ['هل يمكنني طلب كرسي أطفال؟', 'هذه الخدمة غير متاحة حالياً وسيتم توفيرها قريباً.'],
+        ['هل يمكنني طلب كرسي أطفال؟', 'نعم، يمكن طلب كرسي أطفال مجاناً مع أي توصيلة. يرجى اختيار خيار كرسي الأطفال أثناء الحجز.'],
         ['كيف يمكنني تأكيد حجزي؟', 'أكمل خطوات الحجز الثلاث ثم اختر زر إرسال طلب الحجز الوحيد. ستراجع LuxRide التفاصيل وتتواصل معك لتأكيد التوفر.'],
         ['هل يمكنني الحجز لليوم؟', 'يجب تقديم الحجوزات القياسية عبر الإنترنت قبل ثلاث ساعات على الأقل من المغادرة. للحجوزات اللحظية أو في نفس اليوم، تواصل مع LuxRide مباشرةً عبر واتساب للتحقق من التوفر.'],
         ['ماذا يحدث إذا تأخرت رحلتي الجوية؟', 'تتابع LuxRide حالة الرحلة في الوقت الفعلي وتعدّل موعد استلام المطار وفقاً لذلك.'],
         ['كم سينتظر السائق في المطار؟', 'الحد الأقصى لوقت الانتظار لوصول المطار هو ثلاث ساعات.'],
         ['هل تتطلب التوصيلات بعيدة المسافة تصاريح سفر؟', 'نعم. تتطلب التوصيلات إلى الأقصر وأسوان والقاهرة وشرم الشيخ تصريحاً سياحياً وأمنياً رسمياً. تُعرض رسوم التصريح المطبقة بوضوح في السعر النهائي للحجز.'],
-        ['هل يمكنني حجز ذهاب وعودة؟', 'نعم، عندما يكون للمسار المختار سعر ذهاب وعودة معتمد. تعرض LuxRide تصنيف المسار بوضوح وتعرض سعر الذهاب والعودة المعتمد بوضوح قبل الإرسال.'],
+        ['هل يمكنني حجز ذهاب وعودة؟', 'نعم. يدعم كل مسار خياري الذهاب فقط والذهاب والعودة، مع عرض السعر الثابت المعتمد قبل الإرسال.'],
         ['هل الضرائب مشمولة؟', 'نعم. جميع الأسعار معروضة باليورو وشاملة الضريبة.'],
         ['هل يمكنني تعديل حجزي؟', 'نعم. تواصل معنا عبر واتساب مع تفاصيل حجزك وسنبذل قصارى جهدنا لاستيعاب التغييرات حسب التوفر.'],
         ['ما هي سياسة الإلغاء؟', 'استرداد كامل عند الإلغاء قبل ٢٤ ساعة على الأقل من وقت بدء التجربة بالتوقيت المحلي. لا استرداد عند الإلغاء قبل أقل من ٢٤ ساعة من وقت البدء.'],

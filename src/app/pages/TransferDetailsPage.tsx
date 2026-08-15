@@ -2,7 +2,7 @@ import { Check, Clock, MapPin, PlaneLanding, ShieldCheck } from "lucide-react";
 import { Link, useSearchParams } from "react-router";
 import { PageShell } from "../components/luxride/PageShell";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import { FLEET, IMAGES, PERMIT_FEE, availablePublicTripTypes, findRoute, resolveTripType, tripRulesFor } from "../components/luxride/data";
+import { FLEET, IMAGES, PERMIT_FEE, availablePublicTripTypes, findRoute, resolveTripType } from "../components/luxride/data";
 import { formatEur } from "../components/luxride/bookingState";
 import { CLIENT_ACCENT_TEXT, CLIENT_STEP_NUMBER_BG } from "../components/luxride/brand";
 import { locationLabel, useL, useLang } from "../components/luxride/i18n";
@@ -24,19 +24,12 @@ export function TransferDetailsPage() {
   const xpander = FLEET[0];
   const fromLabel = locationLabel(lang, route.from);
   const toLabel = locationLabel(lang, route.to);
-  const routeRules = tripRulesFor(route);
   const priceRows = availablePublicTripTypes(route).map((publicTrip) => {
     const trip = resolveTripType(route, publicTrip)!;
-    const classification =
-      publicTrip === "roundTrip" && routeRules?.roundTripMode === "overday"
-        ? L("Route classification: Overday", "تصنيف المسار: جولة يوم كامل")
-        : publicTrip === "roundTrip" && routeRules?.roundTripMode === "overnight"
-        ? L("Route classification: Overnight", "تصنيف المسار: مبيت")
-        : "";
     return {
       trip: publicTrip,
       label: L(TRIP_LABELS[publicTrip][0], TRIP_LABELS[publicTrip][1]),
-      classification,
+      recommendation: publicTrip === "roundTrip" ? L("Recommended: Round Trip", "موصى به: ذهاب وعودة") : "",
       base: route.prices[trip]!,
     };
   });
@@ -88,7 +81,7 @@ export function TransferDetailsPage() {
                 <div key={row.trip} className={`flex items-center justify-between gap-4 p-5 ${index > 0 ? "border-t border-lux-charcoal/10" : ""}`}>
                   <div>
                     <p className="text-lux-charcoal">{row.label}</p>
-                    {row.classification && <p className="text-sm font-medium text-lux-green">{row.classification}</p>}
+                    {row.recommendation && <p className="text-sm font-medium text-lux-green">{row.recommendation}</p>}
                     <p className="text-sm text-neutral-500">{L("Route-specific fixed base price", "سعر أساسي ثابت خاص بالمسار")}</p>
                   </div>
                   <p className="text-lux-green" style={{ fontSize: "1.75rem", fontWeight: 700 }}>{formatEur(row.base)}</p>
