@@ -81,7 +81,7 @@ export function BookingPage() {
   const [step, setStep] = useState<Step>(1);
   const [publicTrip, setPublicTrip] = useState<PublicTripType>(initial.publicTrip);
   const [from, setFrom] = useState(initial.from);
-  const [dests, setDests] = useState(() => destinationsFor(initial.from));
+  const [dests, setDests] = useState(() => (initial.from ? destinationsFor(initial.from) : []));
   const [to, setTo] = useState(initial.to);
   const [date, setDate] = useState(initial.date);
   const [time, setTime] = useState(initial.time);
@@ -110,12 +110,15 @@ export function BookingPage() {
   const [submitError, setSubmitError] = useState("");
   const [priceChangedNotice, setPriceChangedNotice] = useState("");
   const [idempotencyKey] = useState(makeIdempotencyKey);
-  const [step1Errors, setStep1Errors] = useState<{ date?: string; time?: string; leadTime?: string }>({});
+  const [step1Errors, setStep1Errors] = useState<{ pickup?: string; destination?: string; date?: string; time?: string; leadTime?: string }>({});
+  const pickupRef = useRef<HTMLInputElement>(null);
+  const destinationRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
   const timeRef = useRef<HTMLInputElement>(null);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
   const pickups = useMemo(() => pickupLocationsFor(routes), [routes]);
+  const allLocations = useMemo(() => Array.from(new Set(routes.flatMap((item) => [item.from, item.to]))), [routes]);
   const vehicle = vehicles.find((v) => v.id === vehicleId) ?? vehicles[0] ?? FLEET[0];
   const route = findRouteIn(routes, from, to) ?? findRoute(from, to);
   const trip = useMemo(() => resolveTripType(route, publicTrip), [route, publicTrip]);
@@ -135,12 +138,12 @@ export function BookingPage() {
   }, [date, time]);
 
   const hasValidReturn = trip ? isValidReturn(trip, date, time, returnDate, returnTime) : false;
-  const step1Valid = !!(from && to && date && time && breakdown);
+  const step1Valid = !!(from && to && route && date && time && breakdown);
   const step2Valid =
     hotel.trim().length > 0 &&
     name.trim().length > 0 &&
     phone.trim().length > 0 &&
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) &&
+    (!email.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) &&
     (!isAirportArrival || flight.trim().length > 0) &&
     (!needsPermit || passport.trim().length > 0) &&
     hasValidReturn;
@@ -208,20 +211,10 @@ export function BookingPage() {
   }, []);
 
   useEffect(() => {
-    if (!pickups.length || pickups.includes(from)) return;
-    const nextFrom = pickups[0];
-    const nextDests = destinationsForRoutes(routes, nextFrom);
-    setFrom(nextFrom);
+    const nextDests = from && pickups.includes(from) ? destinationsForRoutes(routes, from) : [];
     setDests(nextDests);
-    setTo(nextDests[0] ?? "");
-  }, [from, pickups, routes]);
-
-  useEffect(() => {
-    const nextDests = destinationsForRoutes(routes, from);
-    if (!nextDests.length) return;
-    setDests(nextDests);
-    if (!nextDests.includes(to)) setTo(nextDests[0]);
-  }, [from, routes, to]);
+    if (to && !nextDests.includes(to)) setTo("");
+  }, [from, pickups, routes, to]);
 
   useEffect(() => {
     setServerQuote(null);
@@ -243,13 +236,15 @@ export function BookingPage() {
 
   function handlePickup(value: string) {
     setFrom(value);
-    const d = destinationsForRoutes(routes, value);
+    setStep1Errors((current) => ({ ...current, pickup: undefined, destination: undefined }));
+    const d = pickups.includes(value) ? destinationsForRoutes(routes, value) : [];
     setDests(d);
-    if (!d.includes(to)) setTo(d[0]);
+    if (to && !d.includes(to)) setTo("");
   }
 
   function handleDestination(value: string) {
     setTo(value);
+    setStep1Errors((current) => ({ ...current, destination: undefined }));
   }
 
   function handleVehicleChange(id: VehicleId) {
@@ -283,6 +278,12 @@ export function BookingPage() {
 
   function handleStep1Next() {
     const nextErrors: typeof step1Errors = {};
+    if (!from || !pickups.includes(from)) {
+      nextErrors.pickup = isAR ? "يرجى اختيار موقع انطلاق من القائمة." : "Please choose a pickup location from the list.";
+    }
+    if (!to || !route) {
+      nextErrors.destination = isAR ? "يرجى اختيار وجهة متاحة لهذا الانطلاق." : "Please choose an available destination for this pickup.";
+    }
     if (!date) nextErrors.date = isAR ? "يرجى اختيار تاريخ المغادرة." : "Please select a departure date.";
     if (!time) nextErrors.time = isAR ? "يرجى اختيار وقت الانطلاق." : "Please select a pickup time.";
     if (date && time && tooSoon) {
@@ -291,6 +292,16 @@ export function BookingPage() {
         : "Standard booking requires at least 3 hours before departure in Cairo time.";
     }
     setStep1Errors(nextErrors);
+    if (nextErrors.pickup) {
+      pickupRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      pickupRef.current?.focus();
+      return;
+    }
+    if (nextErrors.destination) {
+      destinationRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      destinationRef.current?.focus();
+      return;
+    }
     if (nextErrors.date) {
       dateRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       dateRef.current?.focus();
@@ -491,15 +502,43 @@ export function BookingPage() {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label htmlFor="booking-from" className={labelCls}><MapPin className="h-4 w-4 text-lux-green" />{isAR ? "موقع الانطلاق" : "Pickup"}</label>
-                  <select id="booking-from" value={from} onChange={(e) => handlePickup(e.target.value)} className={inputCls}>
+                  <input
+                    id="booking-from"
+                    ref={pickupRef}
+                    type="text"
+                    list="booking-pickup-options"
+                    value={from}
+                    onChange={(e) => handlePickup(e.target.value)}
+                    placeholder={isAR ? "ابحث عن موقع الانطلاق" : "Search pickup location"}
+                    className={inputCls}
+                    autoComplete="off"
+                    aria-invalid={Boolean(step1Errors.pickup)}
+                    aria-describedby={step1Errors.pickup ? "booking-from-error" : undefined}
+                  />
+                  <datalist id="booking-pickup-options">
                     {pickups.map((p) => <option key={p} value={p}>{locationLabel(lang, p)}</option>)}
-                  </select>
+                  </datalist>
+                  {step1Errors.pickup && <p id="booking-from-error" role="alert" className="mt-1 text-sm text-red-600">{step1Errors.pickup}</p>}
                 </div>
                 <div>
                   <label htmlFor="booking-to" className={labelCls}><MapPin className="h-4 w-4 text-lux-green" />{isAR ? "الوجهة" : "Destination"}</label>
-                  <select id="booking-to" value={to} onChange={(e) => handleDestination(e.target.value)} className={inputCls}>
-                    {dests.map((d) => <option key={d} value={d}>{locationLabel(lang, d)}</option>)}
-                  </select>
+                  <input
+                    id="booking-to"
+                    ref={destinationRef}
+                    type="text"
+                    list="booking-destination-options"
+                    value={to}
+                    onChange={(e) => handleDestination(e.target.value)}
+                    placeholder={isAR ? "ابحث عن الوجهة" : "Search destination"}
+                    className={inputCls}
+                    autoComplete="off"
+                    aria-invalid={Boolean(step1Errors.destination)}
+                    aria-describedby={step1Errors.destination ? "booking-to-error" : undefined}
+                  />
+                  <datalist id="booking-destination-options">
+                    {(dests.length ? dests : allLocations).map((d) => <option key={d} value={d}>{locationLabel(lang, d)}</option>)}
+                  </datalist>
+                  {step1Errors.destination && <p id="booking-to-error" role="alert" className="mt-1 text-sm text-red-600">{step1Errors.destination}</p>}
                 </div>
                 <div>
                   <label htmlFor="booking-date" className={labelCls}><CalendarDays className="h-4 w-4 text-lux-green" />{isAR ? "تاريخ المغادرة" : "Departure Date"}</label>
@@ -618,7 +657,7 @@ export function BookingPage() {
                 type="button"
                 onClick={handleStep1Next}
                 aria-disabled={!step1Valid || tooSoon}
-                className="flex items-center gap-2 rounded-full bg-lux-green px-8 py-3.5 text-white font-medium shadow-md shadow-lux-green/25 transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 rounded-full bg-lux-green px-8 py-3.5 text-white font-medium transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ fontFamily: hFamily, fontWeight: 700, fontSize: "1.05rem" }}
               >
                 {isAR ? "التالي: بياناتك" : "Next: Your Details"}
@@ -702,7 +741,7 @@ export function BookingPage() {
                 <Field label={isAR ? "رقم واتساب *" : "WhatsApp Number *"} labelCls={labelCls}>
                   <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+20 101 355 4009" className={inputCls} dir="ltr" />
                 </Field>
-                <Field label={isAR ? "البريد الإلكتروني *" : "Email Address *"} labelCls={labelCls}>
+                <Field label={isAR ? "البريد الإلكتروني (اختياري)" : "Email Address (optional)"} labelCls={labelCls}>
                   <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className={inputCls} dir="ltr" />
                 </Field>
                 <Field label={isAR ? "ملاحظات (اختياري)" : "Notes (optional)"} labelCls={labelCls}>
@@ -718,7 +757,7 @@ export function BookingPage() {
                 type="button"
                 onClick={() => setStep(3)}
                 disabled={!step2Valid}
-                className="flex items-center gap-2 rounded-full bg-lux-green px-8 py-3.5 text-white font-medium shadow-md shadow-lux-green/25 transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 rounded-full bg-lux-green px-8 py-3.5 text-white font-medium transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ fontFamily: hFamily, fontWeight: 700 }}
               >
                 {isAR ? "التالي: مراجعة وإرسال" : "Next: Review & Send"} <ArrowRight className="h-5 w-5" />
@@ -742,7 +781,8 @@ export function BookingPage() {
                 <ReviewRow label={isAR ? "المغادرة" : "Departure"} value={`${date} at ${time}`} />
                 {needsReturn && <ReviewRow label={isAR ? "العودة" : "Return"} value={`${returnDate || "-"} at ${returnTime || "-"}`} />}
                 <ReviewRow label={isAR ? "السيارة" : "Vehicle"} value={`${vehicle.name} (${isAR ? vehicle.categoryAr : vehicle.category})`} />
-                <ReviewRow label={isAR ? "ركاب / حقائب" : "Pax / Bags"} value={`${pax} / ${luggage}`} />
+                <ReviewRow label={isAR ? "الركاب" : "Passengers"} value={pax} />
+                <ReviewRow label={isAR ? "الحقائب" : "Bags"} value={luggage} />
                 <ReviewRow label={isAR ? "كرسي أطفال" : "Child seat"} value={childSeat ? (isAR ? "نعم، مجاني" : "Yes, free") : (isAR ? "لا" : "No")} />
                 <img src={vehicle.image} alt={vehicle.name} className="mt-3 h-28 w-full rounded-xl bg-white object-contain p-2" style={{ direction: "ltr" }} />
               </ReviewSection>
@@ -797,7 +837,7 @@ export function BookingPage() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={submitLoading || quoteLoading || !serverQuote}
-                className="inline-flex items-center justify-center gap-3 rounded-full bg-lux-green px-10 py-4 text-white shadow-lg shadow-lux-green/30 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-3 rounded-full bg-lux-green px-10 py-4 text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ fontFamily: hFamily, fontWeight: 800, fontSize: "1.15rem" }}
               >
                 <Send className="h-5 w-5" />

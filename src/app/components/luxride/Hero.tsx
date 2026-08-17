@@ -27,10 +27,10 @@ export function Hero() {
       id="home"
       className="luxride-hero relative isolate overflow-hidden bg-lux-dark bg-cover pt-20 md:pt-20"
       style={{
-        backgroundImage: `linear-gradient(90deg, rgba(15,22,35,0.70) 0%, rgba(15,22,35,0.43) 42%, rgba(15,22,35,0.22) 100%), url(${hurghadaAlMina})`,
+        backgroundImage: `linear-gradient(90deg, rgba(15,22,35,0.82) 0%, rgba(15,22,35,0.54) 42%, rgba(15,22,35,0.31) 100%), url(${hurghadaAlMina})`,
       }}
     >
-      <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(15,22,35,0.26)_0%,rgba(15,22,35,0.14)_44%,rgba(15,22,35,0.34)_100%)]" />
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(15,22,35,0.32)_0%,rgba(15,22,35,0.20)_44%,rgba(15,22,35,0.42)_100%)]" />
       <div className="mx-auto grid min-h-[calc(100svh-80px)] w-full max-w-7xl items-center gap-6 overflow-hidden px-4 py-5 md:px-8 md:py-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,500px)] lg:gap-10 lg:py-0">
         <div className={`${isAR ? "max-w-3xl" : "max-w-2xl"} min-w-0 text-white`}>
           <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/16 px-4 py-1.5 text-xs uppercase tracking-[0.18em] text-white shadow-sm backdrop-blur-md">

@@ -1,24 +1,68 @@
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Clock } from "lucide-react";
 import { Link } from "react-router";
 import { PageShell } from "../components/luxride/PageShell";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import { IMAGES, availablePublicTripTypes, findRoute, resolveTripType, type Route } from "../components/luxride/data";
-import { useDestinationGroups, type CmsDestination } from "../components/luxride/cms";
+import { IMAGES, ROUTES, availablePublicTripTypes, resolveTripType, routeFromApiRoute, type Route } from "../components/luxride/data";
+import { useDestinationGroups, type CmsDestination, type CmsDestinationGroup } from "../components/luxride/cms";
 import { CLIENT_ACCENT_TEXT, CLIENT_STEP_NUMBER_BG } from "../components/luxride/brand";
 import { locationLabel, useLang, useL } from "../components/luxride/i18n";
 
 type DestinationRoute = Route & Pick<CmsDestination, "displayFrom" | "displayTo" | "imagePosition">;
+type DestinationGroupView = { en: string; ar: string; routes: DestinationRoute[] };
 
-function cmsDestinationRoute(destination: CmsDestination): DestinationRoute | null {
-  const baseRoute = findRoute(destination.from, destination.to);
-  if (!baseRoute) return null;
+const HURGHADA_AREA_LOCATIONS = new Set([
+  "Hurghada",
+  "Hurghada City Center",
+  "El Gouna",
+  "Sahl Hasheesh",
+  "Makadi Bay",
+  "Village Road",
+  "Al Ahyaa Subdivisions",
+  "Soma Bay",
+  "Safaga",
+]);
+
+function routeKey(from: string, to: string): string {
+  return `${from}::${to}`;
+}
+
+function cmsDestinationRoute(baseRoute: Route, destination?: CmsDestination): DestinationRoute {
   return {
     ...baseRoute,
-    image: destination.image || baseRoute.image,
-    displayFrom: destination.displayFrom,
-    displayTo: destination.displayTo,
-    imagePosition: destination.imagePosition,
+    image: destination?.image || baseRoute.image,
+    displayFrom: destination?.displayFrom,
+    displayTo: destination?.displayTo,
+    imagePosition: destination?.imagePosition,
   };
+}
+
+function destinationGroupFor(routeItem: Route): "airport" | "area" | "longDistance" {
+  if (routeItem.from === "Hurghada Airport" || routeItem.to === "Hurghada Airport") return "airport";
+  if (HURGHADA_AREA_LOCATIONS.has(routeItem.from) && HURGHADA_AREA_LOCATIONS.has(routeItem.to)) return "area";
+  return "longDistance";
+}
+
+function buildDestinationGroups(routes: readonly Route[], cmsGroups: CmsDestinationGroup[]): DestinationGroupView[] {
+  const overrides = new Map<string, CmsDestination>();
+  cmsGroups.forEach((group) => {
+    group.routes.forEach((destination) => {
+      overrides.set(routeKey(destination.from, destination.to), destination);
+    });
+  });
+
+  const groups: Record<"airport" | "area" | "longDistance", DestinationGroupView> = {
+    airport: { en: "Airport transfers", ar: "توصيلات المطار", routes: [] },
+    area: { en: "Hurghada area transfers", ar: "توصيلات منطقة الغردقة", routes: [] },
+    longDistance: { en: "City and long-distance transfers", ar: "توصيلات المدن والمسافات الطويلة", routes: [] },
+  };
+
+  routes.forEach((routeItem) => {
+    if (!availablePublicTripTypes(routeItem).length) return;
+    groups[destinationGroupFor(routeItem)].routes.push(cmsDestinationRoute(routeItem, overrides.get(routeKey(routeItem.from, routeItem.to))));
+  });
+
+  return [groups.airport, groups.area, groups.longDistance].filter((group) => group.routes.length > 0);
 }
 
 function routeImagePosition(routeItem: DestinationRoute, image: string): string {
@@ -36,7 +80,26 @@ function routeImagePosition(routeItem: DestinationRoute, image: string): string 
 export function DestinationsPage() {
   const lang = useLang();
   const L = useL();
-  const destinationGroups = useDestinationGroups();
+  const cmsDestinationGroups = useDestinationGroups();
+  const [routes, setRoutes] = useState<Route[]>(ROUTES);
+  const destinationGroups = useMemo(() => buildDestinationGroups(routes, cmsDestinationGroups), [routes, cmsDestinationGroups]);
+  const routeCount = destinationGroups.reduce((count, group) => count + group.routes.length, 0);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/wp-json/luxride/v1/routes", { headers: { Accept: "application/json" } })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload) => {
+        if (!active || !Array.isArray(payload?.routes) || payload.routes.length === 0) return;
+        setRoutes(payload.routes.map(routeFromApiRoute));
+      })
+      .catch(() => {
+        // Static previews use the compiled workbook fallback.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <PageShell
@@ -45,15 +108,13 @@ export function DestinationsPage() {
       subtitle={L("Explore private transfers from Hurghada and the Red Sea to popular destinations across Egypt.", "استكشف توصيلات خاصة من الغردقة والبحر الأحمر إلى أشهر الوجهات في مصر.")}
       tone="brand"
     >
-      <section className="bg-lux-beige py-16 md:py-24">
+      <section className="bg-lux-beige py-16 md:py-24" data-destinations-route-count={routeCount}>
         <div className="mx-auto max-w-7xl space-y-14 px-4 md:px-8">
           {destinationGroups.map((group) => (
-            <div key={group.en}>
+            <div key={group.en} data-destination-group={group.en} data-destination-group-count={group.routes.length}>
               <h2 className="mb-6 flex items-center gap-3 text-lux-charcoal" style={{ fontSize: "1.75rem", fontWeight: 800 }}><span className="h-px w-8 bg-lux-green" /> {L(group.en, group.ar)}</h2>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {group.routes.map((destination) => {
-                  const routeItem = cmsDestinationRoute(destination);
-                  if (!routeItem) return null;
+                {group.routes.map((routeItem) => {
                   const publicTrip = availablePublicTripTypes(routeItem)[0];
                   const trip = resolveTripType(routeItem, publicTrip);
                   const price = trip ? routeItem.prices[trip] : undefined;
@@ -63,7 +124,7 @@ export function DestinationsPage() {
                   const fromLabel = routeItem.displayFrom?.[lang] ?? locationLabel(lang, routeItem.from);
                   const toLabel = routeItem.displayTo?.[lang] ?? locationLabel(lang, routeItem.to);
                   return (
-                    <article key={routeItem.id} className="group overflow-hidden rounded-2xl bg-white shadow-[0_10px_40px_rgba(0,0,0,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)]">
+                    <article key={routeItem.id} data-destination-card={routeItem.id} className="group overflow-hidden rounded-2xl bg-white shadow-[0_10px_40px_rgba(0,0,0,0.06)] transition-all hover:-translate-y-1 hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)]">
                       <div className="relative h-44 overflow-hidden bg-white">
                         <ImageWithFallback loading="lazy" src={image} alt={`${fromLabel} — ${toLabel}`} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" style={{ objectPosition: routeImagePosition(routeItem, image) }} />
                         <span className="absolute right-4 top-4 rounded-full bg-lux-green px-3 py-1 text-xs text-white">{L("from", "من")} €{price}</span>

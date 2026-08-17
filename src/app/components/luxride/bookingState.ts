@@ -37,12 +37,12 @@ export const BOOKING_TIME_ZONE = "Africa/Cairo";
 export function readInitialBookingState(params: URLSearchParams): InitialBookingState {
   const pickups = pickupLocations();
   const requestedFrom = params.get("from");
-  const from = requestedFrom && pickups.includes(requestedFrom) ? requestedFrom : pickups[0];
+  const from = requestedFrom && pickups.includes(requestedFrom) ? requestedFrom : "";
 
-  const destinations = destinationsFor(from);
+  const destinations = from ? destinationsFor(from) : [];
   const requestedTo = params.get("to");
-  const to = requestedTo && destinations.includes(requestedTo) ? requestedTo : destinations[0];
-  const route = findRoute(from, to);
+  const to = requestedTo && destinations.includes(requestedTo) ? requestedTo : "";
+  const route = from && to ? findRoute(from, to) : undefined;
 
   const requestedTrip = params.get("trip");
   const publicTrips = availablePublicTripTypes(route);

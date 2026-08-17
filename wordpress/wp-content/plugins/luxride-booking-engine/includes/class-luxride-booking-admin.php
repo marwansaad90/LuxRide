@@ -492,7 +492,8 @@ final class LuxRide_Booking_Admin
                 <tr><th><?php echo esc_html__('Route', 'luxride-booking-engine'); ?></th><td><?php echo esc_html(self::route_label($route)); ?></td></tr>
                 <tr><th><?php echo esc_html__('Trip', 'luxride-booking-engine'); ?></th><td><?php echo esc_html($booking['trip_type'] . ' / ' . $booking['system_classification']); ?></td></tr>
                 <tr><th><?php echo esc_html__('Vehicle', 'luxride-booking-engine'); ?></th><td><?php echo esc_html($booking['vehicle_key']); ?></td></tr>
-                <tr><th><?php echo esc_html__('Passengers / bags', 'luxride-booking-engine'); ?></th><td><?php echo esc_html($booking['passengers'] . ' / ' . $booking['bags']); ?></td></tr>
+                <tr><th><?php echo esc_html__('Passengers', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) $booking['passengers']); ?></td></tr>
+                <tr><th><?php echo esc_html__('Bags', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) $booking['bags']); ?></td></tr>
                 <tr><th><?php echo esc_html__('Outbound', 'luxride-booking-engine'); ?></th><td><?php echo esc_html($booking['outbound_datetime']); ?></td></tr>
                 <tr><th><?php echo esc_html__('Return', 'luxride-booking-engine'); ?></th><td><?php echo esc_html($booking['return_datetime'] ?: '-'); ?></td></tr>
                 <tr><th><?php echo esc_html__('Customer', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) ($customer['full_name'] ?? '')); ?><br><?php echo esc_html((string) ($customer['phone'] ?? '')); ?><br><?php echo esc_html((string) ($customer['email'] ?? '')); ?></td></tr>

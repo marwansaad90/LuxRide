@@ -5,7 +5,7 @@ import { Lang } from "./i18n";
 
 const LABELS: Record<VehicleId, { en: string; ar: string; model: string }> = {
   corolla: { en: "Sedan", ar: "سيدان", model: "Toyota Corolla" },
-  xpander: { en: "Family", ar: "عائلية", model: "Mitsubishi Xpander" },
+  xpander: { en: "Family", ar: "عائلية", model: "Mitsubishi Xpander 2027" },
   hiace: { en: "Mini Van", ar: "ميني فان", model: "Toyota HiAce" },
 };
 

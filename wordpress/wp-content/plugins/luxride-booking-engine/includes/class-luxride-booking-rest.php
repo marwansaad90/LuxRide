@@ -83,7 +83,7 @@ final class LuxRide_Booking_Rest
             }
         }
 
-        return rest_ensure_response([
+        return self::no_cache_response([
             'source' => 'luxride-booking-engine',
             'routes' => array_values($routes),
         ]);
@@ -98,7 +98,7 @@ final class LuxRide_Booking_Rest
             return self::error_response($quote);
         }
 
-        return rest_ensure_response($quote);
+        return self::no_cache_response($quote);
     }
 
     public static function booking(WP_REST_Request $request): WP_REST_Response
@@ -110,7 +110,20 @@ final class LuxRide_Booking_Rest
             return self::error_response($booking);
         }
 
-        return new WP_REST_Response($booking, !empty($booking['idempotent_replay']) ? 200 : 201);
+        return self::no_cache_response($booking, !empty($booking['idempotent_replay']) ? 200 : 201);
+    }
+
+    private static function no_cache_response($payload, int $status = 200): WP_REST_Response
+    {
+        do_action('litespeed_control_set_nocache', 'LuxRide booking engine REST response');
+
+        $response = rest_ensure_response($payload);
+        $response->set_status($status);
+        $response->header('Cache-Control', 'no-cache, must-revalidate, max-age=0');
+        $response->header('Pragma', 'no-cache');
+        $response->header('Expires', 'Wed, 11 Jan 1984 05:00:00 GMT');
+
+        return $response;
     }
 
     private static function error_response(WP_Error $error): WP_REST_Response
@@ -118,7 +131,7 @@ final class LuxRide_Booking_Rest
         $data = $error->get_error_data();
         $status = is_array($data) && isset($data['status']) ? (int) $data['status'] : 400;
 
-        return new WP_REST_Response([
+        return self::no_cache_response([
             'code' => $error->get_error_code(),
             'message' => $error->get_error_message(),
             'details' => is_array($data) ? array_diff_key($data, ['status' => true]) : $data,

@@ -250,8 +250,8 @@ describe("vehicle and booking validation", () => {
       time: "99:99",
     });
     expect(readInitialBookingState(params)).toMatchObject({
-      from: "Hurghada Airport",
-      to: "Cairo",
+      from: "",
+      to: "",
       trip: "oneWay",
       publicTrip: "oneWay",
       vehicleId: "hiace",
@@ -260,6 +260,27 @@ describe("vehicle and booking validation", () => {
       date: "",
       time: "",
       corrected: true,
+    });
+  });
+
+  it("starts blank without route params and preserves valid deep-linked routes", () => {
+    expect(readInitialBookingState(new URLSearchParams())).toMatchObject({
+      from: "",
+      to: "",
+      publicTrip: "oneWay",
+      corrected: false,
+    });
+
+    const deepLink = readInitialBookingState(new URLSearchParams({
+      from: "Hurghada Airport",
+      to: "El Gouna",
+      trip: "roundTrip",
+    }));
+    expect(deepLink).toMatchObject({
+      from: "Hurghada Airport",
+      to: "El Gouna",
+      publicTrip: "roundTrip",
+      corrected: false,
     });
   });
 
@@ -335,12 +356,28 @@ describe("latest desktop client-review integration", () => {
     expect(booking).toContain("يرجى اختيار وقت الانطلاق.");
     expect(booking).toContain("Hotel name or exact destination");
     expect(booking).toContain("e.g. Hotel name or exact address");
+    expect(booking).toContain("Search pickup location");
+    expect(booking).toContain("Search destination");
+    expect(booking).toContain("Email Address (optional)");
+    expect(booking).not.toContain("Email Address *");
+    expect(booking).not.toContain("Pax / Bags");
+    expect(booking).not.toContain("shadow-md shadow-lux-green/25");
+    expect(booking).not.toContain("shadow-lg shadow-lux-green/30");
+    const success = readSource("../../pages/BookingSuccessPage.tsx");
+    expect(success).toContain('tone="brand"');
+    expect(success).toContain("Your request is saved in the LuxRide booking dashboard");
+    expect(success).toContain("booking.bookingReference");
+    expect(success).toContain("Follow up on WhatsApp");
+    expect(success).toContain('L("Passengers", "الركاب")');
+    expect(success).toContain('L("Bags", "الحقائب")');
+    expect(success).not.toContain("Passengers / bags");
     expect(booking).toContain("Driver Accommodation");
     expect(booking).toContain("nightLabel");
     expect(booking).toContain("requestQuote(false)");
     expect(booking + translations).not.toContain("Steigenberger Al Dau, El Gouna");
     expect(booking + translations).not.toContain("شتيجنبرجر الداو، الجونة");
     expect(selector).toContain('xpander: { en: "Family", ar: "عائلية"');
+    expect(selector).toContain('model: "Mitsubishi Xpander 2027"');
     expect(seed).toContain("'luxride_vehicle_type' => 'Family Car'");
     expect(seed).toContain("'luxride_summary_ar' => 'مثالية للعائلات والمجموعات الصغيرة'");
     expect(seed).not.toContain("'luxride_vehicle_type' => 'MPV'");
@@ -408,7 +445,9 @@ describe("latest desktop client-review integration", () => {
     expect(sharm?.images).toEqual([IMAGES.sharm]);
     expect(journeySource).toContain("port-ghalib-transfer.jpg");
     expect(journeySource).not.toContain("Airport Arrival Transfer: Hurghada Airport to El Gouna");
-    expect(destinationsPage).toContain("useDestinationGroups");
+    expect(destinationsPage).toContain("buildDestinationGroups");
+    expect(destinationsPage).toContain("data-destinations-route-count");
+    expect(destinationsPage).toContain("routeFromApiRoute");
     expect(readSource("../../../../wordpress/wp-content/themes/luxride/inc/seed-data.php")).toContain("'Hurghada', 'Hurghada Airport'");
     expect(assetSize("../../../assets/experiences/port-ghalib-transfer.jpg")).toBeLessThan(300_000);
   });

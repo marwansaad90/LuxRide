@@ -20,6 +20,41 @@ require_once LUXRIDE_THEME_DIR . '/inc/settings.php';
 require_once LUXRIDE_THEME_DIR . '/inc/seed-data.php';
 require_once LUXRIDE_THEME_DIR . '/inc/content-bootstrap.php';
 
+function luxride_is_public_html_request(): bool
+{
+    if (is_admin() || wp_doing_ajax() || wp_is_json_request() || is_feed() || is_robots() || is_trackback()) {
+        return false;
+    }
+
+    if (defined('REST_REQUEST') && REST_REQUEST) {
+        return false;
+    }
+
+    return true;
+}
+
+function luxride_send_revalidation_headers(): void
+{
+    if (!luxride_is_public_html_request()) {
+        return;
+    }
+
+    header_remove('Expires');
+    header('Cache-Control: no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Expires: Wed, 11 Jan 1984 05:00:00 GMT');
+}
+
+add_action('template_redirect', function (): void {
+    if (!luxride_is_public_html_request()) {
+        return;
+    }
+
+    do_action('litespeed_control_set_nocache', 'LuxRide HTML contains bundle and CMS bootstrap data');
+}, 0);
+
+add_action('send_headers', 'luxride_send_revalidation_headers', 0);
+
 add_action('after_setup_theme', function (): void {
     add_theme_support('title-tag');
     add_theme_support('post-thumbnails');

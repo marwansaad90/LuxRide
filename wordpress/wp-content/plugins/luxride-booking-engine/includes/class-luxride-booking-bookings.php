@@ -199,7 +199,7 @@ final class LuxRide_Booking_Bookings
         if (!preg_match('/^[0-9+()\\-\\s]{6,32}$/', $phone)) {
             $missing[] = 'phone';
         }
-        if (!is_email($email)) {
+        if ('' !== $email && !is_email($email)) {
             $missing[] = 'email';
         }
 
