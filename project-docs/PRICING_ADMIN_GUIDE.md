@@ -71,6 +71,18 @@ Expected approved result:
 5. Upload the same JSON again and click Apply clean import.
 6. Verify import history records the workbook SHA-256.
 
+## Production Sync And Cache Purge
+
+When production pricing, CMS content, theme assets, or booking plugin files are updated, use a backup-first sync and purge the WordPress/LiteSpeed cache through WordPress hooks. Do not delete arbitrary cache directories manually.
+
+1. Create a fresh server backup of the database, active theme, and `luxride-booking-engine` plugin.
+2. Import the approved workbook JSON and verify route count, vehicle price records, workbook SHA-256, and mismatch count before touching the cache.
+3. Deploy only the current `dist/assets` files referenced by WordPress, plus the changed theme/plugin PHP files.
+4. Keep at most one known-good previous `index-*.js` bundle for rollback and remove stale bundles that are no longer referenced.
+5. Purge with `wp_cache_flush()`, `do_action('litespeed_purge_all', 'LuxRide production sync')`, and targeted `do_action('litespeed_purge_url', home_url('/path/'))` calls for `/`, `/booking/`, `/destinations/`, `/experiences/`, `/fleet/`, and `/cancellation-policy/`.
+6. Verify normal production URLs without query-string cache busters. Confirm the HTML references the current JS/CSS bundle, the favicon link, and no old bundle.
+7. Recheck `/wp-json/luxride/v1/content`, `/wp-json/luxride/v1/routes`, and quote samples after purge.
+
 ## Change Fees
 
 Open LuxRide -> Pricing & Routes -> Fees & Rules.
