@@ -23,7 +23,6 @@ function cmsDestinationRoute(destination: CmsDestination): DestinationRoute | nu
 
 function routeImagePosition(routeItem: DestinationRoute, image: string): string {
   if (routeItem.imagePosition) return routeItem.imagePosition;
-  if (image === IMAGES.hurghada) return "center 72%";
   if (image === IMAGES.airport) return "center 42%";
   if (image === IMAGES.villageRoad) return "center 62%";
   if (image === IMAGES.makadi) return "center 58%";

@@ -6,8 +6,8 @@ import corollaImg from "../../../assets/vehicles/corolla.webp";
 import hiacaImg from "../../../assets/vehicles/hiace.webp";
 import aboutTransferImg from "../../../assets/about/luxride-about-transfer.webp";
 import airportImg from "../../../assets/destinations/hurghada-airport-transfer.webp";
-import cityAirportTransferImg from "../../../assets/destinations/hurghada-city-airport-transfer.webp";
-import hurghadaImg from "../../../assets/destinations/hurghada-client.jpg";
+import cityAirportTransferImg from "../../../assets/destinations/Airport-16to9.jpg";
+import hurghadaImg from "../../../assets/destinations/Hurghada-16to9.jpg";
 import sahlHasheeshImg from "../../../assets/destinations/sahl-hasheesh-client.jpg";
 import villageRoadImg from "../../../assets/destinations/village-road-transfer.webp";
 import cairoPyramidsImg from "../../../assets/destinations/cairo-pyramids-transfer.webp";
@@ -67,8 +67,8 @@ export const ABOUT_IMAGE_SOURCE_FILE = "LuxRide.gif" as const;
 
 export const DESTINATION_IMAGE_SOURCE_FILES = {
   airport: "images.jpg",
-  hurghadaCityAirportTransfer: "Airport.jpg",
-  hurghada: "Hurghada.jpg",
+  hurghadaCityAirportTransfer: "Airport-16to9.jpg",
+  hurghada: "Hurghada-16to9.jpg",
   sahlHasheesh: "Sahl-Hasheesh.jpg",
   makadi: "Makadi-Bay.jpg",
   villageRoad: "Village-Road (1).jpg",

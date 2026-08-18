@@ -12,8 +12,8 @@ const TRIP_LABELS = {
   roundTrip: ["Round Trip", "ذهاب وعودة"],
 } as const;
 
-function routeImagePosition(image: string | undefined): string {
-  return image === IMAGES.hurghada ? "center 72%" : "center";
+function routeImagePosition(): string {
+  return "center";
 }
 
 export function TransferDetailsPage() {
@@ -49,7 +49,7 @@ export function TransferDetailsPage() {
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 md:px-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <div className="overflow-hidden rounded-3xl">
-              <ImageWithFallback src={route.image ?? IMAGES.hurghada} alt={toLabel} className="h-72 w-full object-cover md:h-96" style={{ objectPosition: routeImagePosition(route.image ?? IMAGES.hurghada) }} />
+              <ImageWithFallback src={route.image ?? IMAGES.hurghada} alt={toLabel} className="h-72 w-full object-cover md:h-96" style={{ objectPosition: routeImagePosition() }} />
             </div>
 
             <div className="mt-6 flex flex-wrap gap-4 text-sm text-neutral-600">

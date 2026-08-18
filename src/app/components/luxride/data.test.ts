@@ -298,8 +298,8 @@ describe("vehicle and booking validation", () => {
     expect(findRoute("Hurghada Airport", "Hurghada City Center")?.image).toBe(IMAGES.hurghada);
     expect(findRoute("Hurghada City Center", "Hurghada Airport")?.image).toBe(IMAGES.cityAirportTransfer);
     expect(IMAGES.airport).toContain("hurghada-airport-transfer.webp");
-    expect(IMAGES.cityAirportTransfer).toContain("hurghada-city-airport-transfer.webp");
-    expect(IMAGES.hurghada).toContain("hurghada-client.jpg");
+    expect(IMAGES.cityAirportTransfer).toContain("Airport-16to9.jpg");
+    expect(IMAGES.hurghada).toContain("Hurghada-16to9.jpg");
     expect(IMAGES.sahlHasheesh).toContain("sahl-hasheesh-client.jpg");
     expect(IMAGES.luxor).toContain("luxor-private-transfer.webp");
     expect(IMAGES.aswan).toContain("aswan-private-transfer.webp");
@@ -308,7 +308,8 @@ describe("vehicle and booking validation", () => {
     expect(IMAGES.wadiElGemal).toContain("wadi-el-gemal-transfer.webp");
     expect(IMAGES.sharm).toContain("Sharm_El_Sheikh._Naama_Bay..jpg");
     expect(new Set([IMAGES.luxor, IMAGES.aswan, IMAGES.cairo, IMAGES.alexandria, IMAGES.sharm]).size).toBe(5);
-    expect(assetSize("../../../assets/destinations/hurghada-client.jpg")).toBeLessThan(400_000);
+    expect(assetSize("../../../assets/destinations/Airport-16to9.jpg")).toBeLessThan(200_000);
+    expect(assetSize("../../../assets/destinations/Hurghada-16to9.jpg")).toBeLessThan(500_000);
     expect(assetSize("../../../assets/destinations/sahl-hasheesh-client.jpg")).toBeLessThan(500_000);
   });
 
@@ -535,8 +536,8 @@ describe("latest desktop client-review integration", () => {
     expect(IMAGES.aboutTransfer).toContain("luxride-about-transfer.webp");
     expect(DESTINATION_IMAGE_SOURCE_FILES).toMatchObject({
       airport: "images.jpg",
-      hurghadaCityAirportTransfer: "Airport.jpg",
-      hurghada: "Hurghada.jpg",
+      hurghadaCityAirportTransfer: "Airport-16to9.jpg",
+      hurghada: "Hurghada-16to9.jpg",
       sahlHasheesh: "Sahl-Hasheesh.jpg",
       makadi: "Makadi-Bay.jpg",
       villageRoad: "Village-Road (1).jpg",
@@ -556,7 +557,7 @@ describe("latest desktop client-review integration", () => {
     expect(firstTransfer.displayFrom?.EN).toBe("Hurghada City");
     expect(firstTransfer.image).toBe(IMAGES.cityAirportTransfer);
     expect(firstTransfer.image).not.toBe(IMAGES.airport);
-    expect(IMAGES.hurghada).toContain("hurghada-client.jpg");
+    expect(IMAGES.hurghada).toContain("Hurghada-16to9.jpg");
     expect(IMAGES.sahlHasheesh).toContain("sahl-hasheesh-client.jpg");
     expect(IMAGES.villageRoad).toContain("village-road-transfer.webp");
     expect(IMAGES.wadiElGemal).toContain("wadi-el-gemal-transfer.webp");
@@ -627,7 +628,7 @@ describe("latest desktop client-review integration", () => {
     expect(header).not.toContain("shadow-sm");
     expect(header).not.toContain("shadow-[0_2px_20px");
     expect(sections).toContain('objectPosition: imagePosition');
-    expect(sections).toContain('center 72%');
+    expect(sections).not.toContain('center 72%');
     expect(sections).toContain("lg:min-w-[calc((100%_-_2.5rem)_/_3)]");
     expect(sections).toContain('data-homepage-fleet-feed="horizontal"');
     expect(fleetPage).not.toContain('data-homepage-fleet-feed="horizontal"');

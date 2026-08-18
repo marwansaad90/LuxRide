@@ -17,6 +17,11 @@ The live `luxride-booking-engine` plugin now includes the guarded Pricing & Rout
 
 Production activation, import, and quote validation are complete.
 
+Expanded Arabic client training materials are available in:
+
+- `project-docs/LUXRIDE_ADMIN_TRAINING_AR.md`
+- `project-docs/LUXRIDE_TRAINING_VIDEO_SCRIPT_AR.md`
+
 Live state:
 
 - Fresh backup: `/home/u163097036/backups/luxride-phase2-booking-20260814-211014`

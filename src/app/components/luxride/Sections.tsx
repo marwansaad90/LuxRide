@@ -169,11 +169,6 @@ export function LastMinute() {
 export function PopularTransfers() {
   const lang = useLang();
   const popularTransfers = usePopularTransfers();
-  const imagePositionFor = (transferId: string, image: string) => {
-    if (transferId === "hurghada-city-airport") return "center 88%";
-    if (transferId === "airport-hurghada" || image === IMAGES.hurghada) return "center 52%";
-    return "center";
-  };
 
   return (
     <section id="transfers" className="bg-lux-beige py-20 md:py-28">
@@ -185,7 +180,7 @@ export function PopularTransfers() {
         />
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {popularTransfers.map((tr) => {
-            const imagePosition = tr.imagePosition ?? imagePositionFor(tr.id, tr.image);
+            const imagePosition = tr.imagePosition ?? "center";
             return (
             <div
               key={tr.id}
@@ -442,7 +437,7 @@ export function DestinationSEO() {
             const query = new URLSearchParams({ from: route.from, to: route.to, trip: publicTrip }).toString();
             return (
               <article key={route.id} className="overflow-hidden rounded-2xl border border-lux-charcoal/8 bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)]">
-                <ImageWithFallback src={route.image ?? IMAGES.hurghada} alt={locationLabel(lang, route.to)} className="h-44 w-full object-cover" style={{ objectPosition: route.image === IMAGES.hurghada ? "center 72%" : "center" }} />
+                <ImageWithFallback src={route.image ?? IMAGES.hurghada} alt={locationLabel(lang, route.to)} className="h-44 w-full object-cover" style={{ objectPosition: "center" }} />
                 <div className="p-6">
                   <p className="text-xs font-bold uppercase tracking-wider text-lux-bronze">{locationLabel(lang, route.from)}</p>
                   <h3 className="mt-1 text-lux-charcoal" style={{ fontSize: "1.25rem" }}>{locationLabel(lang, route.to)}</h3>
