@@ -14,10 +14,37 @@ interface BookingSuccessState {
   vehicleCategory: string;
   vehicleImage: string;
   departure: string;
+  departureDate?: string;
+  departureTime?: string;
+  returnDate?: string;
+  returnTime?: string;
   passengers: string;
   luggage: string;
   childSeat?: boolean;
+  hotel?: string;
+  room?: string;
+  flight?: string;
+  customerName?: string;
+  customerPhone?: string;
+  pricing?: {
+    base?: number;
+    airport_fee?: number;
+    permit_fee?: number;
+    accommodation_fee?: number;
+    accommodation?: { nights?: number; price_per_night?: number; total?: number };
+    child_seat?: { requested?: boolean; price?: number };
+    total?: number;
+    currency?: string;
+  };
   total: string;
+}
+
+function euro(value?: number): string {
+  return Number.isFinite(value) ? `€${Number(value).toFixed(Number.isInteger(value) ? 0 : 2)}` : "€0";
+}
+
+function hasPositiveFee(value?: number): value is number {
+  return Number.isFinite(value) && Number(value) > 0;
 }
 
 export function BookingSuccessPage() {
@@ -33,9 +60,45 @@ export function BookingSuccessPage() {
     );
   }
 
-  const whatsappMessage = booking.bookingReference
-    ? `Hi LuxRide, I submitted booking request ${booking.bookingReference}. Please confirm next steps.`
-    : "Hi LuxRide, I submitted a booking request. Please confirm next steps.";
+  const p = booking.pricing;
+  const hotelLine = [booking.hotel, booking.room ? `${L("Room", "الغرفة")} ${booking.room}` : ""].filter(Boolean).join(" · ");
+  const accommodationFee = p?.accommodation_fee ?? p?.accommodation?.total;
+  const priceLines = [
+    `${L("Base Fare", "السعر الأساسي")}: ${euro(p?.base)}`,
+    ...(hasPositiveFee(p?.airport_fee) ? [`${L("Airport Fee", "رسوم المطار")}: ${euro(p?.airport_fee)}`] : []),
+    ...(hasPositiveFee(p?.permit_fee) ? [`${L("Permit Fee", "رسوم التصريح")}: ${euro(p?.permit_fee)}`] : []),
+    ...(hasPositiveFee(accommodationFee) ? [`${L("Driver Accommodation", "مبيت السائق")}: ${euro(accommodationFee)}`] : []),
+    `${L("Final Total", "الإجمالي النهائي")}: ${booking.total}`,
+  ];
+  const returnValue = booking.returnDate && booking.returnTime
+    ? `${booking.returnDate} ${L("at", "الساعة")} ${booking.returnTime}`
+    : L("Not applicable", "غير مطبق");
+  const whatsappLines = [
+    L("Hello LuxRide,", "مرحباً LuxRide،"),
+    "",
+    L("I would like to follow up on my booking request.", "أود متابعة طلب الحجز الخاص بي."),
+    "",
+    `${L("Booking Reference", "رقم الحجز")}: ${booking.bookingReference ?? "-"}`,
+    `${L("Route", "المسار")}: ${booking.route}`,
+    `${L("Trip Type", "نوع التوصيلة")}: ${booking.tripLabel}`,
+    `${L("Departure", "المغادرة")}: ${booking.departureDate && booking.departureTime ? `${booking.departureDate} ${L("at", "الساعة")} ${booking.departureTime}` : booking.departure}`,
+    `${L("Return", "العودة")}: ${returnValue}`,
+    `${L("Vehicle", "السيارة")}: ${booking.vehicleName} / ${booking.vehicleCategory}`,
+    `${L("Passengers", "الركاب")}: ${booking.passengers}`,
+    `${L("Bags", "الحقائب")}: ${booking.luggage}`,
+    `${L("Child Seat", "كرسي أطفال")}: ${booking.childSeat ? L("Yes", "نعم") : L("No", "لا")}`,
+    `${L("Hotel / Exact Location", "الفندق / الموقع بالتحديد")}: ${hotelLine || "-"}`,
+    ...(booking.flight ? [`${L("Flight Number", "رقم الرحلة الجوية")}: ${booking.flight}`] : []),
+    "",
+    `${L("Price", "السعر")}:`,
+    ...priceLines,
+    "",
+    `${L("Name", "الاسم")}: ${booking.customerName ?? "-"}`,
+    `${L("WhatsApp", "واتساب")}: ${booking.customerPhone ?? "-"}`,
+    "",
+    L("Please confirm my booking request.", "يرجى تأكيد طلب الحجز الخاص بي."),
+  ];
+  const whatsappMessage = whatsappLines.join("\n");
   const summary = [
     ...(booking.bookingReference ? [{ k: L("Booking reference", "رقم الحجز"), v: booking.bookingReference }] : []),
     { k: L("Transfer type", "نوع التوصيلة"), v: booking.tripLabel },

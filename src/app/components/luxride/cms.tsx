@@ -181,9 +181,9 @@ function normalizeCmsDestinationRoute(destination: CmsDestination): CmsDestinati
     displayFrom: publicDisplayLabel(destination.from, destination.displayFrom),
     displayTo: publicDisplayLabel(destination.to, destination.displayTo),
     imagePosition: destination.id === "hurghada-city-airport"
-      ? "center 58%"
+      ? "center 88%"
       : destination.id === "airport-hurghada"
-      ? "center 46%"
+      ? "center 52%"
       : destination.imagePosition,
   };
 }

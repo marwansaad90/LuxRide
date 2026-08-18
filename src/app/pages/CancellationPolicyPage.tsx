@@ -52,9 +52,12 @@ export function CancellationPolicyPage() {
             </ul>
           </div>
 
-          <div className="mt-8 rounded-2xl bg-lux-dark p-7 text-center text-lux-beige">
-            <p>{L("Need to change or cancel a booking?", "تحتاج لتعديل أو إلغاء حجز؟")}</p>
-            <Link to="/contact" className="mt-4 inline-block rounded-full bg-lux-green px-7 py-3 text-sm text-white transition-all hover:brightness-110">{L("Contact Us", "اتصل بنا")}</Link>
+          <div className="mt-8 rounded-2xl border border-lux-green/25 bg-white p-7 text-center shadow-sm">
+            <p className="text-lux-charcoal" style={{ fontSize: "1.15rem", fontWeight: 700 }}>{L("Need to change or cancel a booking?", "تحتاج لتعديل أو إلغاء حجز؟")}</p>
+            <p className="mx-auto mt-2 max-w-lg text-sm text-neutral-600" style={{ lineHeight: 1.6 }}>
+              {L("Send your booking details and our team will help with the next step.", "أرسل تفاصيل حجزك وسيساعدك فريقنا في الخطوة التالية.")}
+            </p>
+            <Link to="/contact" className="mt-5 inline-flex rounded-full bg-lux-green px-7 py-3 text-sm font-semibold text-white transition-all hover:brightness-110">{L("Contact Us", "اتصل بنا")}</Link>
           </div>
         </div>
       </section>

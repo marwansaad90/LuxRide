@@ -52,13 +52,13 @@ function luxride_seed_destinations(): array
     $sharm = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Sharm_El_Sheikh._Naama_Bay..jpg/1280px-Sharm_El_Sheikh._Naama_Bay..jpg';
 
     return [
-        luxride_destination_record('airport-hurghada', 101, 'Hurghada Airport', 'Hurghada', 'hurghada-client-Cf7RMFet.jpg', '20 min', 13, array_merge($airport, ['luxride_context' => 'popular,destination'])),
+        luxride_destination_record('airport-hurghada', 101, 'Hurghada Airport', 'Hurghada', 'hurghada-client-Cf7RMFet.jpg', '20 min', 13, array_merge($airport, ['luxride_context' => 'popular,destination', 'luxride_image_position' => 'center 52%'])),
         luxride_destination_record('airport-makadi', 102, 'Hurghada Airport', 'Makadi Bay', 'makadi-bay-transfer-DT-qVWIH.webp', '40 min', 18, array_merge($airport, ['luxride_context' => 'popular,destination'])),
         luxride_destination_record('airport-gouna', 103, 'Hurghada Airport', 'El Gouna', 'el-gouna-transfer-C--OCwK9.webp', '35 min', 21, array_merge($airport, ['luxride_context' => 'popular,destination'])),
         luxride_destination_record('airport-sahl', 104, 'Hurghada Airport', 'Sahl Hasheesh', 'sahl-hasheesh-client-Cg4CCvc7.jpg', '30 min', 15, array_merge($airport, ['luxride_context' => 'popular,destination'])),
         luxride_destination_record('airport-village', 105, 'Hurghada Airport', 'Village Road', 'village-road-transfer-D3tiIelP.webp', 'on request', 14, array_merge($airport, ['luxride_context' => 'popular,destination', 'luxride_image_position' => 'center 62%'])),
         luxride_destination_record('airport-ahyaa', 106, 'Hurghada Airport', 'Al Ahyaa', $al_ahyaa, 'on request', 14, array_merge($airport, ['luxride_context' => 'popular,destination'])),
-        luxride_destination_record('hurghada-city-airport', 201, 'Hurghada', 'Hurghada Airport', 'airport-client-DcCKDvLK.jpg', '20 min', 13, array_merge($area, ['luxride_context' => 'popular,destination', 'luxride_image_position' => 'center 58%', 'luxride_display_from_en' => 'Hurghada City', 'luxride_display_from_ar' => 'مدينة الغردقة'])),
+        luxride_destination_record('hurghada-city-airport', 201, 'Hurghada', 'Hurghada Airport', 'airport-client-DcCKDvLK.jpg', '20 min', 13, array_merge($area, ['luxride_context' => 'popular,destination', 'luxride_image_position' => 'center 88%', 'luxride_display_from_en' => 'Hurghada City', 'luxride_display_from_ar' => 'مدينة الغردقة'])),
         luxride_destination_record('hurghada-village', 202, 'Hurghada', 'Village Road', 'village-road-transfer-D3tiIelP.webp', 'on request', 13, array_merge($area, ['luxride_image_position' => 'center 62%'])),
         luxride_destination_record('hurghada-makadi', 203, 'Hurghada', 'Makadi Bay', 'makadi-bay-transfer-DT-qVWIH.webp', '40 min', 15, $area),
         luxride_destination_record('hurghada-gouna', 204, 'Hurghada', 'El Gouna', 'el-gouna-transfer-C--OCwK9.webp', '35 min', 18, $area),
