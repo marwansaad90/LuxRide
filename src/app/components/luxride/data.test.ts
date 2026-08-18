@@ -32,6 +32,7 @@ import {
 } from "./data";
 import { WORKBOOK_PRICE_LIST_ROWS } from "./workbookRoutes";
 import { normalizeReturnFields, isValidReturn, readInitialBookingState } from "./bookingState";
+import { normalizeLuxRideContent } from "./cms";
 import { newestFeaturedTransfers } from "./journeys";
 import { PUBLIC_SEO_ROUTES } from "./seo";
 import {
@@ -76,7 +77,7 @@ function readActiveAppSources(dir: string): string {
 
 describe("workbook-derived route and pricing model", () => {
   it("keeps the workbook metadata and provisional yellow rows auditable", () => {
-    expect(WORKBOOK_PRICE_LIST_META.sourceFile).toBe("LuxRide-Price-List.xlsx");
+    expect(WORKBOOK_PRICE_LIST_META.sourceFile).toBe("LuxRide-Pricelist.xlsx");
     expect(WORKBOOK_PRICE_LIST_META.vehiclePricing).toBe("exact_workbook_values");
     expect(WORKBOOK_PRICE_LIST_META.sourceRows).toBe(320);
     expect(WORKBOOK_PRICE_LIST_META.confirmedRows).toBe(320);
@@ -89,13 +90,13 @@ describe("workbook-derived route and pricing model", () => {
   it("uses exact workbook prices for each vehicle without ratio derivation", () => {
     const workbookRow = WORKBOOK_PRICE_LIST_ROWS.find((row) => row.pickup === "Hurghada Airport" && row.destination === "El Gouna")!;
     const route = findRoute("Hurghada Airport", "El Gouna")!;
-    expect(route.vehiclePrices.corolla).toMatchObject({ oneWay: 17, overday: 30.6 });
+    expect(route.vehiclePrices.corolla).toMatchObject({ oneWay: 17, overday: 31 });
     expect(route.vehiclePrices.xpander).toMatchObject({ oneWay: 21, overday: 38 });
     expect(route.vehiclePrices.hiace).toMatchObject({ oneWay: 37, overday: 67 });
     expect(workbookOneWayPrice(workbookRow, corolla)).toBe(17);
     expect(workbookOneWayPrice(workbookRow, xpander)).toBe(21);
     expect(workbookOneWayPrice(workbookRow, hiace)).toBe(37);
-    expect(workbookRoundTripPrice(workbookRow, corolla)).toBe(30.6);
+    expect(workbookRoundTripPrice(workbookRow, corolla)).toBe(31);
     expect(workbookRoundTripPrice(workbookRow, xpander)).toBe(38);
     expect(workbookRoundTripPrice(workbookRow, hiace)).toBe(67);
   });
@@ -103,7 +104,7 @@ describe("workbook-derived route and pricing model", () => {
   it("computes clean whole-Euro customer prices including unchanged airport and permit fees", () => {
     expect(price("Hurghada Airport", "El Gouna", "oneWay", xpander)).toMatchObject({ base: 21, airport: AIRPORT_SURCHARGE, total: 23 });
     expect(price("Hurghada City Center", "Hurghada Airport", "oneWay", xpander)).toMatchObject({ base: 13, airport: AIRPORT_SURCHARGE, total: 15 });
-    expect(price("Hurghada Airport", "El Gouna", "roundTrip", corolla)).toMatchObject({ base: 30.6, airport: AIRPORT_SURCHARGE, total: 32.6 });
+    expect(price("Hurghada Airport", "El Gouna", "roundTrip", corolla)).toMatchObject({ base: 31, airport: AIRPORT_SURCHARGE, total: 33 });
     expect(price("Hurghada City Center", "Luxor", "oneWay", xpander)).toMatchObject({ base: 75, permit: 20, total: 95 });
     expect(price("Hurghada City Center", "Luxor", "roundTrip", hiace)).toMatchObject({ base: 236, permit: 30, total: 266 });
   });
@@ -159,6 +160,77 @@ describe("workbook-derived route and pricing model", () => {
       airport: true,
     });
   });
+
+  it("normalizes legacy curated CMS route labels to valid calculator routes", () => {
+    const content = normalizeLuxRideContent({
+      vehicles: SELECTABLE_FLEET,
+      popularTransfers: [{
+        id: "airport-hurghada",
+        from: "Hurghada Airport",
+        to: "Hurghada",
+        image: IMAGES.hurghada,
+        duration: "20 min",
+        fromPrice: 13,
+        airport: true,
+        permit: false,
+        displayFrom: { EN: "", AR: "" },
+        displayOrder: 1,
+        contexts: ["popular"],
+      }, {
+        id: "hurghada-city-airport",
+        from: "Hurghada",
+        to: "Hurghada Airport",
+        image: IMAGES.cityAirportTransfer,
+        duration: "20 min",
+        fromPrice: 13,
+        airport: true,
+        permit: false,
+        displayOrder: 99,
+        contexts: ["popular"],
+      }],
+      destinationGroups: [{
+        en: "Hurghada area transfers",
+        ar: "توصيلات منطقة الغردقة",
+        routes: [{
+          id: "hurghada-ahyaa",
+          from: "Hurghada",
+          to: "Al Ahyaa",
+          image: IMAGES.alAhyaa,
+          duration: "on request",
+          fromPrice: 15,
+          airport: false,
+          permit: false,
+          displayOrder: 1,
+          contexts: ["destination"],
+        }],
+      }],
+      experiences: newestFeaturedTransfers(),
+      faqs: [{
+        id: "home-1",
+        context: "home",
+        q: { EN: "Question", AR: "سؤال" },
+        a: { EN: "Answer", AR: "إجابة" },
+        displayOrder: 1,
+      }],
+    });
+
+    expect(content?.popularTransfers[0]).toMatchObject({
+      id: "hurghada-city-airport",
+      from: "Hurghada City Center",
+      to: "Hurghada Airport",
+      displayFrom: { EN: "Hurghada", AR: "الغردقة" },
+    });
+    expect(findRoute(content!.popularTransfers[0].from, content!.popularTransfers[0].to)).toBeDefined();
+    expect(content?.popularTransfers[1].displayFrom).toBeUndefined();
+    expect(content?.popularTransfers[1].displayTo).toEqual({ EN: "Hurghada", AR: "الغردقة" });
+    expect(content?.destinationGroups[0].routes[0]).toMatchObject({
+      from: "Hurghada City Center",
+      to: "Al Ahyaa Subdivisions",
+      displayFrom: { EN: "Hurghada", AR: "الغردقة" },
+      displayTo: { EN: "Al Ahyaa", AR: "الأحياء" },
+    });
+    expect(findRoute(content!.destinationGroups[0].routes[0].from, content!.destinationGroups[0].routes[0].to)).toBeDefined();
+  });
 });
 
 describe("vehicle and booking validation", () => {
@@ -189,8 +261,8 @@ describe("vehicle and booking validation", () => {
 
   it("uses client-approved customer-facing vehicle card copy without removed terms", () => {
     expect(xpander).toMatchObject({
-      category: "Family Car",
-      categoryAr: "سيارة عائلية",
+      category: "MPV",
+      categoryAr: "MPV",
       tagline: "Ideal for families and small groups",
       taglineAr: "مثالية للعائلات والمجموعات الصغيرة",
     });
@@ -203,7 +275,9 @@ describe("vehicle and booking validation", () => {
       taglineAr: "للمجموعات الأكبر والأمتعة الإضافية",
     });
     const fleetCopy = JSON.stringify(FLEET.map(({ category, categoryAr, tagline, taglineAr }) => ({ category, categoryAr, tagline, taglineAr })));
-    expect(fleetCopy).not.toContain("MPV");
+    expect(fleetCopy).toContain("MPV");
+    expect(fleetCopy).not.toContain("Family");
+    expect(fleetCopy).not.toContain("سيارة عائلية");
     expect(fleetCopy).not.toContain("مكيفة");
     expect(fleetCopy).not.toContain("تنفيذية");
     expect(fleetCopy).not.toContain("رحبة");
@@ -295,13 +369,13 @@ describe("vehicle and booking validation", () => {
   it("keeps the verified Alexandria overnight examples derived from workbook values", () => {
     const oneNight = price("Hurghada Airport", "Alexandria", "roundTrip", corolla);
     expect(oneNight).toMatchObject({
-      base: 385.2,
+      base: 385,
       airport: AIRPORT_SURCHARGE,
       overnight: 42,
-      total: 429.2,
+      total: 429,
     });
-    expect(oneNight!.total + 42).toBe(471.2);
-    expect(oneNight!.total + 84).toBe(513.2);
+    expect(oneNight!.total + 42).toBe(471);
+    expect(oneNight!.total + 84).toBe(513);
   });
 });
 
@@ -376,11 +450,11 @@ describe("latest desktop client-review integration", () => {
     expect(booking).toContain("requestQuote(false)");
     expect(booking + translations).not.toContain("Steigenberger Al Dau, El Gouna");
     expect(booking + translations).not.toContain("شتيجنبرجر الداو، الجونة");
-    expect(selector).toContain('xpander: { en: "Family", ar: "عائلية"');
+    expect(selector).toContain('xpander: { en: "MPV", ar: "MPV"');
     expect(selector).toContain('model: "Mitsubishi Xpander 2027"');
-    expect(seed).toContain("'luxride_vehicle_type' => 'Family Car'");
+    expect(seed).toContain("'luxride_vehicle_type' => 'MPV'");
     expect(seed).toContain("'luxride_summary_ar' => 'مثالية للعائلات والمجموعات الصغيرة'");
-    expect(seed).not.toContain("'luxride_vehicle_type' => 'MPV'");
+    expect(seed).not.toContain("'luxride_vehicle_type' => 'Family Car'");
   });
 
   it("renders Unforgettable Experiences as a newest-first horizontal feed with card galleries and hidden visible tags", () => {
@@ -393,6 +467,8 @@ describe("latest desktop client-review integration", () => {
     expect(featured + page).toContain("data-experience-description=\"scrollable\"");
     expect(featured + page).toContain("Book Similar Transfer");
     expect(featured + page).toContain("Explore All Experiences");
+    expect(featured).not.toContain("bg-gradient-to-l");
+    expect(featured).not.toContain("bg-gradient-to-r");
     expect(page).toContain("Explore more experiences");
     expect(page).not.toContain("Scroll horizontally to see older transfers");
     expect(page).not.toContain("More featured transfers can be added once final images and content are approved");
@@ -445,9 +521,11 @@ describe("latest desktop client-review integration", () => {
     expect(sharm?.images).toEqual([IMAGES.sharm]);
     expect(journeySource).toContain("port-ghalib-transfer.jpg");
     expect(journeySource).not.toContain("Airport Arrival Transfer: Hurghada Airport to El Gouna");
-    expect(destinationsPage).toContain("buildDestinationGroups");
-    expect(destinationsPage).toContain("data-destinations-route-count");
-    expect(destinationsPage).toContain("routeFromApiRoute");
+    expect(destinationsPage).toContain("useDestinationGroups");
+    expect(destinationsPage).toContain("findRoute(destination.from, destination.to)");
+    expect(destinationsPage).not.toContain("routeFromApiRoute");
+    expect(destinationsPage).not.toContain("data-destinations-route-count");
+    expect(destinationsPage).not.toContain("/wp-json/luxride/v1/routes");
     expect(readSource("../../../../wordpress/wp-content/themes/luxride/inc/seed-data.php")).toContain("'Hurghada', 'Hurghada Airport'");
     expect(assetSize("../../../assets/experiences/port-ghalib-transfer.jpg")).toBeLessThan(300_000);
   });
@@ -625,7 +703,7 @@ describe("latest desktop client-review integration", () => {
     expect(activeCode).not.toContain("workbook-derived");
     expect(activeCode).not.toContain("Workbook-derived");
     expect(html).not.toContain("prototype");
-    expect(readSource("../../pages/AboutPage.tsx")).toContain("family car, sedan and minivan matched to the passenger and luggage requirements shown during booking");
+    expect(readSource("../../pages/AboutPage.tsx")).toContain("Sedan, MPV and Mini Van options matched to the passenger and luggage requirements shown during booking");
   });
 
   it("publishes sitemap and robots for public routes only", () => {

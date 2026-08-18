@@ -21,7 +21,7 @@ const ARABIC_LOCATION_LABELS: Record<string, string> = {
   "Marsa Alam": "مرسى علم",
   Hamata: "حماطة",
   "City Tour – Alf Leila": "جولة المدينة – ألف ليلة",
-  "Sharm El Naga": "شرم النجع",
+  "Sharm El Naga": "شرم الناقة",
   "Al Ahyaa": "الأحياء",
   "Al Ahyaa Subdivisions": "تقسيمات الأحياء",
   "Village Road": "طريق القرى",

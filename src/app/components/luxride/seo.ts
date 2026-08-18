@@ -26,7 +26,7 @@ export const PUBLIC_SEO_ROUTES: SeoConfig[] = [
   {
     path: "/fleet",
     title: "LuxRide Fleet | Private Transfer Vehicles in Hurghada",
-    description: "View LuxRide Taxi vehicles for private transfers in Hurghada, including family car, sedan, and minivan options matched to passenger and luggage needs.",
+    description: "View LuxRide Taxi vehicles for private transfers in Hurghada, including Sedan, MPV, and Mini Van options matched to passenger and luggage needs.",
   },
   {
     path: "/destinations",

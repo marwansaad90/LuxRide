@@ -170,8 +170,8 @@ export function PopularTransfers() {
   const lang = useLang();
   const popularTransfers = usePopularTransfers();
   const imagePositionFor = (transferId: string, image: string) => {
-    if (transferId === "hurghada-city-airport") return "center 72%";
-    if (image === IMAGES.hurghada) return "center 72%";
+    if (transferId === "hurghada-city-airport") return "center 58%";
+    if (transferId === "airport-hurghada" || image === IMAGES.hurghada) return "center 46%";
     return "center";
   };
 

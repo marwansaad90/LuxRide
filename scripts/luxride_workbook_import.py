@@ -209,7 +209,7 @@ def parse_workbook(path: Path) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Dry-run LuxRide workbook import")
-    parser.add_argument("--workbook", default="LuxRide-Price-List.xlsx")
+    parser.add_argument("--workbook", default="LuxRide-Pricelist.xlsx")
     parser.add_argument("--json-out", help="Optional path for normalized import payload JSON")
     parser.add_argument("--strict", action="store_true", help="Return non-zero when dry run is not clean")
     args = parser.parse_args()

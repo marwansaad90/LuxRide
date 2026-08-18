@@ -306,7 +306,7 @@ final class LuxRide_Booking_Admin
             <table class="widefat striped">
                 <thead><tr><th><?php echo esc_html__('Vehicle', 'luxride-booking-engine'); ?></th><th><?php echo esc_html__('One Way EUR', 'luxride-booking-engine'); ?></th><th><?php echo esc_html__('Round Trip EUR', 'luxride-booking-engine'); ?></th></tr></thead>
                 <tbody>
-                    <?php foreach (['sedan' => 'Sedan', 'mpv' => 'MPV', 'minivan' => 'Minivan'] as $vehicle_key => $label) : ?>
+                    <?php foreach (['sedan' => 'Sedan', 'mpv' => 'MPV', 'minivan' => 'Mini Van'] as $vehicle_key => $label) : ?>
                         <tr>
                             <td><?php echo esc_html($label); ?></td>
                             <td><input name="prices[<?php echo esc_attr($vehicle_key); ?>][one_way]" type="number" min="0" step="0.01" value="<?php echo esc_attr((string) ($prices[$vehicle_key]['one_way'] ?? 0)); ?>"></td>
@@ -564,7 +564,7 @@ final class LuxRide_Booking_Admin
             'airport_surcharge_eur' => __('Airport surcharge EUR', 'luxride-booking-engine'),
             'permit_fee_sedan_eur' => __('Sedan permit fee EUR', 'luxride-booking-engine'),
             'permit_fee_mpv_eur' => __('MPV permit fee EUR', 'luxride-booking-engine'),
-            'permit_fee_minivan_eur' => __('Minivan permit fee EUR', 'luxride-booking-engine'),
+            'permit_fee_minivan_eur' => __('Mini Van permit fee EUR', 'luxride-booking-engine'),
             'driver_accommodation_eur' => __('Driver accommodation EUR per night', 'luxride-booking-engine'),
         ];
     }

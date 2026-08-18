@@ -115,6 +115,19 @@ add_filter('style_loader_tag', function (string $tag, string $handle, string $hr
     );
 }, 10, 3);
 
+add_action('wp_head', function (): void {
+    $logo = luxride_first_asset('LuxRide-Logo-SVG-1-*.svg');
+    if (!$logo) {
+        return;
+    }
+
+    $icon_url = LUXRIDE_THEME_URI . '/assets/' . $logo;
+    $version = (string) filemtime(LUXRIDE_THEME_DIR . '/assets/' . $logo);
+    printf('<link rel="icon" type="image/svg+xml" href="%s" />' . "\n", esc_url(add_query_arg('v', $version, $icon_url)));
+    printf('<link rel="shortcut icon" type="image/svg+xml" href="%s" />' . "\n", esc_url(add_query_arg('v', $version, $icon_url)));
+    printf('<link rel="apple-touch-icon" href="%s" />' . "\n", esc_url(add_query_arg('v', $version, $icon_url)));
+}, 5);
+
 register_activation_hook(__FILE__, 'luxride_activate_theme');
 
 add_action('after_switch_theme', 'luxride_activate_theme');

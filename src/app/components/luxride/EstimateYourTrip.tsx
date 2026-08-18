@@ -6,23 +6,19 @@ import {
   ROUTES,
   Route,
   VehicleId,
-  availablePublicTripTypes,
   computePrice,
-  destinationsFor,
   destinationsForRoutes,
   findRoute,
   findRouteIn,
   pickupLocationsFor,
   routeFromApiRoute,
-  pickupLocations,
   resolveTripType,
 } from "./data";
 import { useVehicles } from "./cms";
 import { formatEur } from "./bookingState";
-import { locationLabel, useLang } from "./i18n";
+import { useLang } from "./i18n";
 import { VehicleSegmentedSelector } from "./VehicleSegmentedSelector";
-
-const PICKUPS = pickupLocations();
+import { LocationSearchInput } from "./LocationSearchInput";
 
 export function EstimateYourTrip() {
   const lang = useLang();
@@ -30,9 +26,9 @@ export function EstimateYourTrip() {
   const isAR = lang === "AR";
 
   const [publicTrip, setPublicTrip] = useState<PublicTripType>("oneWay");
-  const [from, setFrom] = useState(PICKUPS[0]);
-  const [dests, setDests] = useState(() => destinationsFor(PICKUPS[0]));
-  const [to, setTo] = useState(() => destinationsFor(PICKUPS[0])[0]);
+  const [from, setFrom] = useState("");
+  const [dests, setDests] = useState<string[]>([]);
+  const [to, setTo] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [vehicleId, setVehicleId] = useState<VehicleId>("xpander");
@@ -43,9 +39,9 @@ export function EstimateYourTrip() {
   const vehicles = useVehicles();
 
   const pickups = useMemo(() => pickupLocationsFor(routes), [routes]);
+  const allLocations = useMemo(() => Array.from(new Set(routes.flatMap((item) => [item.from, item.to]))), [routes]);
   const vehicle = vehicles.find((v) => v.id === vehicleId) ?? vehicles[0];
   const route = findRouteIn(routes, from, to) ?? findRoute(from, to);
-  const supportedTrips = useMemo(() => availablePublicTripTypes(route), [route]);
   const trip = useMemo(() => resolveTripType(route, publicTrip), [route, publicTrip]);
   const breakdown = useMemo(
     () => (route && vehicle && trip ? computePrice(route, trip, vehicle) : null),
@@ -73,20 +69,10 @@ export function EstimateYourTrip() {
   }, []);
 
   useEffect(() => {
-    if (!pickups.length || pickups.includes(from)) return;
-    const nextFrom = pickups[0];
-    const nextDests = destinationsForRoutes(routes, nextFrom);
-    setFrom(nextFrom);
+    const nextDests = from && pickups.includes(from) ? destinationsForRoutes(routes, from) : [];
     setDests(nextDests);
-    setTo(nextDests[0] ?? "");
-  }, [from, pickups, routes]);
-
-  useEffect(() => {
-    if (!route || supportedTrips.includes(publicTrip)) return;
-    const nextTrip = supportedTrips[0] ?? "oneWay";
-    setPublicTrip(nextTrip);
-    setNotice(isAR ? "تم تحديث اختيار التوصيلة حسب المسار المحدد." : "Transfer choice was updated for the selected route.");
-  }, [isAR, publicTrip, route, supportedTrips]);
+    if (to && nextDests.length && !nextDests.includes(to)) setTo("");
+  }, [from, pickups, routes, to]);
 
   function clampForVehicle(id: VehicleId) {
     const nextVehicle = vehicles.find((v) => v.id === id);
@@ -109,7 +95,7 @@ export function EstimateYourTrip() {
     setFrom(value);
     const nextDests = destinationsForRoutes(routes, value);
     setDests(nextDests);
-    setTo(nextDests.includes(to) ? to : nextDests[0]);
+    if (to && !nextDests.includes(to)) setTo("");
   }
 
   function handleContinue() {
@@ -143,10 +129,7 @@ export function EstimateYourTrip() {
       className="scroll-mt-24 rounded-2xl border border-white/70 bg-white/95 p-3 shadow-[0_22px_70px_rgba(15,22,35,0.22)] backdrop-blur-md sm:p-4"
     >
       <div className="mb-3">
-        <p className="text-xs uppercase tracking-[0.16em] text-lux-green">
-          {isAR ? "حاسبة السعر" : "Fare Calculator"}
-        </p>
-        <h2 className="mt-0.5 text-lux-charcoal" style={{ fontSize: "1.32rem", fontWeight: 800, lineHeight: 1.1 }}>
+        <h2 className="text-lux-charcoal" style={{ fontSize: "1.32rem", fontWeight: 800, lineHeight: 1.1 }}>
           {isAR ? "احسب تكلفة توصيلتك" : "Calculate Your Transfer"}
         </h2>
       </div>
@@ -156,29 +139,21 @@ export function EstimateYourTrip() {
           <span className={labelCls}>{isAR ? "نوع التوصيلة" : "Transfer type"}</span>
           <div role="radiogroup" aria-label={isAR ? "نوع التوصيلة" : "Transfer type"} className="grid grid-cols-2 gap-1 rounded-xl bg-gray-100 p-1">
             {tripTypes.map((tt) => {
-              const supported = supportedTrips.includes(tt.id);
               const selected = publicTrip === tt.id;
-              const disabledReason = isAR ? "غير متاح لهذا المسار" : "Not available for this route";
               return (
                 <button
                   key={tt.id}
                   type="button"
                   role="radio"
                   aria-checked={selected}
-                  aria-disabled={!supported}
-                  title={supported ? tt.desc : disabledReason}
-                  disabled={!supported}
+                  title={tt.desc}
                   onClick={() => setPublicTrip(tt.id)}
                   className={`min-h-9 rounded-lg px-1.5 py-1.5 text-center text-xs font-semibold transition-all ${
-                    !supported
-                      ? "cursor-not-allowed text-gray-400"
-                      : selected
-                      ? "bg-lux-green text-white shadow-sm"
-                      : "text-gray-700 hover:bg-white hover:text-lux-green"
+                    selected ? "bg-lux-green text-white" : "text-gray-700 hover:bg-white hover:text-lux-green"
                   }`}
                 >
                   <span className="block leading-tight">{tt.label}</span>
-                  <span className="sr-only">{supported ? tt.desc : disabledReason}</span>
+                  <span className="sr-only">{tt.desc}</span>
                 </button>
               );
             })}
@@ -187,26 +162,28 @@ export function EstimateYourTrip() {
 
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           <div>
-            <label htmlFor="estimate-from" className={labelCls}>
-              <MapPin className="h-3.5 w-3.5 text-lux-green" />
-              {isAR ? "موقع الانطلاق" : "Pickup"}
-            </label>
-            <select id="estimate-from" value={from} onChange={(event) => handlePickup(event.target.value)} className={inputCls}>
-              {pickups.map((pickup) => (
-                <option key={pickup} value={pickup}>{locationLabel(lang, pickup)}</option>
-              ))}
-            </select>
+            <LocationSearchInput
+              id="estimate-from"
+              lang={lang}
+              label={<><MapPin className="h-3.5 w-3.5 text-lux-green" />{isAR ? "موقع الانطلاق" : "Pickup"}</>}
+              value={from}
+              options={pickups}
+              placeholder={isAR ? "ابحث عن موقع الانطلاق" : "Search pickup location"}
+              className={inputCls}
+              onChange={handlePickup}
+            />
           </div>
           <div>
-            <label htmlFor="estimate-to" className={labelCls}>
-              <MapPin className="h-3.5 w-3.5 text-lux-green" />
-              {isAR ? "الوجهة" : "Destination"}
-            </label>
-            <select id="estimate-to" value={to} onChange={(event) => setTo(event.target.value)} className={inputCls}>
-              {dests.map((destination) => (
-                <option key={destination} value={destination}>{locationLabel(lang, destination)}</option>
-              ))}
-            </select>
+            <LocationSearchInput
+              id="estimate-to"
+              lang={lang}
+              label={<><MapPin className="h-3.5 w-3.5 text-lux-green" />{isAR ? "الوجهة" : "Destination"}</>}
+              value={to}
+              options={from ? dests : allLocations}
+              placeholder={isAR ? "ابحث عن الوجهة" : "Search destination"}
+              className={inputCls}
+              onChange={setTo}
+            />
           </div>
           <div>
             <label htmlFor="estimate-date" className={labelCls}>
@@ -282,15 +259,15 @@ export function EstimateYourTrip() {
               <button
                 type="button"
                 onClick={handleContinue}
-                disabled={!date || !time}
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-lux-green px-4 py-2 text-sm font-bold text-white shadow-md shadow-lux-green/25 transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={!breakdown || !date || !time}
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-lux-green px-4 py-2 text-sm font-bold text-white shadow-none transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isAR ? "المتابعة لتفاصيل التوصيلة" : "Continue to Transfer Details"}
                 <ArrowRight className="h-4 w-4 rtl:rotate-180" />
               </button>
             </div>
           ) : (
-            <p className="text-sm text-gray-500">{isAR ? "هذا النوع غير متاح لهذا المسار." : "This trip type is not available for the selected route."}</p>
+            <p className="text-sm text-gray-500">{isAR ? "اختر موقع الانطلاق والوجهة لعرض السعر الثابت." : "Select pickup and destination to see the fixed price."}</p>
           )}
         </div>
       </div>

@@ -69,7 +69,7 @@ export function TransferDetailsPage() {
               <div className="mt-6 flex items-start gap-2 rounded-xl border p-4 text-sm text-lux-charcoal" style={{ backgroundColor: CLIENT_STEP_NUMBER_BG, borderColor: CLIENT_STEP_NUMBER_BG }}>
                 <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" style={{ color: CLIENT_ACCENT_TEXT }} />
                 <span>{L(
-                  "This transfer requires an official tourism and security travel permit. A permit fee applies once per booking: €20 for Sedan/MPV, €30 for Minivan.",
+                  "This transfer requires an official tourism and security travel permit. A permit fee applies once per booking: €20 for Sedan/MPV, €30 for Mini Van.",
                   "تتطلب هذه التوصيلة تصريح سفر سياحي وأمني رسمي. تُطبّق رسوم تصريح مرة واحدة لكل حجز: €20 للسيدان/MPV و€30 للميني فان.",
                 )}</span>
               </div>

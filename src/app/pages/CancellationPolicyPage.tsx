@@ -14,6 +14,7 @@ export function CancellationPolicyPage() {
         "A clear, standard policy so you can book with confidence.",
         "سياسة قياسية وواضحة حتى تحجز بثقة.",
       )}
+      tone="brand"
     >
       <section className="bg-lux-beige py-16 md:py-24">
         <div className="mx-auto max-w-3xl px-4 md:px-8">

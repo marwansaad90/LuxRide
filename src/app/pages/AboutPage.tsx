@@ -17,7 +17,7 @@ export function AboutPage() {
   const L = useL();
   const cards = [
     { icon: Sparkles, title: L("Why Choose LuxRide", "لماذا تختار LuxRide"), text: L("Every transfer is planned as a private, door-to-door service with clear pickup details, comfortable transport and direct support when you need it.", "تُخطط كل توصيلة كخدمة خاصة من الباب إلى الباب مع تفاصيل استلام واضحة وتنقل مريح ودعم مباشر عند الحاجة.") },
-    { icon: CarFront, title: L("Fleet and Comfort", "الأسطول والراحة"), text: L("The modern fleet includes a family car, sedan and minivan matched to the passenger and luggage requirements shown during booking.", "يشمل الأسطول الحديث سيارة عائلية وسيدان وميني فان، وتطابق خياراته متطلبات الركاب والأمتعة المعروضة أثناء الحجز.") },
+    { icon: CarFront, title: L("Fleet and Comfort", "الأسطول والراحة"), text: L("The modern fleet includes Sedan, MPV and Mini Van options matched to the passenger and luggage requirements shown during booking.", "يشمل الأسطول خيارات سيدان وMPV وميني فان، وتطابق خياراته متطلبات الركاب والأمتعة المعروضة أثناء الحجز.") },
     { icon: ShieldCheck, title: L("Safety and Compliance", "السلامة والامتثال"), text: L("LuxRide arranges transfers with licensed vehicles and drivers in line with applicable Egyptian tourism transport and travel-permit requirements.", "ترتّب LuxRide التوصيلات بسيارات وسائقين مرخصين وفق متطلبات النقل السياحي وتصاريح السفر المعمول بها في مصر.") },
     { icon: BadgeCheck, title: L("Professional Drivers", "سائقون محترفون"), text: L("Courteous, experienced English-speaking drivers focus on safe driving, punctual pickup and a calm guest experience.", "يركز السائقون المحترفون ذوو الخبرة والمتحدثون بالإنجليزية على القيادة الآمنة والاستلام في الموعد وتجربة مريحة للضيف.") },
     { icon: Wallet, title: L("Transparent Pricing", "أسعار شفافة"), text: L("Approved fares are fixed in EUR and tax inclusive. Applicable airport or permit fees are listed separately before submission, with no hidden charges.", "الأسعار المعتمدة ثابتة باليورو وشاملة الضريبة. تُدرج رسوم المطار أو التصريح المطبقة بشكل منفصل قبل الإرسال، من دون رسوم خفية.") },
@@ -35,7 +35,7 @@ export function AboutPage() {
       <section className="bg-lux-beige py-16 md:py-24" aria-labelledby="about-introduction">
         <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-4 md:px-8 lg:grid-cols-2">
           <div className="aspect-[4/3] overflow-hidden rounded-3xl border border-white/70 bg-white p-2 shadow-[0_20px_60px_rgba(15,22,35,0.10)]">
-            <ImageWithFallback loading="lazy" src={IMAGES.aboutTransfer} alt={L("LuxRide private transfer pickup at a Hurghada hotel", "استلام توصيلة LuxRide خاصة عند فندق في الغردقة")} className="h-full w-full rounded-2xl object-cover object-center" />
+            <ImageWithFallback loading="eager" fetchPriority="high" width={1023} height={768} src={IMAGES.aboutTransfer} alt={L("LuxRide private transfer pickup at a Hurghada hotel", "استلام توصيلة LuxRide خاصة عند فندق في الغردقة")} className="h-full w-full rounded-2xl object-cover object-center" />
           </div>
           <div>
             <h2 id="about-introduction" className="text-lux-charcoal" style={{ fontSize: "clamp(1.75rem,3vw,2.5rem)", fontWeight: 800, lineHeight: 1.12 }}>{L("Premium private transportation", "نقل خاص متميز")}</h2>

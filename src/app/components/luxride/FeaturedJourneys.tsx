@@ -97,7 +97,6 @@ export function FeaturedJourneys() {
           subtitle={lang === "AR" ? "نماذج من تجارب توصيلة حقيقية تساعدك على اختيار الخدمة المناسبة بثقة." : "Selected real transfer experiences to help you choose the right private service with confidence."}
         />
         <div className="relative">
-          <div className={`pointer-events-none absolute inset-y-0 z-10 hidden w-16 from-white to-transparent md:block ${lang === "AR" ? "left-0 bg-gradient-to-r" : "right-0 bg-gradient-to-l"}`} />
           <div dir={lang === "AR" ? "rtl" : "ltr"} className="flex snap-x snap-mandatory gap-6 overflow-x-auto pb-4 [scrollbar-width:thin]" data-experiences-feed="horizontal">
             {transfers.map((journey) => (
               <div key={journey.id} className="snap-start">

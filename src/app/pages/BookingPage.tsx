@@ -19,7 +19,6 @@ import {
   ROUTES,
   Route,
   VehicleId,
-  availablePublicTripTypes,
   computePrice,
   destinationsFor,
   destinationsForRoutes,
@@ -33,8 +32,9 @@ import { addDays, formatEur, isValidReturn, isWithinLeadTime, normalizeReturnFie
 import { settingsWhatsappLink, useSiteSettings, useVehicles } from "../components/luxride/cms";
 import { locationLabel, useLang } from "../components/luxride/i18n";
 import { PageShell } from "../components/luxride/PageShell";
-import { VehicleSegmentedSelector } from "../components/luxride/VehicleSegmentedSelector";
+import { vehicleSegmentLabel, VehicleSegmentedSelector } from "../components/luxride/VehicleSegmentedSelector";
 import { WhatsAppIcon } from "../components/luxride/WhatsAppIcon";
+import { LocationSearchInput } from "../components/luxride/LocationSearchInput";
 
 type Step = 1 | 2 | 3;
 
@@ -90,7 +90,7 @@ export function BookingPage() {
   const [vehicleId, setVehicleId] = useState<VehicleId>(initial.vehicleId);
   const [pax, setPax] = useState(initial.pax);
   const [luggage, setLuggage] = useState(initial.luggage);
-  const [capacityNotice, setCapacityNotice] = useState(initial.corrected);
+  const [capacityNotice, setCapacityNotice] = useState(false);
 
   // ── Step 2 state ────────────────────────────────────────────────────────────
   const [hotel, setHotel] = useState("");
@@ -101,7 +101,6 @@ export function BookingPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
-  const [tripNotice, setTripNotice] = useState("");
   const [childSeat, setChildSeat] = useState(false);
   const [serverQuote, setServerQuote] = useState<ServerQuote | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -111,8 +110,6 @@ export function BookingPage() {
   const [priceChangedNotice, setPriceChangedNotice] = useState("");
   const [idempotencyKey] = useState(makeIdempotencyKey);
   const [step1Errors, setStep1Errors] = useState<{ pickup?: string; destination?: string; date?: string; time?: string; leadTime?: string }>({});
-  const pickupRef = useRef<HTMLInputElement>(null);
-  const destinationRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
   const timeRef = useRef<HTMLInputElement>(null);
 
@@ -129,7 +126,6 @@ export function BookingPage() {
   const isAirportArrival = from === "Hurghada Airport";
   const needsPermit = !!route?.permit;
   const needsReturn = trip === "overday" || trip === "overnight";
-  const supportedTrips = useMemo(() => availablePublicTripTypes(route), [route]);
   const todayLocal = useMemo(() => todayInBookingTimeZone(), []);
 
   const tooSoon = useMemo(() => {
@@ -258,13 +254,6 @@ export function BookingPage() {
   }
 
   useEffect(() => {
-    if (route && !supportedTrips.includes(publicTrip)) {
-      setPublicTrip(supportedTrips[0] ?? "oneWay");
-      setTripNotice(isAR ? "تم تحديث اختيار التوصيلة حسب المسار المحدد." : "Transfer choice was updated for the selected route.");
-    }
-  }, [isAR, publicTrip, route, supportedTrips]);
-
-  useEffect(() => {
     const normalized = normalizeReturnFields(trip ?? "oneWay", date, returnDate, returnTime);
     if (normalized.returnDate !== returnDate) setReturnDate(normalized.returnDate);
     if (normalized.returnTime !== returnTime) setReturnTime(normalized.returnTime);
@@ -292,16 +281,7 @@ export function BookingPage() {
         : "Standard booking requires at least 3 hours before departure in Cairo time.";
     }
     setStep1Errors(nextErrors);
-    if (nextErrors.pickup) {
-      pickupRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      pickupRef.current?.focus();
-      return;
-    }
-    if (nextErrors.destination) {
-      destinationRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-      destinationRef.current?.focus();
-      return;
-    }
+    if (nextErrors.pickup || nextErrors.destination) return;
     if (nextErrors.date) {
       dateRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       dateRef.current?.focus();
@@ -378,7 +358,7 @@ export function BookingPage() {
           tripLabel,
           route: `${locationLabel(lang, from)} → ${locationLabel(lang, to)}`,
           vehicleName: vehicle.name,
-          vehicleCategory: isAR ? vehicle.categoryAr : vehicle.category,
+          vehicleCategory: vehicleSegmentLabel(vehicle, lang),
           vehicleImage: vehicle.image,
           departure: `${date} · ${time}`,
           passengers: pax,
@@ -473,71 +453,48 @@ export function BookingPage() {
                       type="button"
                       key={tt.id}
                       onClick={() => setPublicTrip(tt.id)}
-                      disabled={!supportedTrips.includes(tt.id)}
-                      aria-describedby={!supportedTrips.includes(tt.id) ? `booking-trip-${tt.id}-unsupported` : undefined}
-                      title={!supportedTrips.includes(tt.id) ? (isAR ? "غير متاح لهذا المسار" : "Not available for this route") : tt.desc}
+                      title={tt.desc}
                       className={`rounded-xl border-2 p-3 text-center transition-all ${
-                        !supportedTrips.includes(tt.id) ? "cursor-not-allowed border-gray-100 bg-gray-50 text-gray-400"
-                        : publicTrip === tt.id ? "border-lux-green bg-lux-green/5 text-lux-green" : "border-gray-200 text-gray-600 hover:border-lux-green/40"
+                        publicTrip === tt.id ? "border-lux-green bg-lux-green/5 text-lux-green" : "border-gray-200 text-gray-600 hover:border-lux-green/40"
                       }`}
                     >
                       <div className="font-semibold text-sm" style={{ fontFamily: hFamily }}>{tt.label}</div>
                       <div className="text-xs mt-0.5 opacity-70">{tt.desc}</div>
-                      {!supportedTrips.includes(tt.id) && (
-                        <span id={`booking-trip-${tt.id}-unsupported`} className="sr-only">
-                          {isAR ? "غير متاح لهذا المسار" : "Not available for this route"}
-                        </span>
-                      )}
                     </button>
                   ))}
                 </div>
-                {tripNotice && (
-                  <p role="status" aria-live="polite" className="mt-3 rounded-lg border border-lux-orange/30 bg-orange-50 px-3 py-2 text-sm text-gray-700">
-                    {tripNotice}
-                  </p>
-                )}
               </div>
 
               {/* Route */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="booking-from" className={labelCls}><MapPin className="h-4 w-4 text-lux-green" />{isAR ? "موقع الانطلاق" : "Pickup"}</label>
-                  <input
+                  <LocationSearchInput
                     id="booking-from"
-                    ref={pickupRef}
-                    type="text"
-                    list="booking-pickup-options"
+                    lang={lang}
+                    label={<><MapPin className="h-4 w-4 text-lux-green" />{isAR ? "موقع الانطلاق" : "Pickup"}</>}
                     value={from}
-                    onChange={(e) => handlePickup(e.target.value)}
+                    options={pickups}
                     placeholder={isAR ? "ابحث عن موقع الانطلاق" : "Search pickup location"}
                     className={inputCls}
-                    autoComplete="off"
-                    aria-invalid={Boolean(step1Errors.pickup)}
-                    aria-describedby={step1Errors.pickup ? "booking-from-error" : undefined}
+                    onChange={handlePickup}
+                    invalid={Boolean(step1Errors.pickup)}
+                    describedBy={step1Errors.pickup ? "booking-from-error" : undefined}
                   />
-                  <datalist id="booking-pickup-options">
-                    {pickups.map((p) => <option key={p} value={p}>{locationLabel(lang, p)}</option>)}
-                  </datalist>
                   {step1Errors.pickup && <p id="booking-from-error" role="alert" className="mt-1 text-sm text-red-600">{step1Errors.pickup}</p>}
                 </div>
                 <div>
-                  <label htmlFor="booking-to" className={labelCls}><MapPin className="h-4 w-4 text-lux-green" />{isAR ? "الوجهة" : "Destination"}</label>
-                  <input
+                  <LocationSearchInput
                     id="booking-to"
-                    ref={destinationRef}
-                    type="text"
-                    list="booking-destination-options"
+                    lang={lang}
+                    label={<><MapPin className="h-4 w-4 text-lux-green" />{isAR ? "الوجهة" : "Destination"}</>}
                     value={to}
-                    onChange={(e) => handleDestination(e.target.value)}
+                    options={from ? dests : allLocations}
                     placeholder={isAR ? "ابحث عن الوجهة" : "Search destination"}
                     className={inputCls}
-                    autoComplete="off"
-                    aria-invalid={Boolean(step1Errors.destination)}
-                    aria-describedby={step1Errors.destination ? "booking-to-error" : undefined}
+                    onChange={handleDestination}
+                    invalid={Boolean(step1Errors.destination)}
+                    describedBy={step1Errors.destination ? "booking-to-error" : undefined}
                   />
-                  <datalist id="booking-destination-options">
-                    {(dests.length ? dests : allLocations).map((d) => <option key={d} value={d}>{locationLabel(lang, d)}</option>)}
-                  </datalist>
                   {step1Errors.destination && <p id="booking-to-error" role="alert" className="mt-1 text-sm text-red-600">{step1Errors.destination}</p>}
                 </div>
                 <div>
@@ -780,7 +737,7 @@ export function BookingPage() {
                 <ReviewRow label={isAR ? "مسار" : "Route"} value={`${locationLabel(lang, from)} → ${locationLabel(lang, to)}`} />
                 <ReviewRow label={isAR ? "المغادرة" : "Departure"} value={`${date} at ${time}`} />
                 {needsReturn && <ReviewRow label={isAR ? "العودة" : "Return"} value={`${returnDate || "-"} at ${returnTime || "-"}`} />}
-                <ReviewRow label={isAR ? "السيارة" : "Vehicle"} value={`${vehicle.name} (${isAR ? vehicle.categoryAr : vehicle.category})`} />
+                <ReviewRow label={isAR ? "السيارة" : "Vehicle"} value={`${vehicle.name} (${vehicleSegmentLabel(vehicle, lang)})`} />
                 <ReviewRow label={isAR ? "الركاب" : "Passengers"} value={pax} />
                 <ReviewRow label={isAR ? "الحقائب" : "Bags"} value={luggage} />
                 <ReviewRow label={isAR ? "كرسي أطفال" : "Child seat"} value={childSeat ? (isAR ? "نعم، مجاني" : "Yes, free") : (isAR ? "لا" : "No")} />

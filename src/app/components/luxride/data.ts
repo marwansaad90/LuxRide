@@ -119,8 +119,8 @@ export type VehicleId = "xpander" | "corolla" | "hiace";
 export interface Vehicle {
   id: VehicleId;
   name: string;
-  category: "Sedan" | "Family Car" | "Minivan";
-  categoryAr: "سيدان" | "سيارة عائلية" | "ميني فان";
+  category: "Sedan" | "MPV" | "Mini Van";
+  categoryAr: "سيدان" | "MPV" | "ميني فان";
   image: string;
   pax: number;
   luggage: number;
@@ -137,8 +137,8 @@ export const FLEET: Vehicle[] = [
   {
     id: "xpander",
     name: "Mitsubishi Xpander 2027",
-    category: "Family Car",
-    categoryAr: "سيارة عائلية",
+    category: "MPV",
+    categoryAr: "MPV",
     image: VEHICLE_IMAGES.xpander,
     pax: 4,
     luggage: 4,
@@ -169,7 +169,7 @@ export const FLEET: Vehicle[] = [
   {
     id: "hiace",
     name: "Toyota HiAce",
-    category: "Minivan",
+    category: "Mini Van",
     categoryAr: "ميني فان",
     image: VEHICLE_IMAGES.hiace,
     pax: 8,

@@ -70,6 +70,13 @@ const DEFAULT_SETTINGS: LuxRideSettings = {
   tripadvisorUrl: TRIPADVISOR_URL,
 };
 
+const PUBLIC_ROUTE_ALIASES: Record<string, { routeKey: string; label: { EN: string; AR: string } }> = {
+  Hurghada: { routeKey: "Hurghada City Center", label: { EN: "Hurghada", AR: "الغردقة" } },
+  "Al Ahyaa": { routeKey: "Al Ahyaa Subdivisions", label: { EN: "Al Ahyaa", AR: "الأحياء" } },
+};
+
+const FIRST_HOME_TRANSFER_ID = "hurghada-city-airport";
+
 const fallbackFaqs: CmsFaqItem[] = [
   ...FAQS.EN.map((item, index) => ({
     id: `home-${index + 1}`,
@@ -141,18 +148,78 @@ function normalizeSettings(settings?: Partial<LuxRideSettings>): LuxRideSettings
   return { ...DEFAULT_SETTINGS, ...(settings ?? {}) };
 }
 
+function hasText(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function publicRouteKey(value: string): string {
+  return PUBLIC_ROUTE_ALIASES[value]?.routeKey ?? value;
+}
+
+function compactDisplayLabel(existing: CmsDestination["displayFrom"]): CmsDestination["displayFrom"] | undefined {
+  const displayLabel: NonNullable<CmsDestination["displayFrom"]> = {};
+  if (hasText(existing?.EN)) displayLabel.EN = existing.EN;
+  if (hasText(existing?.AR)) displayLabel.AR = existing.AR;
+  return Object.keys(displayLabel).length ? displayLabel : undefined;
+}
+
+function publicDisplayLabel(value: string, existing: CmsDestination["displayFrom"]): CmsDestination["displayFrom"] | undefined {
+  const alias = PUBLIC_ROUTE_ALIASES[value];
+  if (!alias) return compactDisplayLabel(existing);
+
+  return {
+    EN: hasText(existing?.EN) ? existing.EN : alias.label.EN,
+    AR: hasText(existing?.AR) ? existing.AR : alias.label.AR,
+  };
+}
+
+function normalizeCmsDestinationRoute(destination: CmsDestination): CmsDestination {
+  return {
+    ...destination,
+    from: publicRouteKey(destination.from),
+    to: publicRouteKey(destination.to),
+    displayFrom: publicDisplayLabel(destination.from, destination.displayFrom),
+    displayTo: publicDisplayLabel(destination.to, destination.displayTo),
+    imagePosition: destination.id === "hurghada-city-airport"
+      ? "center 58%"
+      : destination.id === "airport-hurghada"
+      ? "center 46%"
+      : destination.imagePosition,
+  };
+}
+
+function normalizeVehicle(vehicle: Vehicle): Vehicle {
+  if (vehicle.id === "xpander") return { ...vehicle, category: "MPV", categoryAr: "MPV" };
+  if (vehicle.id === "hiace") return { ...vehicle, category: "Mini Van", categoryAr: "ميني فان" };
+  return vehicle;
+}
+
+function orderPopularTransfers(transfers: CmsDestination[]): CmsDestination[] {
+  return [...transfers].sort((a, b) => {
+    if (a.id === FIRST_HOME_TRANSFER_ID) return -1;
+    if (b.id === FIRST_HOME_TRANSFER_ID) return 1;
+    return 0;
+  });
+}
+
 export function normalizeLuxRideContent(raw: Partial<LuxRideContent> | undefined): LuxRideContent | null {
   if (!raw) return null;
   const content = decodeContentStrings(raw);
 
-  const vehicles = ordered(content.vehicles).filter((vehicle): vehicle is Vehicle => Boolean(vehicle?.id));
-  const popularTransfers = ordered(content.popularTransfers).filter((transfer): transfer is CmsDestination => Boolean(transfer?.id));
+  const vehicles = ordered(content.vehicles)
+    .filter((vehicle): vehicle is Vehicle => Boolean(vehicle?.id))
+    .map(normalizeVehicle);
+  const popularTransfers = ordered(content.popularTransfers)
+    .filter((transfer): transfer is CmsDestination => Boolean(transfer?.id))
+    .map(normalizeCmsDestinationRoute);
   const destinationGroups = ordered(content.destinationGroups as Array<CmsDestinationGroup & { displayOrder?: number }> | undefined)
     .filter((group) => Boolean(group?.en && group?.ar))
     .map((group) => ({
       en: group.en,
       ar: group.ar,
-      routes: ordered(group.routes).filter((route): route is CmsDestination => Boolean(route?.from && route?.to)),
+      routes: ordered(group.routes)
+        .filter((route): route is CmsDestination => Boolean(route?.from && route?.to))
+        .map(normalizeCmsDestinationRoute),
     }));
   const experiences = ordered(content.experiences as Array<FeaturedTransfer & { displayOrder?: number }> | undefined)
     .filter((item): item is FeaturedTransfer => Boolean(item?.id && item?.images?.length));
@@ -166,7 +233,7 @@ export function normalizeLuxRideContent(raw: Partial<LuxRideContent> | undefined
     source: content.source === "wordpress" ? "wordpress" : "development-fallback",
     settings: normalizeSettings(content.settings),
     vehicles,
-    popularTransfers,
+    popularTransfers: orderPopularTransfers(popularTransfers),
     destinationGroups,
     experiences,
     faqs,
