@@ -285,7 +285,7 @@ export function Fleet() {
                   {lang === "AR" ? v.categoryAr : v.category}
                 </span>
               </div>
-              <div className="flex flex-1 flex-col p-6">
+              <div className="flex flex-1 flex-col p-6" data-vehicle-card-scroll="y">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lux-charcoal" style={{ fontSize: "1.25rem" }}>{v.name}</h3>
                   <Sparkles className="h-4 w-4 text-lux-client-accent" />

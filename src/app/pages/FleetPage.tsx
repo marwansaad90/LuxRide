@@ -48,7 +48,7 @@ export function FleetPage() {
                 </span>
                 <span className="absolute right-4 top-4 rounded-full px-3 py-1 text-xs font-bold" style={{ backgroundColor: CLIENT_ACCENT_YELLOW, color: CLIENT_ACCENT_TEXT }} data-fleet-type-badge="client-accent">{L(v.category, v.categoryAr)}</span>
               </div>
-              <div className="flex flex-1 flex-col p-6">
+              <div className="flex flex-1 flex-col p-6" data-vehicle-card-scroll="y">
                 <h3 className="text-lux-charcoal" style={{ fontSize: "1.35rem" }}>{v.name}</h3>
                 <p className="mt-1 text-sm text-neutral-500">{L(v.tagline, v.taglineAr)}</p>
 

@@ -3,7 +3,7 @@ import { useLocation } from "react-router";
 import { useFaqItems, useSiteSettings, type LuxRideSettings } from "./cms";
 import type { Lang } from "./i18n";
 
-export const SITE_URL = typeof window === "undefined" ? "https://luxdure.pages.dev" : window.location.origin;
+export const SITE_URL = typeof window === "undefined" ? "https://luxride-eg.com" : window.location.origin;
 export const OG_IMAGE_URL = `${SITE_URL}/luxride-og-image.webp`;
 
 export interface SeoConfig {

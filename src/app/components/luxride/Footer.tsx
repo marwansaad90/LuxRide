@@ -14,10 +14,7 @@ const QUICK_LINKS: Array<{ key: TKey; to: string }> = [
   { key: "nav_fleet", to: "/fleet" },
   { key: "nav_booking", to: "/booking" },
   { key: "nav_faq", to: "/faq" },
-  { key: "footer_cancellation", to: "/cancellation-policy" },
   { key: "nav_contact", to: "/contact" },
-  { key: "footer_privacy", to: "/privacy-policy" },
-  { key: "footer_terms", to: "/terms" },
 ];
 
 export function Footer() {
