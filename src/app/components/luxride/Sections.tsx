@@ -9,6 +9,7 @@ import {
   Headphones,
   MapPinned,
   PlaneLanding,
+  PackageCheck,
   Send,
   ShieldCheck,
   Snowflake,
@@ -236,6 +237,14 @@ export function PopularTransfers() {
 export function Fleet() {
   const lang = useLang();
   const vehicles = useVehicles();
+  const vehicleChargingText = (id: string) =>
+    id === "hiace"
+      ? lang === "AR"
+        ? "منافذ شحن USB متوفرة في المقصورة الأمامية"
+        : "USB charging available in the front cabin"
+      : lang === "AR"
+        ? "شحن USB نوع A/C"
+        : "USB Type-A/C charging";
 
   return (
     <section id="fleet" className="bg-white py-14 md:py-18">
@@ -254,7 +263,7 @@ export function Fleet() {
             <div
               key={v.id}
               dir={lang === "AR" ? "rtl" : "ltr"}
-              className={`flex max-h-[34rem] min-w-[82%] snap-start flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] transition-all sm:min-w-[24rem] lg:min-w-[calc((100%_-_2.5rem)_/_3)] lg:basis-[calc((100%_-_2.5rem)_/_3)] lg:max-w-[calc((100%_-_2.5rem)_/_3)] ${
+              className={`flex min-h-[38rem] min-w-[82%] snap-start flex-col overflow-hidden rounded-2xl border bg-white shadow-[0_10px_35px_rgba(0,0,0,0.06)] transition-all sm:min-w-[24rem] lg:min-w-[calc((100%_-_2.5rem)_/_3)] lg:basis-[calc((100%_-_2.5rem)_/_3)] lg:max-w-[calc((100%_-_2.5rem)_/_3)] ${
                 isVehicleSelectable(v) ? "border-lux-green/30 hover:border-lux-green/60" : "border-neutral-200 opacity-70"
               }`}
             >
@@ -276,7 +285,7 @@ export function Fleet() {
                   {lang === "AR" ? v.categoryAr : v.category}
                 </span>
               </div>
-              <div className="min-h-0 flex-1 overflow-y-auto p-6 [scrollbar-width:thin]" data-vehicle-card-scroll="y">
+              <div className="flex flex-1 flex-col p-6">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lux-charcoal" style={{ fontSize: "1.25rem" }}>{v.name}</h3>
                   <Sparkles className="h-4 w-4 text-lux-client-accent" />
@@ -289,11 +298,17 @@ export function Fleet() {
                   <span className="flex items-center gap-2">
                     <Snowflake className="h-4 w-4 text-lux-green" /> {t(lang, "fleet_ac")}
                   </span>
+                  <span className="flex items-center gap-2" title={vehicleChargingText(v.id)}>
+                    <Usb className="h-4 w-4 text-lux-green" /> USB
+                  </span>
                   <span className="flex items-center gap-2">
                     <Wifi className={`h-4 w-4 ${v.wifi ? "text-lux-green" : "text-neutral-300"}`} /> WiFi
                   </span>
+                  <span className="flex items-center gap-2">
+                    <PackageCheck className="h-4 w-4 text-lux-green" /> {lang === "AR" ? "صندوق مشروبات" : "Ice Box"}
+                  </span>
                 </div>
-                <div className="mt-5 flex items-center justify-between border-t border-neutral-100 pt-4">
+                <div className="mt-auto flex items-center justify-between border-t border-neutral-100 pt-4">
                   <span className="text-sm text-neutral-500">{t(lang, "fleet_price")}</span>
                   {isVehicleSelectable(v) ? (
                     <Link
