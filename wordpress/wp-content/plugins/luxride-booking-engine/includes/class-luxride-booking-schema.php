@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
 
 final class LuxRide_Booking_Schema
 {
-    public const SCHEMA_VERSION = '0.3.0';
+    public const SCHEMA_VERSION = '0.4.0';
 
     public static function table(string $name): string
     {
@@ -31,6 +31,7 @@ final class LuxRide_Booking_Schema
         $routes = self::table('routes');
         $prices = self::table('route_prices');
         $bookings = self::table('bookings');
+        $blocks = self::table('vehicle_blocks');
         $imports = self::table('pricing_imports');
 
         dbDelta("
@@ -100,14 +101,50 @@ CREATE TABLE {$bookings} (
   final_total_eur decimal(10,2) NOT NULL,
   currency char(3) NOT NULL DEFAULT 'EUR',
   notification_status varchar(30) NOT NULL DEFAULT 'pending',
+  admin_notified_at datetime NULL,
+  confirmed_at datetime NULL,
+  cancel_reason text NULL,
+  payment_method varchar(80) NOT NULL DEFAULT '',
+  payment_status varchar(30) NOT NULL DEFAULT 'unpaid',
+  payment_note varchar(255) NOT NULL DEFAULT '',
+  driver_name varchar(120) NOT NULL DEFAULT '',
+  vehicle_plate varchar(80) NOT NULL DEFAULT '',
+  admin_notes text NULL,
+  customer_rating tinyint(3) unsigned NOT NULL DEFAULT 0,
+  rating_feedback text NULL,
+  operations_updated_by bigint(20) unsigned NOT NULL DEFAULT 0,
+  operations_updated_at datetime NULL,
   created_at datetime NOT NULL,
   updated_at datetime NOT NULL,
   PRIMARY KEY  (id),
   UNIQUE KEY booking_reference (booking_reference),
   UNIQUE KEY idempotency_key (idempotency_key),
   KEY status (status),
+  KEY payment_status (payment_status),
+  KEY confirmed_at (confirmed_at),
+  KEY vehicle_key (vehicle_key),
   KEY route_id (route_id),
   KEY outbound_datetime (outbound_datetime)
+) {$charset};
+");
+
+        dbDelta("
+CREATE TABLE {$blocks} (
+  id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  vehicle_key varchar(20) NOT NULL DEFAULT 'all',
+  start_datetime datetime NOT NULL,
+  end_datetime datetime NOT NULL,
+  reason varchar(255) NOT NULL DEFAULT '',
+  notes text NULL,
+  active tinyint(1) NOT NULL DEFAULT 1,
+  created_by bigint(20) unsigned NOT NULL DEFAULT 0,
+  created_at datetime NOT NULL,
+  updated_at datetime NOT NULL,
+  PRIMARY KEY  (id),
+  KEY active (active),
+  KEY vehicle_key (vehicle_key),
+  KEY start_datetime (start_datetime),
+  KEY end_datetime (end_datetime)
 ) {$charset};
 ");
 

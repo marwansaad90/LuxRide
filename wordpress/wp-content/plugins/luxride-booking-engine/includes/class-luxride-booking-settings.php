@@ -20,6 +20,12 @@ final class LuxRide_Booking_Settings
             'taxes_included' => 1,
             'minimum_lead_hours' => 3,
             'child_seat_price_eur' => 0.0,
+            'admin_notification_email' => get_option('admin_email'),
+            'availability_window_hours' => 3,
+            'availability_timezone' => 'Africa/Cairo',
+            'fleet_sedan_count' => 1,
+            'fleet_mpv_count' => 1,
+            'fleet_minivan_count' => 1,
         ];
     }
 
@@ -53,6 +59,12 @@ final class LuxRide_Booking_Settings
             'taxes_included' => !empty($input['taxes_included']) ? 1 : 0,
             'minimum_lead_hours' => max(0, (int) ($input['minimum_lead_hours'] ?? $current['minimum_lead_hours'])),
             'child_seat_price_eur' => 0.0,
+            'admin_notification_email' => sanitize_email((string) ($input['admin_notification_email'] ?? $current['admin_notification_email'])),
+            'availability_window_hours' => max(1, (int) ($input['availability_window_hours'] ?? $current['availability_window_hours'])),
+            'availability_timezone' => 'Africa/Cairo',
+            'fleet_sedan_count' => max(1, (int) ($input['fleet_sedan_count'] ?? $current['fleet_sedan_count'])),
+            'fleet_mpv_count' => max(1, (int) ($input['fleet_mpv_count'] ?? $current['fleet_mpv_count'])),
+            'fleet_minivan_count' => max(1, (int) ($input['fleet_minivan_count'] ?? $current['fleet_minivan_count'])),
         ];
 
         update_option(self::OPTION, $next, false);

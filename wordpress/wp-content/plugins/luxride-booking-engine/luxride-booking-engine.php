@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: LuxRide Booking Engine
- * Description: Server-side route pricing, quotes, and booking records for LuxRide Phase 2.
- * Version: 0.3.0
+ * Description: Server-side route pricing, quotes, and booking operations for LuxRide.
+ * Version: 0.4.0
  * Author: LuxRide
  * Text Domain: luxride-booking-engine
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('LUXRIDE_BOOKING_ENGINE_VERSION', '0.3.0');
+define('LUXRIDE_BOOKING_ENGINE_VERSION', '0.4.0');
 define('LUXRIDE_BOOKING_ENGINE_FILE', __FILE__);
 define('LUXRIDE_BOOKING_ENGINE_DIR', plugin_dir_path(__FILE__));
 
@@ -29,4 +29,5 @@ add_action('plugins_loaded', static function (): void {
     LuxRide_Booking_Schema::maybe_install();
     LuxRide_Booking_Rest::register_hooks();
     LuxRide_Booking_Admin::register_hooks();
+    add_action('luxride_booking_created', ['LuxRide_Booking_Bookings', 'notify_admin'], 10, 2);
 });

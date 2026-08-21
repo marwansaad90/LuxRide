@@ -6,7 +6,8 @@ if (!defined('ABSPATH')) {
 
 final class LuxRide_Booking_Bookings
 {
-    public const STATUSES = ['new', 'confirmed', 'cancelled', 'completed'];
+    public const STATUSES = ['new', 'pending', 'confirmed', 'assigned', 'completed', 'cancelled'];
+    public const AVAILABILITY_STATUSES = ['new', 'pending', 'confirmed', 'assigned'];
 
     public static function create(array $input)
     {
@@ -56,6 +57,10 @@ final class LuxRide_Booking_Bookings
         $details = self::conditional_details($input, $quote);
         $outbound = self::mysql_datetime((string) $quote_input['outbound_datetime']);
         $returning = '' !== (string) $quote_input['return_datetime'] ? self::mysql_datetime((string) $quote_input['return_datetime']) : null;
+        $availability = self::availability_error($quote, $outbound, $returning);
+        if (is_wp_error($availability)) {
+            return $availability;
+        }
 
         $inserted = $wpdb->insert(
             LuxRide_Booking_Schema::table('bookings'),
@@ -124,11 +129,160 @@ final class LuxRide_Booking_Bookings
         }
 
         global $wpdb;
+        $data = ['status' => $status, 'updated_at' => current_time('mysql')];
+        $formats = ['%s', '%s'];
+
+        if ('confirmed' === $status) {
+            $existing = self::get($booking_id);
+            if ($existing && empty($existing['confirmed_at'])) {
+                $data['confirmed_at'] = current_time('mysql');
+                $formats[] = '%s';
+            }
+        }
+
         return false !== $wpdb->update(
             LuxRide_Booking_Schema::table('bookings'),
-            ['status' => $status, 'updated_at' => current_time('mysql')],
+            $data,
             ['id' => $booking_id],
-            ['%s', '%s'],
+            $formats,
+            ['%d']
+        );
+    }
+
+    public static function update_operations(int $booking_id, array $input, int $user_id): bool
+    {
+        global $wpdb;
+
+        $rating = isset($input['customer_rating']) ? (int) $input['customer_rating'] : 0;
+        $rating = max(0, min(5, $rating));
+
+        return false !== $wpdb->update(
+            LuxRide_Booking_Schema::table('bookings'),
+            [
+                'payment_status' => self::payment_status((string) ($input['payment_status'] ?? 'unpaid')),
+                'payment_method' => sanitize_text_field((string) ($input['payment_method'] ?? '')),
+                'payment_note' => sanitize_text_field((string) ($input['payment_note'] ?? '')),
+                'cancel_reason' => sanitize_textarea_field((string) ($input['cancel_reason'] ?? '')),
+                'driver_name' => sanitize_text_field((string) ($input['driver_name'] ?? '')),
+                'vehicle_plate' => sanitize_text_field((string) ($input['vehicle_plate'] ?? '')),
+                'admin_notes' => sanitize_textarea_field((string) ($input['admin_notes'] ?? '')),
+                'customer_rating' => $rating,
+                'rating_feedback' => sanitize_textarea_field((string) ($input['rating_feedback'] ?? '')),
+                'operations_updated_by' => $user_id,
+                'operations_updated_at' => current_time('mysql'),
+                'updated_at' => current_time('mysql'),
+            ],
+            ['id' => $booking_id],
+            ['%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%s', '%s'],
+            ['%d']
+        );
+    }
+
+    public static function delete(int $booking_id): bool
+    {
+        global $wpdb;
+
+        return false !== $wpdb->delete(
+            LuxRide_Booking_Schema::table('bookings'),
+            ['id' => $booking_id],
+            ['%d']
+        );
+    }
+
+    public static function notify_admin(int $booking_id, ?array $booking = null): void
+    {
+        $booking = $booking ?: self::get($booking_id);
+        if (!$booking || 'sent' === (string) ($booking['notification_status'] ?? '')) {
+            return;
+        }
+
+        $settings = LuxRide_Booking_Settings::all();
+        $to = sanitize_email((string) ($settings['admin_notification_email'] ?? get_option('admin_email')));
+        if (!$to || !is_email($to)) {
+            return;
+        }
+
+        $route = self::json_field($booking, 'route_snapshot');
+        $customer = self::json_field($booking, 'customer_snapshot');
+        $subject = sprintf('LuxRide new booking %s', (string) $booking['booking_reference']);
+        $lines = [
+            'New LuxRide booking received.',
+            'Reference: ' . (string) $booking['booking_reference'],
+            'Route: ' . self::route_label($route),
+            'Trip: ' . (string) $booking['trip_type'] . ' / ' . (string) $booking['system_classification'],
+            'Vehicle: ' . (string) $booking['vehicle_key'],
+            'Pickup time: ' . (string) $booking['outbound_datetime'],
+            'Return time: ' . ((string) ($booking['return_datetime'] ?? '') ?: '-'),
+            'Customer: ' . (string) ($customer['full_name'] ?? ''),
+            'Phone: ' . (string) ($customer['phone'] ?? ''),
+            'Total: ' . number_format((float) $booking['final_total_eur'], 2) . ' ' . (string) $booking['currency'],
+            'Admin: ' . admin_url('admin.php?page=luxride-bookings&booking_id=' . (int) $booking_id),
+        ];
+
+        $sent = wp_mail($to, $subject, implode("\n", $lines));
+
+        global $wpdb;
+        $wpdb->update(
+            LuxRide_Booking_Schema::table('bookings'),
+            [
+                'notification_status' => $sent ? 'sent' : 'failed',
+                'admin_notified_at' => current_time('mysql'),
+                'updated_at' => current_time('mysql'),
+            ],
+            ['id' => $booking_id],
+            ['%s', '%s', '%s'],
+            ['%d']
+        );
+    }
+
+    public static function create_block(array $input, int $user_id): bool
+    {
+        global $wpdb;
+
+        $block_id = isset($input['block_id']) ? absint($input['block_id']) : 0;
+        $start = self::mysql_datetime((string) ($input['start_datetime'] ?? ''));
+        $end = self::mysql_datetime((string) ($input['end_datetime'] ?? ''));
+        if ($end <= $start) {
+            return false;
+        }
+
+        $data = [
+            'vehicle_key' => self::block_vehicle_key((string) ($input['vehicle_key'] ?? 'all')),
+            'start_datetime' => $start,
+            'end_datetime' => $end,
+            'reason' => sanitize_text_field((string) ($input['reason'] ?? '')),
+            'notes' => sanitize_textarea_field((string) ($input['notes'] ?? '')),
+            'active' => !empty($input['active']) ? 1 : 0,
+            'updated_at' => current_time('mysql'),
+        ];
+
+        if ($block_id) {
+            return false !== $wpdb->update(
+                LuxRide_Booking_Schema::table('vehicle_blocks'),
+                $data,
+                ['id' => $block_id],
+                ['%s', '%s', '%s', '%s', '%s', '%d', '%s'],
+                ['%d']
+            );
+        }
+
+        $data['created_by'] = $user_id;
+        $data['created_at'] = current_time('mysql');
+
+        return false !== $wpdb->insert(
+            LuxRide_Booking_Schema::table('vehicle_blocks'),
+            $data,
+            ['%s', '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%s']
+        );
+    }
+
+    public static function delete_block(int $block_id): bool
+    {
+        global $wpdb;
+
+        return false !== $wpdb->delete(
+            LuxRide_Booking_Schema::table('vehicle_blocks'),
+            ['id' => $block_id],
             ['%d']
         );
     }
@@ -319,5 +473,93 @@ final class LuxRide_Booking_Bookings
     {
         $decoded = json_decode((string) ($booking[$key] ?? '{}'), true);
         return is_array($decoded) ? $decoded : [];
+    }
+
+    private static function availability_error(array $quote, string $outbound, ?string $returning)
+    {
+        global $wpdb;
+
+        $vehicle_key = (string) ($quote['vehicle']['key'] ?? '');
+        $window = self::booking_window($outbound, $returning);
+        if (!$vehicle_key || !$window) {
+            return true;
+        }
+
+        $blocks = (int) $wpdb->get_var($wpdb->prepare(
+            'SELECT COUNT(*) FROM ' . LuxRide_Booking_Schema::table('vehicle_blocks') . ' WHERE active = 1 AND start_datetime < %s AND end_datetime > %s AND (vehicle_key = %s OR vehicle_key = %s)',
+            $window['end'],
+            $window['start'],
+            $vehicle_key,
+            'all'
+        ));
+        if ($blocks > 0) {
+            return new WP_Error('luxride_vehicle_blocked', 'Selected vehicle is blocked for this time. Please choose another time or contact us on WhatsApp.', [
+                'status' => 409,
+                'message_ar' => 'السيارة المحددة غير متاحة في هذا الوقت. يرجى اختيار وقت آخر أو التواصل معنا عبر واتساب.',
+            ]);
+        }
+
+        $settings = LuxRide_Booking_Settings::all();
+        $limit = max(1, (int) ($settings['fleet_' . $vehicle_key . '_count'] ?? 1));
+        $booked = (int) $wpdb->get_var($wpdb->prepare(
+            'SELECT COUNT(*) FROM ' . LuxRide_Booking_Schema::table('bookings') . " WHERE vehicle_key = %s AND status IN ('new', 'pending', 'confirmed', 'assigned') AND outbound_datetime < %s AND COALESCE(return_datetime, DATE_ADD(outbound_datetime, INTERVAL %d HOUR)) > %s",
+            $vehicle_key,
+            $window['end'],
+            max(1, (int) ($settings['availability_window_hours'] ?? 3)),
+            $window['start']
+        ));
+
+        if ($booked >= $limit) {
+            return new WP_Error('luxride_vehicle_unavailable', 'Selected vehicle is already booked for this time. Please choose another time or contact us on WhatsApp.', [
+                'status' => 409,
+                'message_ar' => 'السيارة المحددة محجوزة في هذا الوقت. يرجى اختيار وقت آخر أو التواصل معنا عبر واتساب.',
+            ]);
+        }
+
+        return true;
+    }
+
+    private static function booking_window(string $outbound, ?string $returning): ?array
+    {
+        $timezone = self::availability_timezone();
+        $start = date_create_immutable($outbound, $timezone);
+        if (!$start) {
+            return null;
+        }
+
+        $end = $returning ? date_create_immutable($returning, $timezone) : false;
+        if (!$end || $end <= $start) {
+            $settings = LuxRide_Booking_Settings::all();
+            $end = $start->modify('+' . max(1, (int) ($settings['availability_window_hours'] ?? 3)) . ' hours');
+        }
+
+        return [
+            'start' => $start->format('Y-m-d H:i:s'),
+            'end' => $end->format('Y-m-d H:i:s'),
+        ];
+    }
+
+    private static function payment_status(string $status): string
+    {
+        $status = sanitize_key($status);
+        return in_array($status, ['unpaid', 'deposit_paid', 'paid', 'refunded'], true) ? $status : 'unpaid';
+    }
+
+    private static function block_vehicle_key(string $vehicle_key): string
+    {
+        $vehicle_key = sanitize_key($vehicle_key);
+        return in_array($vehicle_key, ['all', 'sedan', 'mpv', 'minivan'], true) ? $vehicle_key : 'all';
+    }
+
+    private static function route_label(array $route): string
+    {
+        $pickup = $route['pickup']['label'] ?? '';
+        $destination = $route['destination']['label'] ?? '';
+        return trim((string) $pickup . ' -> ' . (string) $destination, ' ->');
+    }
+
+    private static function availability_timezone(): DateTimeZone
+    {
+        return new DateTimeZone('Africa/Cairo');
     }
 }
