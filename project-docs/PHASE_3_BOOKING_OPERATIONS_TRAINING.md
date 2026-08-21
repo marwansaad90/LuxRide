@@ -1,107 +1,137 @@
 # LuxRide Phase 3 Booking Operations Training
 
-Status: Phase 3 core operations draft.
+Status: live booking core `0.4.0`, client training draft.
 
-## Booking Admin
+هذا الدليل مخصص لفريق LuxRide غير التقني. استخدم لوحة ووردبريس فقط في التشغيل اليومي، ولا تعدل قاعدة البيانات أو ملفات الموقع.
 
-Use WordPress Admin -> LuxRide -> Bookings.
+## 1. قائمة الحجوزات
 
-- Review the analytics cards first: total bookings, upcoming bookings, today bookings, open new bookings, confirmed bookings, and non-cancelled EUR.
-- Use filters for booking status, payment status, pickup date range, and search by reference, customer, or route.
-- Open a booking with View to see readable customer, route, trip, required detail, and price sections.
-- Do not use raw database tools for normal booking review. The booking detail page is the client-facing operations screen.
+المسار: `WordPress Admin -> LuxRide -> Bookings`.
 
-## Booking Status Workflow
+- ابدأ ببطاقات الملخص أعلى الصفحة: إجمالي الحجوزات، الحجوزات القادمة، حجوزات اليوم، الحجوزات الجديدة، المؤكدة، وإجمالي اليورو للحجوزات غير الملغاة.
+- استخدم البحث للعثور على رقم حجز، اسم عميل، رقم هاتف، أو مسار.
+- استخدم الفلاتر حسب حالة الحجز، حالة الدفع، ونطاق تاريخ الاستلام.
+- استخدم الترتيب حسب تاريخ الاستلام، تاريخ الإنشاء، الإجمالي، الحالة، أو الدفع.
+- اضغط `View` لفتح تفاصيل الحجز.
 
-Use the status form on the booking detail page.
+## 2. حالات الحجز
 
-- New: booking received and not yet confirmed.
-- Pending: staff review is in progress.
-- Confirmed: LuxRide accepted the booking.
-- Assigned: driver/vehicle assignment is ready.
-- Completed: trip finished.
-- Cancelled: booking cancelled or rejected.
+غيّر الحالة من صفحة تفاصيل الحجز.
 
-Availability-consuming statuses are: new, pending, confirmed, and assigned.
-Cancelled bookings do not consume availability. Completed bookings do not consume future availability.
+- `new`: حجز جديد لم تتم مراجعته بعد.
+- `pending`: قيد المراجعة.
+- `confirmed`: تم قبول الحجز وتأكيده مع العميل.
+- `assigned`: تم تعيين السائق أو السيارة.
+- `completed`: الرحلة انتهت.
+- `cancelled`: الحجز ملغي أو مرفوض.
 
-## Operations Fields
+الحالات التي تستهلك توفر السيارة هي: `new`, `pending`, `confirmed`, `assigned`.
 
-Use the Operations form on a booking detail page.
+الحالات `cancelled` و `completed` لا تستهلك التوفر المستقبلي.
 
-- Payment status: unpaid, deposit paid, paid, refunded.
-- Payment note: short internal note for payment context.
-- Driver name: assigned driver.
-- Vehicle plate: assigned car or van plate.
-- Customer rating: optional 0 to 5 rating after trip.
-- Admin notes: private staff notes.
+## 3. تفاصيل الحجز
 
-## Availability Blocks
+صفحة التفاصيل تعرض أقساماً مقروءة:
 
-Use WordPress Admin -> LuxRide -> Availability.
+- ملخص الحجز.
+- بيانات العميل.
+- تفاصيل الاستلام والوجهة.
+- بيانات السيارة والركاب والحقائب.
+- تفاصيل الطيران أو الفندق أو الموقع الدقيق عند وجودها.
+- تفصيل السعر.
+- حقول التشغيل الداخلية.
 
-- Add or edit a block for one vehicle type or all vehicles.
-- Set start and end date/time.
-- Add a reason and note for staff context.
-- Use the Active checkbox to decide whether a saved block currently affects booking availability.
-- Delete a block only when the vehicle or time is available again.
+لا يحتاج الفريق إلى قراءة JSON أو مفاتيح داخلية.
 
-The booking API rejects new bookings that overlap an active block or exceed the configured fleet count for the vehicle type.
+## 4. حقول التشغيل
 
-## Booking Export
+من نموذج `Operations` في صفحة الحجز:
 
-Use Export Excel (.xlsx) from LuxRide -> Bookings for the client-facing booking manifest.
-Use Export bookings CSV only as a fallback/admin backup format.
+- `Payment status`: حالة الدفع.
+- `Payment method`: طريقة الدفع مثل Cash أو Bank transfer.
+- `Payment note`: ملاحظة قصيرة عن الدفع.
+- `Driver name`: اسم السائق.
+- `Vehicle plate`: رقم لوحة السيارة.
+- `Cancel reason`: سبب الإلغاء إذا أُلغي الحجز.
+- `Customer rating`: تقييم العميل بعد الرحلة.
+- `Rating feedback`: ملاحظات التقييم.
+- `Admin notes`: ملاحظات داخلية لا تظهر للعميل.
 
-The export has 38 fixed columns and opens in Excel. It includes booking reference, timing, status, cancellation reason, customer details, route, trip dates/times, vehicle assignment, passenger/luggage counts, child seat, price lines, payment details, flight number, special requests, and rating feedback. Empty fields stay blank.
+اضغط حفظ بعد التعديل، ثم أعد فتح الحجز للتأكد.
 
-## 38-Column Manifest Mapping
+## 5. حذف حجز
 
-- Booking_Reference: booking reference.
-- Created_At: booking creation timestamp.
-- Confirmed_At: timestamp first set when booking status becomes confirmed.
-- Booking_Status: current booking status.
-- Cancel_Reason: admin-entered cancellation reason, blank when not populated.
-- Customer_Name: customer full name.
-- Customer_Phone: customer phone.
-- Customer_Email: customer email, blank when not populated.
-- Customer_Country: blank until a public country field exists.
-- Customer_Language: booking language.
-- Pickup_Location: route pickup label.
-- Dropoff_Location: route destination label.
-- Hotel_Room_Number: booking room number, blank when not populated.
-- Trip_Type: one_way or round_trip.
-- Trip_Category: one_way, overday, or overnight.
-- Pickup_Date: pickup date.
-- Pickup_Time: pickup time.
-- Return_Date: return date, blank for one way.
-- Return_Time: return time, blank for one way.
-- Vehicle_Type: vehicle key.
-- Assigned_Vehicle_Plates: admin-entered plate number.
-- Assigned_Driver: admin-entered driver.
-- Passenger_Count: passenger count.
-- Luggage_Count: luggage count.
-- Child_Seat: Yes or No.
-- Base_Fare: numeric base fare.
-- Airport_Fee: numeric airport fee.
-- Travel_Permit_Fee: numeric permit fee.
-- Driver_Overnight_Fee: numeric overnight/accommodation fee.
-- Extra_Stops_Fee: blank until an extra-stops feature exists.
-- Discount_Amount: numeric discount amount.
-- Total_Amount: numeric total.
-- Currency: booking currency.
-- Payment_Method: admin-entered payment method, blank when not populated.
-- Payment_Status: admin payment status.
-- Flight_Number: flight number, blank when not populated.
-- Special_Requests: customer notes only.
-- Rating_Feedback: admin-entered rating feedback, blank when not populated.
+استخدم زر الحذف فقط للحجوزات التجريبية أو المكررة بوضوح.
 
-## Notifications
+قبل الحذف:
 
-New bookings trigger an admin email to the configured Admin notification email in LuxRide -> Pricing & Routes -> Fees & Rules.
+- تأكد من رقم الحجز.
+- تأكد أنه ليس حجزاً حقيقياً قيد التشغيل.
+- لا تحذف حجزاً يحتاج إلى سجل مالي أو متابعة مع العميل.
 
-If email delivery fails, the booking remains stored and `notification_status` is marked as failed for admin follow-up.
+## 6. تصدير Excel و CSV
 
-## Deployment Notes
+المسار: `LuxRide -> Bookings`.
 
-After deploying the plugin files, WordPress loads schema version `0.4.0` and runs the dbDelta migration automatically. Do not import pricing again for this change; pricing routes and price values are not part of this Phase 3 operations patch.
+- `Export Excel (.xlsx)`: الملف الأساسي للعميل والتحليل.
+- `Export bookings CSV`: بديل تقني عند الحاجة.
+- التصدير يحترم الفلاتر الحالية.
+- ملف Excel يحتوي 38 عموداً ثابتاً.
+
+الحقول الحساسة مثل Passport/ID لا تظهر في التصدير العادي.
+
+## 7. أعمدة Excel
+
+الأعمدة هي:
+
+`Booking_Reference`, `Created_At`, `Confirmed_At`, `Booking_Status`, `Cancel_Reason`, `Customer_Name`, `Customer_Phone`, `Customer_Email`, `Customer_Country`, `Customer_Language`, `Pickup_Location`, `Dropoff_Location`, `Hotel_Room_Number`, `Trip_Type`, `Trip_Category`, `Pickup_Date`, `Pickup_Time`, `Return_Date`, `Return_Time`, `Vehicle_Type`, `Assigned_Vehicle_Plates`, `Assigned_Driver`, `Passenger_Count`, `Luggage_Count`, `Child_Seat`, `Base_Fare`, `Airport_Fee`, `Travel_Permit_Fee`, `Driver_Overnight_Fee`, `Extra_Stops_Fee`, `Discount_Amount`, `Total_Amount`, `Currency`, `Payment_Method`, `Payment_Status`, `Flight_Number`, `Special_Requests`, `Rating_Feedback`.
+
+## 8. توفر السيارات والحظر اليدوي
+
+المسار: `WordPress Admin -> LuxRide -> Availability`.
+
+- اختر السيارة: all أو sedan أو mpv أو minivan.
+- أدخل بداية ونهاية فترة الحظر بتوقيت مصر `Africa/Cairo`.
+- أضف سبباً وملاحظة داخلية.
+- استخدم `Active` لتفعيل أو تعطيل الحظر.
+- احفظ.
+
+الحجز الجديد سيرفض تلقائياً إذا كان يتعارض مع حظر نشط أو يتجاوز عدد سيارات الفئة المتاحة.
+
+## 9. إشعارات البريد
+
+عند إنشاء حجز جديد يحاول ووردبريس إرسال بريد للإدارة.
+
+البريد يحتوي رقم الحجز، العميل، الهاتف، البريد إن وجد، الاستلام، الوجهة، نوع الرحلة، التواريخ، السيارة، الركاب، الحقائب، كرسي الطفل، رقم الرحلة إن وجد، الفندق أو الموقع الدقيق، تفصيل السعر، الإجمالي، ورابط مباشر للحجز في لوحة التحكم.
+
+لا يحتوي بريد الإدارة على Passport/ID.
+
+إذا فشل البريد، يبقى الحجز محفوظاً في لوحة التحكم.
+
+## 10. خصوصية Passport/ID
+
+Passport/ID بيانات حساسة.
+
+- لا تظهر في واتساب.
+- لا تظهر في بريد الإدارة.
+- لا تظهر في Excel العادي.
+- لا تظهر في ردود REST العامة للعميل.
+- تظهر فقط للمدير المصرح داخل تفاصيل الحجز عند الحاجة التشغيلية.
+
+## 11. ماذا لا نلمس
+
+- لا تغيّر مفاتيح السيارات: `sedan`, `mpv`, `minivan`.
+- لا تحذف مسارات الأسعار.
+- لا تضف 320 Route كوجهات عامة.
+- لا تعدل السعر من Excel بعد تصديره؛ السعر الحقيقي داخل النظام.
+- لا تشارك حساب المدير مع أكثر من شخص بدون حاجة.
+
+## 12. فحص يومي سريع
+
+1. افتح `LuxRide -> Bookings`.
+2. راجع الحجوزات الجديدة.
+3. تأكد من الحجز مع العميل.
+4. غيّر الحالة إلى `confirmed`.
+5. أضف السائق واللوحة عند الجاهزية.
+6. صدّر Excel عند الحاجة.
+7. استخدم Availability عند وجود سيارة غير متاحة.

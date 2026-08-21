@@ -13,10 +13,10 @@ add_action('init', 'luxride_register_content_types');
 
 function luxride_register_content_types(): void
 {
-    luxride_register_cpt('luxride_vehicle', 'Vehicle', 'Vehicles', 'dashicons-car', ['title', 'thumbnail', 'page-attributes', 'custom-fields']);
-    luxride_register_cpt('luxride_destination', 'Destination', 'Destinations', 'dashicons-location-alt', ['title', 'editor', 'thumbnail', 'page-attributes', 'custom-fields']);
-    luxride_register_cpt('luxride_experience', 'Experience', 'Experiences', 'dashicons-palmtree', ['title', 'editor', 'thumbnail', 'page-attributes', 'custom-fields']);
-    luxride_register_cpt('luxride_faq', 'FAQ Item', 'FAQ Items', 'dashicons-editor-help', ['title', 'editor', 'page-attributes', 'custom-fields']);
+    luxride_register_cpt('luxride_vehicle', 'Vehicle', 'Vehicles', 'dashicons-car', ['title', 'thumbnail', 'page-attributes']);
+    luxride_register_cpt('luxride_destination', 'Destination', 'Destinations', 'dashicons-location-alt', ['title', 'editor', 'thumbnail', 'page-attributes']);
+    luxride_register_cpt('luxride_experience', 'Experience', 'Experiences', 'dashicons-palmtree', ['title', 'editor', 'thumbnail', 'page-attributes']);
+    luxride_register_cpt('luxride_faq', 'FAQ Item', 'FAQ Items', 'dashicons-editor-help', ['title', 'editor', 'page-attributes']);
 
     $meta_fields = [
         'luxride_title_ar' => 'string',
@@ -37,7 +37,11 @@ function luxride_register_content_types(): void
         'luxride_wifi' => 'boolean',
         'luxride_source_id' => 'string',
         'luxride_image_url' => 'string',
+        'luxride_image_alt_en' => 'string',
+        'luxride_image_alt_ar' => 'string',
         'luxride_image_position' => 'string',
+        'luxride_video_url' => 'string',
+        'luxride_video_poster_url' => 'string',
         'luxride_context' => 'string',
         'luxride_group_en' => 'string',
         'luxride_group_ar' => 'string',
@@ -65,6 +69,9 @@ function luxride_register_content_types(): void
         'luxride_faq_context' => 'string',
         'luxride_question_ar' => 'string',
         'luxride_answer_ar' => 'string',
+        'luxride_air_conditioning' => 'boolean',
+        'luxride_ice_box' => 'boolean',
+        'luxride_usb_charging' => 'boolean',
     ];
 
     foreach (['luxride_vehicle', 'luxride_destination', 'luxride_experience', 'luxride_faq'] as $post_type) {

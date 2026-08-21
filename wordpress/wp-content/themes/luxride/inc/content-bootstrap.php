@@ -67,6 +67,17 @@ function luxride_posts(string $post_type): array
     ]);
 }
 
+function luxride_experience_images(int $post_id): array
+{
+    $gallery = array_values(array_filter(luxride_json_meta($post_id, 'luxride_gallery_urls')));
+    $featured = (string) luxride_meta($post_id, 'luxride_image_url', '');
+    if ('' !== $featured && !in_array($featured, $gallery, true)) {
+        array_unshift($gallery, $featured);
+    }
+
+    return array_map('luxride_asset_or_url', $gallery);
+}
+
 function luxride_content_payload(): array
 {
     $payload = [
@@ -166,7 +177,11 @@ function luxride_content_payload(): array
         $payload['experiences'][] = [
             'id' => luxride_text_meta($post->ID, 'luxride_source_id', $post->post_name),
             'createdAt' => get_the_date('Y-m-d', $post),
-            'images' => array_map('luxride_asset_or_url', luxride_json_meta($post->ID, 'luxride_gallery_urls')),
+            'images' => luxride_experience_images($post->ID),
+            'video' => [
+                'url' => luxride_asset_or_url((string) luxride_meta($post->ID, 'luxride_video_url', '')),
+                'poster' => luxride_asset_or_url((string) luxride_meta($post->ID, 'luxride_video_poster_url', '')),
+            ],
             'routeType' => ['EN' => luxride_text_meta($post->ID, 'luxride_route_type_en', ''), 'AR' => luxride_text_meta($post->ID, 'luxride_route_type_ar', '')],
             'title' => ['EN' => luxride_plain_text(get_the_title($post)), 'AR' => luxride_text_meta($post->ID, 'luxride_title_ar', get_the_title($post))],
             'vehicle' => ['EN' => luxride_text_meta($post->ID, 'luxride_vehicle_en', ''), 'AR' => luxride_text_meta($post->ID, 'luxride_vehicle_ar', '')],

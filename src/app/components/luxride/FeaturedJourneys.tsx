@@ -1,4 +1,4 @@
-import { ArrowRight, ChevronLeft, ChevronRight, Images, MapPinned } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Images, MapPinned, PlayCircle } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
@@ -24,6 +24,7 @@ export function JourneyCard({
   const description = compact ? journey.excerpt[lang] : journey.description[lang];
   const isExpanded = layout === "expanded";
   const shouldScrollDescription = description.length > (isExpanded ? 520 : 220);
+  const hasVideo = Boolean(journey.video?.url);
 
   function moveImage(step: number) {
     setImageIndex((index) => (index + step + journey.images.length) % journey.images.length);
@@ -55,6 +56,12 @@ export function JourneyCard({
           <Images className="h-3.5 w-3.5 text-lux-client-accent" />
           {imageIndex + 1}/{journey.images.length}
         </span>
+        {hasVideo && (
+          <span className="absolute bottom-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-lux-dark/82 px-3 py-1 text-xs font-semibold text-white backdrop-blur">
+            <PlayCircle className="h-3.5 w-3.5 text-lux-client-accent" />
+            {lang === "AR" ? "فيديو" : "Video"}
+          </span>
+        )}
       </div>
       <div className="flex min-h-0 flex-1 flex-col p-6">
         <p className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-lux-bronze">
@@ -75,6 +82,18 @@ export function JourneyCard({
         >
           {description}
         </div>
+        {isExpanded && journey.video?.url && (
+          <div className="mt-4 overflow-hidden rounded-xl border border-lux-charcoal/10 bg-lux-dark" data-experience-video="true">
+            <video
+              className="aspect-video w-full bg-lux-dark object-cover"
+              src={journey.video.url}
+              poster={journey.video.poster || currentImage}
+              controls
+              preload="metadata"
+              playsInline
+            />
+          </div>
+        )}
         <Link to={`/booking?${journeyBookingQuery(journey)}`} className="mt-auto inline-flex w-full items-center justify-center gap-2 rounded-full bg-lux-green py-2.5 text-sm font-semibold text-white transition-all hover:brightness-110">
           {lang === "AR" ? "احجز توصيلة مشابهة" : "Book Similar Transfer"}
           <ArrowRight className="h-4 w-4 rtl:rotate-180" />

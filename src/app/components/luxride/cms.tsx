@@ -184,6 +184,15 @@ function normalizeCmsDestinationRoute(destination: CmsDestination): CmsDestinati
   };
 }
 
+function normalizeExperience(experience: FeaturedTransfer): FeaturedTransfer {
+  const videoUrl = typeof experience.video?.url === "string" ? experience.video.url.trim() : "";
+  const poster = typeof experience.video?.poster === "string" ? experience.video.poster.trim() : "";
+  return {
+    ...experience,
+    video: videoUrl ? { url: videoUrl, poster: poster || undefined } : undefined,
+  };
+}
+
 function normalizeVehicle(vehicle: Vehicle): Vehicle {
   if (vehicle.id === "xpander") return { ...vehicle, category: "MPV", categoryAr: "MPV" };
   if (vehicle.id === "hiace") return { ...vehicle, category: "Mini Van", categoryAr: "ميني فان" };
@@ -219,6 +228,7 @@ export function normalizeLuxRideContent(raw: Partial<LuxRideContent> | undefined
     }));
   const experiences = ordered(content.experiences as Array<FeaturedTransfer & { displayOrder?: number }> | undefined)
     .filter((item): item is FeaturedTransfer => Boolean(item?.id && item?.images?.length));
+  const normalizedExperiences = experiences.map(normalizeExperience);
   const faqs = ordered(content.faqs).filter((item): item is CmsFaqItem => Boolean(item?.id && item?.q && item?.a));
 
   if (!vehicles.length || !popularTransfers.length || !experiences.length || !faqs.length) {
@@ -231,7 +241,7 @@ export function normalizeLuxRideContent(raw: Partial<LuxRideContent> | undefined
     vehicles,
     popularTransfers: orderPopularTransfers(popularTransfers),
     destinationGroups,
-    experiences,
+    experiences: normalizedExperiences,
     faqs,
   };
 }

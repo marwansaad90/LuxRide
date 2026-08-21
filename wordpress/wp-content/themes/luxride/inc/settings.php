@@ -66,16 +66,33 @@ function luxride_sanitize_settings(array $input): array
 function luxride_render_settings_page(): void
 {
     $settings = array_merge(luxride_default_options(), (array) get_option('luxride_site_settings', []));
+    $labels = [
+        'phone_display' => __('Public phone number', 'luxride'),
+        'whatsapp_number' => __('WhatsApp number', 'luxride'),
+        'email' => __('Booking email', 'luxride'),
+        'facebook_url' => __('Facebook page URL', 'luxride'),
+        'instagram_url' => __('Instagram profile URL', 'luxride'),
+        'tripadvisor_url' => __('Tripadvisor page URL', 'luxride'),
+    ];
+    $help = [
+        'phone_display' => __('Shown in the header, footer and contact sections.', 'luxride'),
+        'whatsapp_number' => __('Use country code only, for example 201013554009.', 'luxride'),
+        'email' => __('Shown to customers and used for booking contact links.', 'luxride'),
+        'facebook_url' => __('Leave the full https:// link.', 'luxride'),
+        'instagram_url' => __('Leave the full https:// link.', 'luxride'),
+        'tripadvisor_url' => __('Leave the full https:// link.', 'luxride'),
+    ];
     ?>
     <div class="wrap">
         <h1><?php esc_html_e('LuxRide Settings', 'luxride'); ?></h1>
+        <p><?php esc_html_e('Manage the public contact and social details used by the LuxRide website. These are safe client-facing settings.', 'luxride'); ?></p>
         <form method="post" action="options.php">
             <?php settings_fields('luxride_settings'); ?>
             <table class="form-table" role="presentation">
                 <?php foreach (luxride_default_options() as $key => $default) : ?>
                     <tr>
                         <th scope="row">
-                            <label for="luxride_<?php echo esc_attr($key); ?>"><?php echo esc_html(ucwords(str_replace('_', ' ', $key))); ?></label>
+                            <label for="luxride_<?php echo esc_attr($key); ?>"><?php echo esc_html($labels[$key] ?? ucwords(str_replace('_', ' ', $key))); ?></label>
                         </th>
                         <td>
                             <input
@@ -84,6 +101,9 @@ function luxride_render_settings_page(): void
                                 name="luxride_site_settings[<?php echo esc_attr($key); ?>]"
                                 value="<?php echo esc_attr($settings[$key] ?? $default); ?>"
                             />
+                            <?php if (isset($help[$key])) : ?>
+                                <p class="description"><?php echo esc_html($help[$key]); ?></p>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

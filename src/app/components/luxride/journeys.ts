@@ -12,6 +12,10 @@ export interface FeaturedTransfer {
   id: string;
   createdAt: string;
   images: string[];
+  video?: {
+    url?: string;
+    poster?: string;
+  };
   routeType: Record<Lang, string>;
   title: Record<Lang, string>;
   vehicle: Record<Lang, string>;

@@ -14,6 +14,7 @@ define('LUXRIDE_THEME_DIR', get_template_directory());
 define('LUXRIDE_THEME_URI', get_template_directory_uri());
 
 require_once LUXRIDE_THEME_DIR . '/inc/content-types.php';
+require_once LUXRIDE_THEME_DIR . '/inc/admin-fields.php';
 require_once LUXRIDE_THEME_DIR . '/inc/routes.php';
 require_once LUXRIDE_THEME_DIR . '/inc/seo.php';
 require_once LUXRIDE_THEME_DIR . '/inc/settings.php';
