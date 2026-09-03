@@ -246,7 +246,8 @@ final class LuxRide_Booking_Admin
 
         $booking_id = isset($_POST['booking_id']) ? absint($_POST['booking_id']) : 0;
         $status = sanitize_key((string) ($_POST['status'] ?? ''));
-        $updated = $booking_id && LuxRide_Booking_Bookings::update_status($booking_id, $status);
+        $result = $booking_id ? LuxRide_Booking_Bookings::update_status_with_confirmation($booking_id, $status) : [];
+        $updated = !empty($result['updated']);
 
         wp_safe_redirect(add_query_arg([
             'page' => 'luxride-bookings',
@@ -360,10 +361,10 @@ final class LuxRide_Booking_Admin
     public static function save_promotion(): void
     {
         self::guard_action('luxride_booking_save_promotion');
-        $route_id = isset($_POST['route_id']) ? absint($_POST['route_id']) : 0;
         $input = wp_unslash($_POST);
-        $input['scope'] = $route_id ? 'selected_routes' : 'all_routes';
-        $input['route_ids'] = $route_id ? [$route_id] : [];
+        $scope = sanitize_key((string) ($input['scope'] ?? 'all_routes'));
+        $input['scope'] = in_array($scope, LuxRide_Booking_Promotions::SCOPES, true) ? $scope : 'all_routes';
+        $input['route_ids'] = array_values(array_unique(array_filter(array_map('absint', (array) ($input['route_ids'] ?? [])))));
         $saved = LuxRide_Booking_Promotions::save($input, get_current_user_id());
 
         wp_safe_redirect(add_query_arg([
@@ -473,7 +474,7 @@ final class LuxRide_Booking_Admin
         <div class="wrap">
             <h1><?php echo esc_html__('LuxRide Promotions', 'luxride-booking-engine'); ?></h1>
             <?php self::render_notice(); ?>
-            <p><?php echo esc_html__('Create a simple discount for all routes or one selected route.', 'luxride-booking-engine'); ?></p>
+            <p><?php echo esc_html__('Create a discount for all routes or select multiple routes with the checkboxes below.', 'luxride-booking-engine'); ?></p>
             <h2><?php echo esc_html($promotion ? __('Edit promotion', 'luxride-booking-engine') : __('Add promotion', 'luxride-booking-engine')); ?></h2>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="max-width: 900px;">
                 <input type="hidden" name="action" value="luxride_booking_save_promotion">
@@ -481,7 +482,48 @@ final class LuxRide_Booking_Admin
                 <?php wp_nonce_field('luxride_booking_save_promotion'); ?>
                 <table class="form-table" role="presentation">
                     <tr><th scope="row"><label for="promotion_name"><?php echo esc_html__('Name', 'luxride-booking-engine'); ?></label></th><td><input class="regular-text" id="promotion_name" name="name" value="<?php echo esc_attr((string) ($promotion['name'] ?? '')); ?>" required></td></tr>
-                    <tr><th scope="row"><label for="promotion_route"><?php echo esc_html__('Route', 'luxride-booking-engine'); ?></label></th><td><select id="promotion_route" name="route_id"><option value="0"><?php echo esc_html__('All routes', 'luxride-booking-engine'); ?></option><?php foreach ($routes as $route) : ?><option value="<?php echo esc_attr((string) $route['id']); ?>" <?php selected(in_array((int) $route['id'], $selected_routes, true) ? (int) $route['id'] : 0, (int) $route['id']); ?>><?php echo esc_html(self::route_label($route)); ?></option><?php endforeach; ?></select></td></tr>
+                    <tr>
+                        <th scope="row"><?php echo esc_html__('Routes', 'luxride-booking-engine'); ?></th>
+                        <td>
+                            <?php $scope = (string) ($promotion['scope'] ?? 'all_routes'); ?>
+                            <p style="margin-top: 0;"><label><input type="radio" name="scope" value="all_routes" <?php checked($scope, 'all_routes'); ?>> <?php echo esc_html__('All routes', 'luxride-booking-engine'); ?></label></p>
+                            <p><label><input type="radio" name="scope" value="selected_routes" <?php checked($scope, 'selected_routes'); ?>> <?php echo esc_html__('Selected routes', 'luxride-booking-engine'); ?></label></p>
+                            <input type="search" id="promotion_route_filter" placeholder="<?php echo esc_attr__('Search routes', 'luxride-booking-engine'); ?>" style="width: 100%; max-width: 420px;">
+                            <p><label><input type="checkbox" id="promotion_select_visible"> <?php echo esc_html__('Select all visible routes', 'luxride-booking-engine'); ?></label></p>
+                            <div id="promotion_routes" style="max-height: 520px; overflow: auto; border: 1px solid #ccd0d4; padding: 8px; background: #fff; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 6px 14px;">
+                                <?php foreach ($routes as $route) : $route_id = (int) $route['id']; ?>
+                                    <label data-route-option style="display: flex; align-items: flex-start; gap: 7px; padding: 5px 2px;">
+                                        <input type="checkbox" name="route_ids[]" value="<?php echo esc_attr((string) $route_id); ?>" <?php checked(in_array($route_id, $selected_routes, true)); ?>>
+                                        <span><?php echo esc_html(self::route_label($route)); ?> <code><?php echo esc_html((string) $route['route_code']); ?></code></span>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
+                            <p class="description"><?php echo esc_html__('Choose Selected routes and tick one or more destinations. The All routes option ignores the checked list.', 'luxride-booking-engine'); ?></p>
+                            <script>
+                            (function () {
+                                var filter = document.getElementById('promotion_route_filter');
+                                var selectVisible = document.getElementById('promotion_select_visible');
+                                var options = Array.prototype.slice.call(document.querySelectorAll('#promotion_routes [data-route-option]'));
+                                if (!filter || !selectVisible) return;
+                                filter.addEventListener('input', function () {
+                                    var query = filter.value.toLowerCase().trim();
+                                    options.forEach(function (option) {
+                                        option.style.display = !query || option.textContent.toLowerCase().indexOf(query) !== -1 ? 'flex' : 'none';
+                                    });
+                                    selectVisible.checked = false;
+                                });
+                                selectVisible.addEventListener('change', function () {
+                                    options.forEach(function (option) {
+                                        if (option.style.display !== 'none') {
+                                            var checkbox = option.querySelector('input[type="checkbox"]');
+                                            if (checkbox) checkbox.checked = selectVisible.checked;
+                                        }
+                                    });
+                                });
+                            }());
+                            </script>
+                        </td>
+                    </tr>
                     <tr><th scope="row"><label for="promotion_type"><?php echo esc_html__('Discount Type', 'luxride-booking-engine'); ?></label></th><td><select id="promotion_type" name="discount_type"><option value="percent" <?php selected((string) ($promotion['discount_type'] ?? 'percent'), 'percent'); ?>><?php echo esc_html__('Percentage', 'luxride-booking-engine'); ?></option><option value="fixed" <?php selected((string) ($promotion['discount_type'] ?? ''), 'fixed'); ?>><?php echo esc_html__('Fixed Amount (EUR)', 'luxride-booking-engine'); ?></option></select></td></tr>
                     <tr><th scope="row"><label for="promotion_value"><?php echo esc_html__('Discount Value', 'luxride-booking-engine'); ?></label></th><td><input class="small-text" id="promotion_value" name="discount_value" type="number" min="0.01" step="0.01" value="<?php echo esc_attr((string) ($promotion['discount_value'] ?? '')); ?>" required></td></tr>
                     <tr><th scope="row"><?php echo esc_html__('Active', 'luxride-booking-engine'); ?></th><td><label><input name="active" type="checkbox" value="1" <?php checked(!$promotion || !empty($promotion['active'])); ?>> <?php echo esc_html__('Enabled', 'luxride-booking-engine'); ?></label></td></tr>
@@ -1475,7 +1517,16 @@ final class LuxRide_Booking_Admin
             return '-';
         }
 
-        $timezone = LuxRide_Booking_Settings::get('availability_timezone') ?: wp_timezone();
+        $timezone_setting = LuxRide_Booking_Settings::get('availability_timezone');
+        if ($timezone_setting instanceof DateTimeZone) {
+            $timezone = $timezone_setting;
+        } else {
+            try {
+                $timezone = new DateTimeZone((string) ($timezone_setting ?: wp_timezone_string()));
+            } catch (Exception $exception) {
+                $timezone = wp_timezone();
+            }
+        }
         $date = date_create_immutable($value, $timezone);
         if (!$date) {
             return $value;
