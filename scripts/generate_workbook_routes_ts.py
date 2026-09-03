@@ -49,8 +49,9 @@ def main() -> int:
 
     payload = json.loads(Path(args.json_in).read_text(encoding="utf-8"))
     summary = payload["summary"]
+    source_file = summary.get("source_file") or Path(summary["workbook"]).name
     meta = {
-        "sourceFile": "LuxRide-Pricelist.xlsx",
+        "sourceFile": source_file,
         "sha256": summary["sha256"],
         "sheetName": summary["parsed_sheet"],
         "sourceRows": summary["raw_data_rows"],
@@ -61,7 +62,7 @@ def main() -> int:
     rows = [route_row(route) for route in payload["routes"]]
 
     lines = [
-        "// Generated from LuxRide-Pricelist.xlsx. Do not hand-edit route values.",
+        f"// Generated from {source_file}. Do not hand-edit route values.",
         "// Source values are exact workbook prices; no vehicle ratio derivation is used.",
         "",
         'export type WorkbookDraftStatus = "confirmed" | "provisional";',

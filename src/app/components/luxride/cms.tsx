@@ -22,6 +22,7 @@ export interface LuxRideSettings {
   facebookUrl: string;
   instagramUrl: string;
   tripadvisorUrl: string;
+  minimumLeadHours: number;
 }
 
 export interface CmsDestination extends PopularTransfer {
@@ -68,6 +69,7 @@ const DEFAULT_SETTINGS: LuxRideSettings = {
   facebookUrl: FACEBOOK_URL,
   instagramUrl: INSTAGRAM_URL,
   tripadvisorUrl: TRIPADVISOR_URL,
+  minimumLeadHours: 3,
 };
 
 const PUBLIC_ROUTE_ALIASES: Record<string, { routeKey: string; label: { EN: string; AR: string } }> = {
@@ -152,6 +154,11 @@ function hasText(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
 
+function positiveNumber(value: unknown): number | undefined {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : undefined;
+}
+
 function publicRouteKey(value: string): string {
   return PUBLIC_ROUTE_ALIASES[value]?.routeKey ?? value;
 }
@@ -174,8 +181,16 @@ function publicDisplayLabel(value: string, existing: CmsDestination["displayFrom
 }
 
 function normalizeCmsDestinationRoute(destination: CmsDestination): CmsDestination {
+  const fromPrice = positiveNumber(destination.fromPrice) ?? 0;
+  const oldPrice = positiveNumber(destination.oldPrice);
+  const discountPct = positiveNumber(destination.discountPct);
+  const hasValidDiscount = Boolean(oldPrice && oldPrice > fromPrice && discountPct);
+
   return {
     ...destination,
+    fromPrice,
+    oldPrice: hasValidDiscount ? oldPrice : undefined,
+    discountPct: hasValidDiscount ? discountPct : undefined,
     from: publicRouteKey(destination.from),
     to: publicRouteKey(destination.to),
     displayFrom: publicDisplayLabel(destination.from, destination.displayFrom),
@@ -194,9 +209,10 @@ function normalizeExperience(experience: FeaturedTransfer): FeaturedTransfer {
 }
 
 function normalizeVehicle(vehicle: Vehicle): Vehicle {
-  if (vehicle.id === "xpander") return { ...vehicle, category: "MPV", categoryAr: "MPV" };
-  if (vehicle.id === "hiace") return { ...vehicle, category: "Mini Van", categoryAr: "ميني فان" };
-  return vehicle;
+  const normalized = { ...vehicle, bookingEnabled: vehicle.bookingEnabled !== false };
+  if (vehicle.id === "xpander") return { ...normalized, category: "MPV", categoryAr: "MPV" };
+  if (vehicle.id === "hiace") return { ...normalized, category: "Mini Van", categoryAr: "ميني فان" };
+  return normalized;
 }
 
 function orderPopularTransfers(transfers: CmsDestination[]): CmsDestination[] {
@@ -305,7 +321,24 @@ export function useExperiences(): FeaturedTransfer[] {
 }
 
 export function useFaqItems(context: "home" | "page"): CmsFaqItem[] {
-  return useLuxRideContent().faqs.filter((item) => item.context === context);
+  const { faqs, settings } = useLuxRideContent();
+  const leadHours = Math.max(1, Math.round(settings.minimumLeadHours || 3));
+  const leadHoursArabic = `${leadHours} ${leadHours === 1 ? "ساعة" : "ساعات"}`;
+
+  return faqs
+    .filter((item) => item.context === context)
+    .map((item) => {
+      const isBookingTodayFaq = item.q.EN.toLowerCase().includes("booking for today") || item.q.AR.includes("الحجز لليوم");
+      if (!isBookingTodayFaq) return item;
+
+      return {
+        ...item,
+        a: {
+          EN: `Standard online bookings must be submitted at least ${leadHours} hour${leadHours === 1 ? "" : "s"} before departure. For last-minute or same-day bookings, contact LuxRide directly through WhatsApp to check availability.`,
+          AR: `يجب تقديم الحجوزات القياسية عبر الإنترنت قبل ${leadHoursArabic} على الأقل من المغادرة. للحجوزات اللحظية أو في نفس اليوم، تواصل مع LuxRide مباشرةً عبر واتساب للتحقق من التوفر.`,
+        },
+      };
+    });
 }
 
 export function settingsWhatsappLink(settings: LuxRideSettings, message: string): string {

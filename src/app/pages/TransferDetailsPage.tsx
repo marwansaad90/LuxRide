@@ -29,7 +29,7 @@ export function TransferDetailsPage() {
     return {
       trip: publicTrip,
       label: L(TRIP_LABELS[publicTrip][0], TRIP_LABELS[publicTrip][1]),
-      recommendation: publicTrip === "roundTrip" ? L("Recommended: Round Trip", "موصى به: ذهاب وعودة") : "",
+      recommendation: publicTrip === "roundTrip" ? L("Popular: Round Trip", "شائع: ذهاب وعودة") : "",
       base: route.prices[trip]!,
     };
   });

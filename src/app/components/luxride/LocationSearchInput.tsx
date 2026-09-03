@@ -31,20 +31,31 @@ export function LocationSearchInput({
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const blurTimer = useRef<number | null>(null);
+  const pointerDownInOptions = useRef(false);
 
   useEffect(() => {
     setQuery(value ? locationLabel(lang, value) : "");
   }, [lang, value]);
 
+  useEffect(() => {
+    const resetPointerState = () => { pointerDownInOptions.current = false; };
+    window.addEventListener("pointerup", resetPointerState);
+    window.addEventListener("pointercancel", resetPointerState);
+    return () => {
+      window.removeEventListener("pointerup", resetPointerState);
+      window.removeEventListener("pointercancel", resetPointerState);
+    };
+  }, []);
+
   const filtered = useMemo(() => {
     const search = query.trim().toLowerCase();
-    const unique = Array.from(new Set(options.filter(Boolean)));
-    if (!search) return unique;
-    return unique.filter((option) => {
+    const matching = search ? options.filter((option) => {
       const en = option.toLowerCase();
       const localized = locationLabel(lang, option).toLowerCase();
       return en.includes(search) || localized.includes(search);
-    });
+    }) : options;
+
+    return Array.from(new Set(matching.filter(Boolean)));
   }, [lang, options, query]);
 
   function choose(nextValue: string) {
@@ -78,7 +89,9 @@ export function LocationSearchInput({
           setOpen(true);
         }}
         onBlur={() => {
-          blurTimer.current = window.setTimeout(() => setOpen(false), 120);
+          blurTimer.current = window.setTimeout(() => {
+            if (!pointerDownInOptions.current) setOpen(false);
+          }, 180);
         }}
         onKeyDown={(event) => {
           if (!open && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
@@ -113,6 +126,12 @@ export function LocationSearchInput({
         <div
           id={`${id}-options`}
           role="listbox"
+          onPointerDown={() => {
+            pointerDownInOptions.current = true;
+            if (blurTimer.current) window.clearTimeout(blurTimer.current);
+          }}
+          onPointerUp={() => { pointerDownInOptions.current = false; }}
+          onPointerCancel={() => { pointerDownInOptions.current = false; }}
           className={`absolute z-40 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-lux-green/20 bg-white py-1 text-sm shadow-xl ${isAR ? "text-right" : "text-left"}`}
         >
           {filtered.length ? filtered.map((option, index) => {

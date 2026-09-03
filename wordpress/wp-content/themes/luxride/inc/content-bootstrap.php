@@ -107,7 +107,11 @@ function luxride_content_payload(): array
             'capacityAr' => luxride_text_meta($post->ID, 'luxride_features_ar', ''),
             'permitTier' => luxride_text_meta($post->ID, 'luxride_trip_type', 'sedan'),
             'available' => luxride_bool_meta($post->ID, 'luxride_active', true),
+            'bookingEnabled' => luxride_bool_meta($post->ID, 'luxride_booking_enabled', true),
             'wifi' => luxride_bool_meta($post->ID, 'luxride_wifi', false),
+            'airConditioning' => luxride_bool_meta($post->ID, 'luxride_air_conditioning', true),
+            'usbCharging' => luxride_bool_meta($post->ID, 'luxride_usb_charging', true),
+            'iceBox' => luxride_bool_meta($post->ID, 'luxride_ice_box', false),
             'tagline' => luxride_text_meta($post->ID, 'luxride_summary_en', ''),
             'taglineAr' => luxride_text_meta($post->ID, 'luxride_summary_ar', ''),
             'displayOrder' => (int) $post->menu_order,
@@ -121,6 +125,19 @@ function luxride_content_payload(): array
         }
 
         $contexts = array_filter(array_map('trim', explode(',', (string) luxride_meta($post->ID, 'luxride_context', 'destination'))));
+        $legacy_from_price = (float) luxride_meta($post->ID, 'luxride_from_price', 0);
+        $promotion_price = [];
+        if (class_exists('LuxRide_Booking_Promotions')) {
+            $promotion_price = LuxRide_Booking_Promotions::route_card_pricing(
+                luxride_text_meta($post->ID, 'luxride_route_from', ''),
+                luxride_text_meta($post->ID, 'luxride_route_to', ''),
+                'mpv',
+                'one_way'
+            );
+        }
+        $promotion = is_array($promotion_price['promotion'] ?? null) ? $promotion_price['promotion'] : [];
+        $has_promotion = !empty($promotion['has_promotion']);
+
         $item = [
             'id' => luxride_text_meta($post->ID, 'luxride_source_id', $post->post_name),
             'from' => luxride_text_meta($post->ID, 'luxride_route_from', ''),
@@ -128,9 +145,12 @@ function luxride_content_payload(): array
             'image' => luxride_asset_or_url((string) luxride_meta($post->ID, 'luxride_image_url', '')),
             'imagePosition' => luxride_text_meta($post->ID, 'luxride_image_position', ''),
             'duration' => luxride_text_meta($post->ID, 'luxride_duration', ''),
-            'fromPrice' => (float) luxride_meta($post->ID, 'luxride_from_price', 0),
-            'oldPrice' => luxride_text_meta($post->ID, 'luxride_old_price', ''),
-            'discountPct' => luxride_text_meta($post->ID, 'luxride_discount_pct', ''),
+            'fromPrice' => $has_promotion ? (float) $promotion_price['price'] : $legacy_from_price,
+            'oldPrice' => $has_promotion ? (float) $promotion_price['original_price'] : null,
+            'discountPct' => $has_promotion ? (float) $promotion['promotion_discount_percent'] : null,
+            'promotionName' => $has_promotion ? (string) $promotion['promotion_name'] : null,
+            'promotionStartAt' => $has_promotion ? (string) ($promotion['promotion_start_at'] ?? '') : null,
+            'promotionEndAt' => $has_promotion ? (string) ($promotion['promotion_end_at'] ?? '') : null,
             'airport' => luxride_bool_meta($post->ID, 'luxride_airport_fee', false),
             'permit' => luxride_bool_meta($post->ID, 'luxride_permit_required', false),
             'displayFrom' => [
@@ -218,6 +238,7 @@ function luxride_content_payload(): array
 function luxride_camel_settings(): array
 {
     $settings = array_merge(luxride_default_options(), (array) get_option('luxride_site_settings', []));
+    $booking_settings = class_exists('LuxRide_Booking_Settings') ? LuxRide_Booking_Settings::all() : [];
     return [
         'phoneDisplay' => $settings['phone_display'],
         'whatsappNumber' => $settings['whatsapp_number'],
@@ -225,6 +246,7 @@ function luxride_camel_settings(): array
         'facebookUrl' => $settings['facebook_url'],
         'instagramUrl' => $settings['instagram_url'],
         'tripadvisorUrl' => $settings['tripadvisor_url'],
+        'minimumLeadHours' => max(1, (int) ($booking_settings['minimum_lead_hours'] ?? 3)),
     ];
 }
 

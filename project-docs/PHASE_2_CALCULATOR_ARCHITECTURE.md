@@ -119,7 +119,7 @@ Output includes route, vehicle, classification, fee breakdown, total, required f
 - Compares explicit `review_total` against the recalculated quote and returns `price_changed` when it differs.
 - Returns `last_minute_required` for normal booking attempts inside the minimum lead window.
 - Stores snapshots in `wp_luxride_bookings`.
-- Returns a customer-facing reference like `LXR-YYYYMMDD-XXXX`.
+- Returns a customer-facing reference like `LRT-YYYYMMDD-XXXX`.
 - Fires `do_action('luxride_booking_created', $booking_id, $booking)` for Phase 3 notifications.
 
 ## Import Workflow

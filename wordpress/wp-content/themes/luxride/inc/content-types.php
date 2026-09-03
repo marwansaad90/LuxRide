@@ -34,6 +34,7 @@ function luxride_register_content_types(): void
         'luxride_route_to_ar' => 'string',
         'luxride_trip_type' => 'string',
         'luxride_active' => 'boolean',
+        'luxride_booking_enabled' => 'boolean',
         'luxride_wifi' => 'boolean',
         'luxride_source_id' => 'string',
         'luxride_image_url' => 'string',

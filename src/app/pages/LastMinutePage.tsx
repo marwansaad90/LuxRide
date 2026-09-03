@@ -8,6 +8,9 @@ import { CLIENT_ACCENT_TEXT, CLIENT_ACCENT_YELLOW } from "../components/luxride/
 export function LastMinutePage() {
   const L = useL();
   const settings = useSiteSettings();
+  const leadHours = Math.max(1, Math.round(settings.minimumLeadHours || 3));
+  const leadHoursText = `${leadHours} ${leadHours === 1 ? "hour" : "hours"}`;
+  const leadHoursArabic = `${leadHours} ${leadHours === 1 ? "ساعة" : "ساعات"}`;
 
   const steps = [
     { t: L("Message us on WhatsApp", "راسلنا على واتساب"), d: L("Tell us your route, time and number of passengers for today.", "أخبرنا بمسارك ووقتك وعدد الركاب لليوم.") },
@@ -20,8 +23,8 @@ export function LastMinutePage() {
       crumb={L("Last-minute Booking", "الحجز اللحظي")}
       title={L("Last-minute Booking", "الحجز اللحظي")}
       subtitle={L(
-        "Standard online bookings require at least 3 hours' notice. Travelling sooner? We can still help — just reach out on WhatsApp.",
-        "تتطلب الحجوزات القياسية عبر الإنترنت مهلة ٣ ساعات على الأقل. تسافر أقرب من ذلك؟ لا يزال بإمكاننا المساعدة — تواصل معنا عبر واتساب.",
+        `Standard online bookings require at least ${leadHoursText}' notice. Travelling sooner? We can still help — just reach out on WhatsApp.`,
+        `يتطلب الحجز عبر الموقع قبل موعد الرحلة بـ ${leadHoursArabic} على الأقل. تسافر أقرب من ذلك؟ لا يزال بإمكاننا المساعدة — تواصل معنا عبر واتساب.`,
       )}
     >
       <section className="bg-lux-beige py-16 md:py-24">

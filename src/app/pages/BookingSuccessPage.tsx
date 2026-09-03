@@ -9,6 +9,7 @@ import { useL } from "../components/luxride/i18n";
 interface BookingSuccessState {
   bookingReference?: string;
   tripLabel: string;
+  tripClassificationLabel?: string;
   route: string;
   vehicleName: string;
   vehicleCategory: string;
@@ -81,6 +82,7 @@ export function BookingSuccessPage() {
     `${L("Booking Reference", "رقم الحجز")}: ${booking.bookingReference ?? "-"}`,
     `${L("Route", "المسار")}: ${booking.route}`,
     `${L("Trip Type", "نوع التوصيلة")}: ${booking.tripLabel}`,
+    ...(booking.tripClassificationLabel ? [`${L("Trip classification", "تصنيف الرحلة")}: ${booking.tripClassificationLabel}`] : []),
     `${L("Departure", "المغادرة")}: ${booking.departureDate && booking.departureTime ? `${booking.departureDate} ${L("at", "الساعة")} ${booking.departureTime}` : booking.departure}`,
     `${L("Return", "العودة")}: ${returnValue}`,
     `${L("Vehicle", "السيارة")}: ${booking.vehicleName} / ${booking.vehicleCategory}`,
@@ -102,6 +104,7 @@ export function BookingSuccessPage() {
   const summary = [
     ...(booking.bookingReference ? [{ k: L("Booking reference", "رقم الحجز"), v: booking.bookingReference }] : []),
     { k: L("Transfer type", "نوع التوصيلة"), v: booking.tripLabel },
+    ...(booking.tripClassificationLabel ? [{ k: L("Trip classification", "تصنيف الرحلة"), v: booking.tripClassificationLabel }] : []),
     { k: L("Route", "المسار"), v: booking.route },
     { k: L("Vehicle", "السيارة"), v: `${booking.vehicleName} (${booking.vehicleCategory})` },
     { k: L("Departure", "المغادرة"), v: booking.departure },
@@ -122,7 +125,9 @@ export function BookingSuccessPage() {
             "تم حفظ طلبك في لوحة حجوزات LuxRide ليقوم الفريق بمراجعته. يمكنك إرسال رقم الحجز عبر واتساب للمتابعة.",
           )}
         </p>
-        <img src={booking.vehicleImage} alt={booking.vehicleName} className="mx-auto mt-5 h-36 w-full rounded-2xl bg-neutral-50 object-contain p-3" style={{ direction: "ltr" }} />
+        <div className="mx-auto mt-5 flex h-36 w-full items-center justify-center rounded-2xl bg-white p-3">
+          <img src={booking.vehicleImage} alt={booking.vehicleName} className="h-full w-full object-contain" style={{ direction: "ltr" }} />
+        </div>
         <div className="mt-6 overflow-hidden rounded-2xl border border-lux-charcoal/10 text-start">{summary.map((row, index) => <div key={row.k} className={`flex items-center justify-between gap-4 px-5 py-3 text-sm ${index > 0 ? "border-t border-lux-charcoal/10" : ""} ${row.k === L("Final total", "الإجمالي النهائي") ? "bg-lux-green/5" : ""}`}><span className="text-neutral-500">{row.k}</span><span className="break-words text-end text-lux-charcoal">{row.v}</span></div>)}</div>
         <p className="mt-5 text-start text-sm text-neutral-600">{L("Full refund when cancelled at least 24 hours before the experience start time in the local timezone. No refund for cancellation less than 24 hours before the start time.", "استرداد كامل عند الإلغاء قبل 24 ساعة على الأقل من وقت بدء التجربة بالتوقيت المحلي. لا استرداد عند الإلغاء قبل أقل من 24 ساعة.")}</p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row"><a href={settingsWhatsappLink(settings, whatsappMessage)} target="_blank" rel="noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-full bg-lux-green py-3 text-sm text-white transition-all hover:brightness-110"><WhatsAppIcon className="h-4 w-4" /> {L("Follow up on WhatsApp", "تابع عبر واتساب")}</a><Link to="/" className="flex flex-1 items-center justify-center rounded-full border border-lux-charcoal/15 py-3 text-sm text-lux-charcoal">{L("Back to Home", "العودة للرئيسية")}</Link></div>

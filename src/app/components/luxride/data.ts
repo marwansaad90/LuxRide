@@ -21,6 +21,7 @@ import aswanImg from "../../../assets/destinations/aswan-private-transfer.webp";
 import somaBayImg from "../../../assets/destinations/soma-bay-transfer.webp";
 import wadiElGemalImg from "../../../assets/destinations/wadi-el-gemal-transfer.webp";
 import { WORKBOOK_PRICE_LIST_META, WORKBOOK_PRICE_LIST_ROWS, type WorkbookDraftStatus, type WorkbookRouteRow } from "./workbookRoutes";
+import { locationLabel, type Lang } from "./i18n";
 
 export const VEHICLE_IMAGES = {
   xpander: xpanderImg,
@@ -128,9 +129,22 @@ export interface Vehicle {
   capacityAr: string;
   permitTier: PermitTier;
   available: boolean;
+  bookingEnabled?: boolean;
   wifi: boolean;
+  airConditioning?: boolean;
+  usbCharging?: boolean;
+  iceBox?: boolean;
   tagline: string;
   taglineAr: string;
+}
+
+export type VehicleFeatureKey = "capacity" | "airConditioning" | "usbCharging" | "wifi" | "iceBox";
+
+export interface VehicleFeatureRow {
+  key: VehicleFeatureKey;
+  en: string;
+  ar: string;
+  available?: boolean;
 }
 
 export const FLEET: Vehicle[] = [
@@ -146,7 +160,11 @@ export const FLEET: Vehicle[] = [
     capacityAr: "حتى 4 ركاب و4 حقائب",
     permitTier: "mpv",
     available: true,
+    bookingEnabled: true,
     wifi: true,
+    airConditioning: true,
+    usbCharging: true,
+    iceBox: true,
     tagline: "Ideal for families and small groups",
     taglineAr: "مثالية للعائلات والمجموعات الصغيرة",
   },
@@ -162,7 +180,11 @@ export const FLEET: Vehicle[] = [
     capacityAr: "حتى 3 ركاب وحقيبتين",
     permitTier: "sedan",
     available: false,
+    bookingEnabled: true,
     wifi: true,
+    airConditioning: true,
+    usbCharging: true,
+    iceBox: true,
     tagline: "Comfortable private car for couples and solo travellers",
     taglineAr: "سيارة مريحة للأزواج والمسافرين بمفردهم",
   },
@@ -178,7 +200,11 @@ export const FLEET: Vehicle[] = [
     capacityAr: "حتى 8 ركاب و8 حقائب",
     permitTier: "minivan",
     available: false,
+    bookingEnabled: true,
     wifi: true,
+    airConditioning: true,
+    usbCharging: true,
+    iceBox: true,
     tagline: "For larger groups and extra luggage",
     taglineAr: "للمجموعات الأكبر والأمتعة الإضافية",
   },
@@ -210,6 +236,7 @@ export interface Route {
   fromAr?: string;
   toAr?: string;
   outboundClassification?: string;
+  outboundClassificationAr?: string;
   returnClassification?: string;
   returnClassificationAr?: string;
   duration: string;
@@ -217,6 +244,7 @@ export interface Route {
   airport?: boolean; // Hurghada Airport arrival/departure → €2 surcharge
   permit?: boolean; // out-of-city permit destination
   discountPct?: number; // route-specific promotional discount
+  promotion?: { name?: string; type: "percent" | "fixed"; value: number; discountPercent?: number; startAt?: string; endAt?: string };
   accommodationRequired?: boolean; // only set after client confirms the route rule
 }
 
@@ -309,6 +337,7 @@ function routeFromWorkbook(row: WorkbookRouteRow): Route {
     permit: row.permitRequired,
     accommodationRequired: roundTripMode === "overnight",
     outboundClassification: row.outboundTripName,
+    outboundClassificationAr: row.outboundTripNameAr,
     returnClassification: row.returnTripName,
     returnClassificationAr: row.returnTripNameAr,
     draftStatus: row.draftStatus,
@@ -329,8 +358,13 @@ interface ApiRoute {
   destination: { key: string; label: string; ar?: string };
   recommended_trip_type?: "one_way" | "round_trip";
   round_trip_classification?: RoundTripMode;
+  trip_name_one_way?: string;
+  trip_name_return?: string;
+  trip_name_one_way_ar?: string;
+  trip_name_return_ar?: string;
   airport_fee_applicable?: boolean;
   permit_required?: boolean;
+  promotion?: { name?: string; type: "percent" | "fixed"; value: number; discount_percent?: number; start_at?: string; end_at?: string } | null;
   prices?: Partial<Record<"sedan" | "mpv" | "minivan", ApiRoutePrice>>;
 }
 
@@ -357,10 +391,20 @@ export function routeFromApiRoute(row: ApiRoute): Route {
     } as WorkbookRouteRow),
     airport: Boolean(row.airport_fee_applicable),
     permit: Boolean(row.permit_required),
+    promotion: row.promotion ? {
+      name: row.promotion.name,
+      type: row.promotion.type,
+      value: Number(row.promotion.value),
+      discountPercent: Number(row.promotion.discount_percent ?? 0),
+      startAt: row.promotion.start_at,
+      endAt: row.promotion.end_at,
+    } : undefined,
+    discountPct: row.promotion?.type === "percent" ? Number(row.promotion.value) : Number(row.promotion?.discount_percent ?? 0) || undefined,
     accommodationRequired: roundTripMode === "overnight",
-    outboundClassification: "",
-    returnClassification: roundTripMode,
-    returnClassificationAr: roundTripMode === "overnight" ? "رحلة مع مبيت" : "جولة يوم كامل",
+    outboundClassification: row.trip_name_one_way ?? "",
+    outboundClassificationAr: row.trip_name_one_way_ar ?? "",
+    returnClassification: row.trip_name_return ?? (roundTripMode === "overnight" ? "Overnight" : "Overday"),
+    returnClassificationAr: row.trip_name_return_ar ?? (roundTripMode === "overnight" ? "رحلة مع مبيت" : "جولة يوم كامل"),
     draftStatus: "confirmed",
   };
 }
@@ -386,6 +430,12 @@ export function pickupLocations(): string[] {
 
 export function pickupLocationsFor(routes: readonly Route[]): string[] {
   return Array.from(new Set(routes.map((r) => r.from)));
+}
+
+export function sortLocationOptions(options: readonly string[], lang: Lang): string[] {
+  const collator = new Intl.Collator(lang === "AR" ? "ar" : "en", { sensitivity: "base", numeric: true });
+  const unique = Array.from(new Set(options.filter(Boolean)));
+  return [...unique].sort((a, b) => collator.compare(locationLabel(lang, a), locationLabel(lang, b)));
 }
 
 export function destinationsFor(from: string): string[] {
@@ -418,11 +468,19 @@ export function computePrice(
   route: Route,
   trip: TripType,
   vehicle: Vehicle,
+  travelDateTime = "",
 ): PriceBreakdown | null {
   const base = route.vehiclePrices[vehicle.id]?.[trip];
   if (base == null) return null;
-  const discount = route.discountPct
-    ? Math.round(base * route.discountPct) / 100
+  const promotionDate = travelDateTime.trim().replace("T", " ").slice(0, 16);
+  const promotionStart = route.promotion?.startAt?.trim().replace("T", " ").slice(0, 16) ?? "";
+  const promotionEnd = route.promotion?.endAt?.trim().replace("T", " ").slice(0, 16) ?? "";
+  const promotionEligible = !promotionDate || ((!promotionStart || promotionDate >= promotionStart) && (!promotionEnd || promotionDate <= promotionEnd));
+  const activePromotion = route.promotion && promotionEligible ? route.promotion : undefined;
+  const discount = activePromotion
+    ? activePromotion.type === "fixed"
+      ? Math.min(base, activePromotion.value)
+      : Math.round(base * activePromotion.value) / 100
     : 0;
   const subtotal = base - discount;
   const airport = route.airport ? AIRPORT_SURCHARGE : 0;
@@ -475,11 +533,30 @@ export function defaultPublicTrip(route: Route | undefined): PublicTripType {
 }
 
 export function isVehicleSelectable(vehicle: Vehicle): boolean {
-  return CLIENT_REVIEW_ENABLE_ALL_VEHICLES || vehicle.available;
+  return (CLIENT_REVIEW_ENABLE_ALL_VEHICLES || vehicle.available) && vehicle.bookingEnabled !== false;
+}
+
+export function vehicleChargingLabel(vehicle: Vehicle, lang: Lang): string {
+  return vehicle.id === "hiace"
+    ? lang === "AR" ? "منافذ شحن USB متوفرة في المقصورة الأمامية" : "USB charging available in the front cabin"
+    : lang === "AR" ? "شحن USB نوع A/C" : "USB Type-A/C charging";
 }
 
 export function availableVehicle(value: string | null): Vehicle {
-  return SELECTABLE_FLEET.find((vehicle) => vehicle.id === value) ?? SELECTABLE_FLEET[0] ?? ACTIVE_FLEET[0];
+  return SELECTABLE_FLEET.find((vehicle) => vehicle.id === value && isVehicleSelectable(vehicle))
+    ?? SELECTABLE_FLEET.find(isVehicleSelectable)
+    ?? SELECTABLE_FLEET[0]
+  ?? ACTIVE_FLEET[0];
+}
+
+export function vehicleFeatureRows(vehicle: Vehicle): VehicleFeatureRow[] {
+  return [
+    { key: "capacity", en: vehicle.capacityEn, ar: vehicle.capacityAr },
+    { key: "airConditioning", en: "Air conditioning", ar: "تكييف هواء", available: vehicle.airConditioning !== false },
+    { key: "usbCharging", en: vehicleChargingLabel(vehicle, "EN"), ar: vehicleChargingLabel(vehicle, "AR"), available: vehicle.usbCharging !== false },
+    { key: "wifi", en: vehicle.wifi ? "WiFi on board" : "WiFi not available", ar: vehicle.wifi ? "واي فاي متوفر" : "الواي فاي غير متوفر", available: vehicle.wifi },
+    { key: "iceBox", en: "Ice Box / Chilled Drinks Box", ar: "صندوق حفظ المشروبات", available: vehicle.iceBox !== false },
+  ];
 }
 
 export function clampWholeNumber(value: string | null, min: number, max: number): number {
@@ -498,6 +575,9 @@ export interface PopularTransfer {
   fromPrice: number;
   oldPrice?: number;
   discountPct?: number;
+  promotionName?: string;
+  promotionStartAt?: string;
+  promotionEndAt?: string;
   airport?: boolean;
   permit?: boolean;
   displayFrom?: Partial<Record<"EN" | "AR", string>>;

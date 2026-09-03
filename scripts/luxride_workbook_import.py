@@ -183,6 +183,7 @@ def parse_workbook(path: Path) -> dict[str, Any]:
     duplicate_conflicts = [item for item in duplicates if not item["identical"]]
     summary = {
         "workbook": str(path.resolve()),
+        "source_file": path.name,
         "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
         "sheet_names": workbook.sheetnames,
         "parsed_sheet": sheet_name,

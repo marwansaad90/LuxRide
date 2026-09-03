@@ -9,11 +9,10 @@ import {
   Headphones,
   MapPinned,
   PlaneLanding,
-  PackageCheck,
   Send,
   ShieldCheck,
-  Snowflake,
   Sparkles,
+  Snowflake,
   Usb,
   Users,
   Wallet,
@@ -27,6 +26,7 @@ import {
   availablePublicTripTypes,
   isVehicleSelectable,
 } from "./data";
+import { VehicleFeatures } from "./VehicleFeatures";
 import { settingsWhatsappLink, usePopularTransfers, useSiteSettings, useVehicles } from "./cms";
 import { locationLabel, useLang, t } from "./i18n";
 import { WhatsAppIcon } from "./WhatsAppIcon";
@@ -120,6 +120,9 @@ export function LastMinute() {
   const lang = useLang();
   const settings = useSiteSettings();
   const isAR = lang === "AR";
+  const leadHours = Math.max(1, Math.round(settings.minimumLeadHours || 3));
+  const leadHoursText = isAR ? `${leadHours} ساعات` : `${leadHours} hour${leadHours === 1 ? "" : "s"}`;
+  const leadHoursArabic = `${leadHours} ${leadHours === 1 ? "ساعة" : "ساعات"}`;
   return (
     <section className="border-y border-[#ffcc00]/35 bg-[#FBF5EF] py-10">
       <div className="mx-auto max-w-5xl px-4 md:px-8">
@@ -140,12 +143,12 @@ export function LastMinute() {
                 fontWeight: 700,
               }}
             >
-              {isAR ? "هل تحتاج إلى توصيلة خلال أقل من 3 ساعات؟" : "Need a transfer within 3 hours?"}
+              {isAR ? `هل تحتاج إلى توصيلة خلال أقل من ${leadHoursArabic}؟` : `Need a transfer within ${leadHoursText}?`}
             </h3>
             <p className="mt-1 max-w-xl text-gray-600 text-sm" style={{ lineHeight: 1.6 }}>
               {isAR
-                ? "تتطلب الحجوزات العادية وجود فاصل زمني لا يقل عن 3 ساعات قبل موعد التحرك. للحجوزات العاجلة، تواصل معنا مباشرة عبر واتساب للتحقق من الإتاحة."
-                : "Standard online bookings require at least three hours before pickup. For a last-minute request, contact LuxRide directly through WhatsApp to check availability."}
+                ? `يتطلب الحجز عبر الموقع قبل موعد الرحلة بـ ${leadHoursArabic} على الأقل. للحجوزات العاجلة، تواصل معنا مباشرة عبر واتساب للتحقق من الإتاحة.`
+                : `Online bookings require at least ${leadHoursText}' notice. For a last-minute request, contact LuxRide directly through WhatsApp to check availability.`}
             </p>
           </div>
           <div className="shrink-0 text-center">
@@ -182,6 +185,10 @@ export function PopularTransfers() {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {popularTransfers.map((tr) => {
             const imagePosition = tr.imagePosition ?? "center";
+            const salePrice = Number(tr.fromPrice) > 0 ? Number(tr.fromPrice) : undefined;
+            const oldPrice = Number(tr.oldPrice) > 0 ? Number(tr.oldPrice) : undefined;
+            const discountPct = Number(tr.discountPct) > 0 ? Number(tr.discountPct) : undefined;
+            const hasValidDiscount = Boolean(salePrice && oldPrice && oldPrice > salePrice && discountPct);
             return (
             <div
               key={tr.id}
@@ -194,9 +201,9 @@ export function PopularTransfers() {
                   className="popular-transfer-image h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   style={{ filter: "none", opacity: 1, mixBlendMode: "normal", objectPosition: imagePosition }}
                 />
-                {tr.discountPct && (
-                  <span className="absolute left-4 top-4 rounded-full px-3 py-1 text-xs" style={{ backgroundColor: CLIENT_ACCENT_YELLOW, color: CLIENT_ACCENT_TEXT }}>
-                    {tr.discountPct}% OFF
+                {hasValidDiscount && (
+                  <span className="absolute left-4 top-4 rounded-full bg-lux-orange px-3 py-1 text-xs font-bold text-white shadow-sm">
+                    {lang === "AR" ? "عرض خاص" : "Special Offer"} · {discountPct}%
                   </span>
                 )}
               </div>
@@ -207,8 +214,8 @@ export function PopularTransfers() {
                     {tr.displayTo?.[lang] ?? locationLabel(lang, tr.to)}
                   </h3>
                   <div className="shrink-0 text-end">
-                    {tr.oldPrice && <p className="text-xs text-neutral-400 line-through">€{tr.oldPrice}</p>}
-                    <p className="text-sm font-bold text-lux-green">{lang === "AR" ? "من" : "from"} €{tr.fromPrice}</p>
+                    {hasValidDiscount && <p className="text-xs text-neutral-400 line-through">€{oldPrice}</p>}
+                    <p className="text-sm font-bold text-lux-green">{lang === "AR" ? "من" : "from"} €{salePrice}</p>
                   </div>
                 </div>
                 <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-neutral-500">
@@ -237,14 +244,6 @@ export function PopularTransfers() {
 export function Fleet() {
   const lang = useLang();
   const vehicles = useVehicles();
-  const vehicleChargingText = (id: string) =>
-    id === "hiace"
-      ? lang === "AR"
-        ? "منافذ شحن USB متوفرة في المقصورة الأمامية"
-        : "USB charging available in the front cabin"
-      : lang === "AR"
-        ? "شحن USB نوع A/C"
-        : "USB Type-A/C charging";
 
   return (
     <section id="fleet" className="bg-white py-14 md:py-18">
@@ -279,7 +278,7 @@ export function Fleet() {
                     isVehicleSelectable(v) ? "bg-lux-green text-white" : "bg-lux-charcoal/90 text-lux-beige/80"
                   }`}
                 >
-                  {isVehicleSelectable(v) ? t(lang, "fleet_available") : t(lang, "fleet_soon")}
+                  {isVehicleSelectable(v) ? t(lang, "fleet_available") : (lang === "AR" ? "غير متاحة حالياً" : "Temporarily Unavailable")}
                 </span>
                 <span className="absolute right-4 top-4 rounded-full px-3.5 py-1.5 text-xs font-bold" style={{ backgroundColor: CLIENT_ACCENT_YELLOW, color: CLIENT_ACCENT_TEXT }} data-fleet-type-badge="client-accent">
                   {lang === "AR" ? v.categoryAr : v.category}
@@ -291,23 +290,7 @@ export function Fleet() {
                   <Sparkles className="h-4 w-4 text-lux-client-accent" />
                 </div>
                 <p className="mt-1 min-h-10 text-sm text-neutral-500">{lang === "AR" ? v.taglineAr : v.tagline}</p>
-                <div className="mt-5 grid grid-cols-2 gap-3 text-sm text-neutral-600">
-                  <span className="col-span-2 flex items-center gap-2">
-                    <Users className="h-4 w-4 text-lux-green" /> {lang === "AR" ? v.capacityAr : v.capacityEn}
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <Snowflake className="h-4 w-4 text-lux-green" /> {t(lang, "fleet_ac")}
-                  </span>
-                  <span className="flex items-center gap-2" title={vehicleChargingText(v.id)}>
-                    <Usb className="h-4 w-4 text-lux-green" /> USB
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <Wifi className={`h-4 w-4 ${v.wifi ? "text-lux-green" : "text-neutral-300"}`} /> WiFi
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <PackageCheck className="h-4 w-4 text-lux-green" /> {lang === "AR" ? "صندوق مشروبات" : "Ice Box"}
-                  </span>
-                </div>
+                <VehicleFeatures vehicle={v} lang={lang} />
                 <div className="mt-auto flex items-center justify-between border-t border-neutral-100 pt-4">
                   <span className="text-sm text-neutral-500">{t(lang, "fleet_price")}</span>
                   {isVehicleSelectable(v) ? (
@@ -319,7 +302,7 @@ export function Fleet() {
                     </Link>
                   ) : (
                     <span className="cursor-not-allowed rounded-full border border-neutral-200 px-5 py-2 text-sm text-neutral-400">
-                      {t(lang, "fleet_soon")}
+                      {lang === "AR" ? "غير متاحة للحجز حالياً" : "Currently Unavailable"}
                     </span>
                   )}
                 </div>

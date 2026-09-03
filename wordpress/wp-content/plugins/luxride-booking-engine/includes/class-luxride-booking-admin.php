@@ -13,6 +13,7 @@ final class LuxRide_Booking_Admin
         add_action('admin_post_luxride_booking_save_route', [self::class, 'save_route']);
         add_action('admin_post_luxride_booking_import', [self::class, 'handle_import']);
         add_action('admin_post_luxride_booking_export', [self::class, 'handle_export']);
+        add_action('admin_post_luxride_booking_template_xlsx', [self::class, 'download_template_xlsx']);
         add_action('admin_post_luxride_booking_export_bookings', [self::class, 'export_bookings']);
         add_action('admin_post_luxride_booking_export_bookings_xlsx', [self::class, 'export_bookings_xlsx']);
         add_action('admin_post_luxride_booking_update_status', [self::class, 'update_booking_status']);
@@ -20,6 +21,10 @@ final class LuxRide_Booking_Admin
         add_action('admin_post_luxride_booking_delete', [self::class, 'delete_booking']);
         add_action('admin_post_luxride_booking_save_block', [self::class, 'save_block']);
         add_action('admin_post_luxride_booking_delete_block', [self::class, 'delete_block']);
+        add_action('admin_post_luxride_booking_save_pickup_order', [self::class, 'save_pickup_order']);
+        add_action('admin_post_luxride_booking_save_promotion', [self::class, 'save_promotion']);
+        add_action('admin_post_luxride_booking_toggle_promotion', [self::class, 'toggle_promotion']);
+        add_action('admin_post_luxride_booking_delete_promotion', [self::class, 'delete_promotion']);
     }
 
     public static function admin_menu(): void
@@ -59,6 +64,24 @@ final class LuxRide_Booking_Admin
             'manage_options',
             'luxride-availability',
             [self::class, 'render_availability_page']
+        );
+
+        add_submenu_page(
+            'luxride-booking-engine',
+            __('Pickup Order', 'luxride-booking-engine'),
+            __('Pickup Order', 'luxride-booking-engine'),
+            'manage_options',
+            'luxride-pickup-order',
+            [self::class, 'render_pickup_order_page']
+        );
+
+        add_submenu_page(
+            'luxride-booking-engine',
+            __('Promotions', 'luxride-booking-engine'),
+            __('Promotions', 'luxride-booking-engine'),
+            'manage_options',
+            'luxride-promotions',
+            [self::class, 'render_promotions_page']
         );
     }
 
@@ -162,14 +185,17 @@ final class LuxRide_Booking_Admin
     {
         self::guard_action('luxride_booking_import');
 
-        if (empty($_FILES['pricing_payload']['tmp_name'])) {
+        $upload = $_FILES['pricing_payload'] ?? [];
+        if (!is_array($upload) || empty($upload['tmp_name']) || !empty($upload['error'])) {
             self::redirect(['luxride_notice' => 'import_missing']);
         }
 
-        $json = file_get_contents((string) $_FILES['pricing_payload']['tmp_name']);
-        $payload = json_decode((string) $json, true);
-        if (!is_array($payload)) {
-            self::redirect(['luxride_notice' => 'import_invalid_json']);
+        $payload = LuxRide_Booking_Importer::parse_upload(
+            (string) $upload['tmp_name'],
+            sanitize_file_name((string) ($upload['name'] ?? ''))
+        );
+        if (is_wp_error($payload)) {
+            self::redirect(['luxride_notice' => 'import_invalid_file']);
         }
 
         $mode = sanitize_key((string) ($_POST['import_mode'] ?? 'dry_run'));
@@ -194,6 +220,23 @@ final class LuxRide_Booking_Admin
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="luxride-pricing-routes-' . gmdate('Ymd-His') . '.csv"');
         echo LuxRide_Booking_Importer::export_csv(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        exit;
+    }
+
+    public static function download_template_xlsx(): void
+    {
+        self::guard_action('luxride_booking_template_xlsx');
+        $xlsx = LuxRide_Booking_Importer::template_xlsx();
+
+        if (is_wp_error($xlsx)) {
+            wp_die(esc_html($xlsx->get_error_message()));
+        }
+
+        nocache_headers();
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="luxride-pricing-routes-template.xlsx"');
+        header('Content-Length: ' . strlen($xlsx));
+        echo $xlsx; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         exit;
     }
 
@@ -302,6 +345,172 @@ final class LuxRide_Booking_Admin
         exit;
     }
 
+    public static function save_pickup_order(): void
+    {
+        self::guard_action('luxride_booking_save_pickup_order');
+        $saved = LuxRide_Booking_Locations::save_order(wp_unslash((array) ($_POST['pickup_order'] ?? [])));
+
+        wp_safe_redirect(add_query_arg([
+            'page' => 'luxride-pickup-order',
+            'luxride_notice' => $saved ? 'pickup_order_saved' : 'pickup_order_failed',
+        ], admin_url('admin.php')));
+        exit;
+    }
+
+    public static function save_promotion(): void
+    {
+        self::guard_action('luxride_booking_save_promotion');
+        $route_id = isset($_POST['route_id']) ? absint($_POST['route_id']) : 0;
+        $input = wp_unslash($_POST);
+        $input['scope'] = $route_id ? 'selected_routes' : 'all_routes';
+        $input['route_ids'] = $route_id ? [$route_id] : [];
+        $saved = LuxRide_Booking_Promotions::save($input, get_current_user_id());
+
+        wp_safe_redirect(add_query_arg([
+            'page' => 'luxride-promotions',
+            'promotion_id' => is_wp_error($saved) ? 0 : (int) $saved,
+            'luxride_notice' => is_wp_error($saved) ? 'promotion_failed' : 'promotion_saved',
+        ], admin_url('admin.php')));
+        exit;
+    }
+
+    public static function toggle_promotion(): void
+    {
+        self::guard_action('luxride_booking_toggle_promotion');
+        $promotion_id = isset($_POST['promotion_id']) ? absint($_POST['promotion_id']) : 0;
+        $updated = $promotion_id && LuxRide_Booking_Promotions::toggle($promotion_id);
+
+        wp_safe_redirect(add_query_arg([
+            'page' => 'luxride-promotions',
+            'luxride_notice' => $updated ? 'promotion_updated' : 'promotion_failed',
+        ], admin_url('admin.php')));
+        exit;
+    }
+
+    public static function delete_promotion(): void
+    {
+        self::guard_action('luxride_booking_delete_promotion');
+        $promotion_id = isset($_POST['promotion_id']) ? absint($_POST['promotion_id']) : 0;
+        $deleted = $promotion_id && LuxRide_Booking_Promotions::delete($promotion_id);
+
+        wp_safe_redirect(add_query_arg([
+            'page' => 'luxride-promotions',
+            'luxride_notice' => $deleted ? 'promotion_deleted' : 'promotion_failed',
+        ], admin_url('admin.php')));
+        exit;
+    }
+
+    public static function render_pickup_order_page(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to access this page.', 'luxride-booking-engine'));
+        }
+
+        $pickups = LuxRide_Booking_Locations::ordered_pickups();
+        ?>
+        <div class="wrap">
+            <h1><?php echo esc_html__('LuxRide Pickup Order', 'luxride-booking-engine'); ?></h1>
+            <?php self::render_notice(); ?>
+            <p><?php echo esc_html__('Drag the pickup locations into the order used by the booking calculator, then save.', 'luxride-booking-engine'); ?></p>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                <input type="hidden" name="action" value="luxride_booking_save_pickup_order">
+                <?php wp_nonce_field('luxride_booking_save_pickup_order'); ?>
+                <ol id="luxride-pickup-order" style="max-width: 760px; margin: 18px 0; padding: 0; list-style: none;">
+                    <?php foreach ($pickups as $pickup) : ?>
+                        <li draggable="true" data-pickup-key="<?php echo esc_attr($pickup['key']); ?>" style="display: flex; align-items: center; gap: 12px; margin: 8px 0; padding: 12px 14px; background: #fff; border: 1px solid #ccd0d4; cursor: move;">
+                            <span aria-hidden="true">&#9776;</span>
+                            <strong style="min-width: 220px;"><?php echo esc_html($pickup['label']); ?></strong>
+                            <span><?php echo esc_html($pickup['label_ar'] ?: '-'); ?></span>
+                            <code style="margin-left: auto;"><?php echo esc_html($pickup['key']); ?></code>
+                            <input type="hidden" name="pickup_order[]" value="<?php echo esc_attr($pickup['key']); ?>">
+                        </li>
+                    <?php endforeach; ?>
+                </ol>
+                <?php if ($pickups) : ?>
+                    <?php submit_button(__('Save Order', 'luxride-booking-engine')); ?>
+                <?php else : ?>
+                    <p><?php echo esc_html__('No enabled pickup locations were found.', 'luxride-booking-engine'); ?></p>
+                <?php endif; ?>
+            </form>
+        </div>
+        <script>
+        (function () {
+            var list = document.getElementById('luxride-pickup-order');
+            if (!list) return;
+            var dragged = null;
+            list.addEventListener('dragstart', function (event) {
+                dragged = event.target.closest('li');
+                if (dragged) dragged.style.opacity = '0.5';
+            });
+            list.addEventListener('dragend', function () {
+                if (dragged) dragged.style.opacity = '';
+                dragged = null;
+            });
+            list.addEventListener('dragover', function (event) {
+                event.preventDefault();
+                var target = event.target.closest('li');
+                if (!dragged || !target || target === dragged) return;
+                var rect = target.getBoundingClientRect();
+                list.insertBefore(dragged, event.clientY < rect.top + rect.height / 2 ? target : target.nextSibling);
+            });
+        }());
+        </script>
+        <?php
+    }
+
+    public static function render_promotions_page(): void
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to access this page.', 'luxride-booking-engine'));
+        }
+
+        $promotion_id = isset($_GET['promotion_id']) ? absint($_GET['promotion_id']) : 0;
+        $promotion = $promotion_id ? LuxRide_Booking_Promotions::get($promotion_id) : null;
+        $selected_routes = $promotion ? LuxRide_Booking_Promotions::selected_route_ids($promotion_id) : [];
+        $routes = self::promotion_routes();
+        $promotions = LuxRide_Booking_Promotions::all_for_admin();
+        ?>
+        <div class="wrap">
+            <h1><?php echo esc_html__('LuxRide Promotions', 'luxride-booking-engine'); ?></h1>
+            <?php self::render_notice(); ?>
+            <p><?php echo esc_html__('Create a simple discount for all routes or one selected route.', 'luxride-booking-engine'); ?></p>
+            <h2><?php echo esc_html($promotion ? __('Edit promotion', 'luxride-booking-engine') : __('Add promotion', 'luxride-booking-engine')); ?></h2>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="max-width: 900px;">
+                <input type="hidden" name="action" value="luxride_booking_save_promotion">
+                <input type="hidden" name="promotion_id" value="<?php echo esc_attr((string) $promotion_id); ?>">
+                <?php wp_nonce_field('luxride_booking_save_promotion'); ?>
+                <table class="form-table" role="presentation">
+                    <tr><th scope="row"><label for="promotion_name"><?php echo esc_html__('Name', 'luxride-booking-engine'); ?></label></th><td><input class="regular-text" id="promotion_name" name="name" value="<?php echo esc_attr((string) ($promotion['name'] ?? '')); ?>" required></td></tr>
+                    <tr><th scope="row"><label for="promotion_route"><?php echo esc_html__('Route', 'luxride-booking-engine'); ?></label></th><td><select id="promotion_route" name="route_id"><option value="0"><?php echo esc_html__('All routes', 'luxride-booking-engine'); ?></option><?php foreach ($routes as $route) : ?><option value="<?php echo esc_attr((string) $route['id']); ?>" <?php selected(in_array((int) $route['id'], $selected_routes, true) ? (int) $route['id'] : 0, (int) $route['id']); ?>><?php echo esc_html(self::route_label($route)); ?></option><?php endforeach; ?></select></td></tr>
+                    <tr><th scope="row"><label for="promotion_type"><?php echo esc_html__('Discount Type', 'luxride-booking-engine'); ?></label></th><td><select id="promotion_type" name="discount_type"><option value="percent" <?php selected((string) ($promotion['discount_type'] ?? 'percent'), 'percent'); ?>><?php echo esc_html__('Percentage', 'luxride-booking-engine'); ?></option><option value="fixed" <?php selected((string) ($promotion['discount_type'] ?? ''), 'fixed'); ?>><?php echo esc_html__('Fixed Amount (EUR)', 'luxride-booking-engine'); ?></option></select></td></tr>
+                    <tr><th scope="row"><label for="promotion_value"><?php echo esc_html__('Discount Value', 'luxride-booking-engine'); ?></label></th><td><input class="small-text" id="promotion_value" name="discount_value" type="number" min="0.01" step="0.01" value="<?php echo esc_attr((string) ($promotion['discount_value'] ?? '')); ?>" required></td></tr>
+                    <tr><th scope="row"><?php echo esc_html__('Active', 'luxride-booking-engine'); ?></th><td><label><input name="active" type="checkbox" value="1" <?php checked(!$promotion || !empty($promotion['active'])); ?>> <?php echo esc_html__('Enabled', 'luxride-booking-engine'); ?></label></td></tr>
+                </table>
+                <?php submit_button($promotion ? __('Save Promotion', 'luxride-booking-engine') : __('Create Promotion', 'luxride-booking-engine')); ?>
+                <?php if ($promotion) : ?><a class="button" href="<?php echo esc_url(admin_url('admin.php?page=luxride-promotions')); ?>"><?php echo esc_html__('Cancel', 'luxride-booking-engine'); ?></a><?php endif; ?>
+            </form>
+
+            <h2><?php echo esc_html__('Existing promotions', 'luxride-booking-engine'); ?></h2>
+            <table class="widefat striped" style="max-width: 1200px;">
+                <thead><tr><th><?php echo esc_html__('Name', 'luxride-booking-engine'); ?></th><th><?php echo esc_html__('Route', 'luxride-booking-engine'); ?></th><th><?php echo esc_html__('Discount', 'luxride-booking-engine'); ?></th><th><?php echo esc_html__('Status', 'luxride-booking-engine'); ?></th><th><?php echo esc_html__('Actions', 'luxride-booking-engine'); ?></th></tr></thead>
+                <tbody>
+                <?php foreach ($promotions as $row) : ?>
+                    <?php $row_routes = LuxRide_Booking_Promotions::selected_route_ids((int) $row['id']); ?>
+                    <tr>
+                        <td><?php echo esc_html((string) $row['name']); ?></td>
+                        <td><?php echo esc_html(empty($row_routes) && 'all_routes' === $row['scope'] ? __('All routes', 'luxride-booking-engine') : sprintf(__('%d selected route(s)', 'luxride-booking-engine'), count($row_routes))); ?></td>
+                        <td><?php echo esc_html(number_format((float) $row['discount_value'], 2) . ('fixed' === $row['discount_type'] ? ' EUR' : '%')); ?></td>
+                        <td><?php echo esc_html(ucfirst(LuxRide_Booking_Promotions::status($row))); ?></td>
+                        <td style="display: flex; gap: 6px; align-items: center;"><a class="button button-small" href="<?php echo esc_url(add_query_arg(['page' => 'luxride-promotions', 'promotion_id' => (int) $row['id']], admin_url('admin.php'))); ?>"><?php echo esc_html__('Edit', 'luxride-booking-engine'); ?></a><form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>"><input type="hidden" name="action" value="luxride_booking_toggle_promotion"><input type="hidden" name="promotion_id" value="<?php echo esc_attr((string) $row['id']); ?>"><?php wp_nonce_field('luxride_booking_toggle_promotion'); ?><button class="button button-small" type="submit"><?php echo esc_html__('Toggle', 'luxride-booking-engine'); ?></button></form><form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" onsubmit="return confirm('<?php echo esc_js(__('Delete this promotion?', 'luxride-booking-engine')); ?>');"><input type="hidden" name="action" value="luxride_booking_delete_promotion"><input type="hidden" name="promotion_id" value="<?php echo esc_attr((string) $row['id']); ?>"><?php wp_nonce_field('luxride_booking_delete_promotion'); ?><button class="button button-small" type="submit"><?php echo esc_html__('Delete', 'luxride-booking-engine'); ?></button></form></td>
+                    </tr>
+                <?php endforeach; ?>
+                <?php if (!$promotions) : ?><tr><td colspan="5"><?php echo esc_html__('No promotions saved.', 'luxride-booking-engine'); ?></td></tr><?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php
+    }
+
     private static function render_settings_form(array $settings): void
     {
         ?>
@@ -353,8 +562,8 @@ final class LuxRide_Booking_Admin
             <?php wp_nonce_field('luxride_booking_import'); ?>
             <table class="form-table" role="presentation">
                 <tr>
-                    <th scope="row"><label for="pricing_payload"><?php echo esc_html__('Importer JSON payload', 'luxride-booking-engine'); ?></label></th>
-                    <td><input id="pricing_payload" name="pricing_payload" type="file" accept="application/json,.json" required></td>
+                    <th scope="row"><label for="pricing_payload"><?php echo esc_html__('Pricing & routes workbook', 'luxride-booking-engine'); ?></label></th>
+                    <td><input id="pricing_payload" name="pricing_payload" type="file" accept="application/json,.json,.csv,.xlsx" required><p class="description"><?php echo esc_html__('Upload the downloaded template after adding your route data.', 'luxride-booking-engine'); ?></p></td>
                 </tr>
                 <tr>
                     <th scope="row"><?php echo esc_html__('Action', 'luxride-booking-engine'); ?></th>
@@ -369,6 +578,11 @@ final class LuxRide_Booking_Admin
             <input type="hidden" name="action" value="luxride_booking_export">
             <?php wp_nonce_field('luxride_booking_export'); ?>
             <?php submit_button(__('Export pricing backup', 'luxride-booking-engine'), 'secondary', 'submit', false); ?>
+        </form>
+        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 8px 0 24px;">
+            <input type="hidden" name="action" value="luxride_booking_template_xlsx">
+            <?php wp_nonce_field('luxride_booking_template_xlsx'); ?>
+            <?php submit_button(__('Download import template (.xlsx)', 'luxride-booking-engine'), 'secondary', 'submit', false); ?>
         </form>
         <?php
     }
@@ -667,7 +881,7 @@ final class LuxRide_Booking_Admin
                         <td><?php echo esc_html((string) ($customer['full_name'] ?? '')); ?><br><code><?php echo esc_html((string) ($customer['phone'] ?? '')); ?></code></td>
                         <td><?php echo esc_html(self::route_label($route)); ?></td>
                         <td><?php echo esc_html($row['vehicle_key']); ?></td>
-                        <td><?php echo esc_html($row['trip_type'] . ' / ' . $row['system_classification']); ?><br><?php echo esc_html($row['outbound_datetime']); ?></td>
+                        <td><?php echo esc_html($row['trip_type'] . ' / ' . $row['system_classification']); ?><br><?php echo esc_html(self::booking_datetime_label((string) $row['outbound_datetime'])); ?></td>
                         <td><?php echo esc_html(number_format((float) $row['final_total_eur'], 2) . ' ' . $row['currency']); ?></td>
                         <td><?php echo esc_html($row['status']); ?></td>
                         <td><?php echo esc_html(self::labelize((string) ($row['payment_status'] ?? 'unpaid'))); ?></td>
@@ -716,8 +930,8 @@ final class LuxRide_Booking_Admin
                         <tr><th><?php echo esc_html__('Trip', 'luxride-booking-engine'); ?></th><td><?php echo esc_html($booking['trip_type'] . ' / ' . $booking['system_classification']); ?></td></tr>
                         <tr><th><?php echo esc_html__('Vehicle', 'luxride-booking-engine'); ?></th><td><?php echo esc_html(self::labelize((string) $booking['vehicle_key'])); ?></td></tr>
                         <tr><th><?php echo esc_html__('Passengers / bags', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) $booking['passengers'] . ' / ' . (string) $booking['bags']); ?></td></tr>
-                        <tr><th><?php echo esc_html__('Outbound', 'luxride-booking-engine'); ?></th><td><?php echo esc_html($booking['outbound_datetime']); ?></td></tr>
-                        <tr><th><?php echo esc_html__('Return', 'luxride-booking-engine'); ?></th><td><?php echo esc_html($booking['return_datetime'] ?: '-'); ?></td></tr>
+                        <tr><th><?php echo esc_html__('Outbound', 'luxride-booking-engine'); ?></th><td><?php echo esc_html(self::booking_datetime_label((string) $booking['outbound_datetime'])); ?></td></tr>
+                        <tr><th><?php echo esc_html__('Return', 'luxride-booking-engine'); ?></th><td><?php echo esc_html(self::booking_datetime_label((string) ($booking['return_datetime'] ?? ''))); ?></td></tr>
                         <tr><th><?php echo esc_html__('Language', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) $booking['language']); ?></td></tr>
                     </tbody>
                 </table>
@@ -889,7 +1103,7 @@ final class LuxRide_Booking_Admin
             <tbody>
                 <?php foreach ($rows as $row) : ?>
                     <tr>
-                        <td><?php echo esc_html($row['created_at']); ?></td>
+                        <td><?php echo esc_html(self::booking_datetime_label((string) $row['created_at'])); ?></td>
                         <td><?php echo esc_html($row['source_file']); ?></td>
                         <td><code><?php echo esc_html(substr((string) $row['source_checksum'], 0, 12)); ?></code></td>
                         <td><?php echo esc_html((string) $row['applied_route_count']); ?></td>
@@ -908,7 +1122,8 @@ final class LuxRide_Booking_Admin
             'settings_saved' => __('Settings saved.', 'luxride-booking-engine'),
             'route_saved' => __('Route saved.', 'luxride-booking-engine'),
             'route_missing' => __('Route was not selected.', 'luxride-booking-engine'),
-            'import_missing' => __('Choose an importer JSON payload first.', 'luxride-booking-engine'),
+            'import_missing' => __('Choose a pricing and routes workbook first.', 'luxride-booking-engine'),
+            'import_invalid_file' => __('The uploaded workbook could not be read or validated.', 'luxride-booking-engine'),
             'import_invalid_json' => __('Importer payload is not valid JSON.', 'luxride-booking-engine'),
             'import_failed' => __('Import failed validation.', 'luxride-booking-engine'),
             'import_dry_run' => __('Dry run completed.', 'luxride-booking-engine'),
@@ -924,10 +1139,16 @@ final class LuxRide_Booking_Admin
             'block_failed' => __('Availability block could not be saved.', 'luxride-booking-engine'),
             'block_deleted' => __('Availability block deleted.', 'luxride-booking-engine'),
             'block_delete_failed' => __('Availability block could not be deleted.', 'luxride-booking-engine'),
+            'pickup_order_saved' => __('Pickup order saved.', 'luxride-booking-engine'),
+            'pickup_order_failed' => __('Pickup order could not be saved.', 'luxride-booking-engine'),
+            'promotion_saved' => __('Promotion saved.', 'luxride-booking-engine'),
+            'promotion_updated' => __('Promotion status updated.', 'luxride-booking-engine'),
+            'promotion_deleted' => __('Promotion deleted.', 'luxride-booking-engine'),
+            'promotion_failed' => __('Promotion could not be saved.', 'luxride-booking-engine'),
         ];
 
         if ($notice && isset($messages[$notice])) {
-            $class = in_array($notice, ['import_failed', 'import_missing', 'import_invalid_json', 'route_missing', 'booking_status_failed', 'booking_operations_failed', 'booking_delete_failed', 'booking_xlsx_failed', 'block_failed', 'block_delete_failed'], true) ? 'notice notice-error' : 'notice notice-success';
+            $class = in_array($notice, ['import_failed', 'import_missing', 'import_invalid_file', 'import_invalid_json', 'route_missing', 'booking_status_failed', 'booking_operations_failed', 'booking_delete_failed', 'booking_xlsx_failed', 'block_failed', 'block_delete_failed', 'pickup_order_failed', 'promotion_failed'], true) ? 'notice notice-error' : 'notice notice-success';
             echo '<div class="' . esc_attr($class) . '"><p>' . esc_html($messages[$notice]) . '</p>';
             $result_key = sanitize_key((string) ($_GET['result_key'] ?? ''));
             if ($result_key) {
@@ -965,6 +1186,15 @@ final class LuxRide_Booking_Admin
         return $prices;
     }
 
+    private static function promotion_routes(): array
+    {
+        global $wpdb;
+        return $wpdb->get_results(
+            'SELECT * FROM ' . LuxRide_Booking_Schema::table('routes') . ' WHERE enabled = 1 ORDER BY pickup_label ASC, destination_label ASC',
+            ARRAY_A
+        ) ?: [];
+    }
+
     private static function fee_summary(array $row): string
     {
         $fees = [];
@@ -988,8 +1218,8 @@ final class LuxRide_Booking_Admin
 
     private static function route_label(array $route): string
     {
-        $pickup = $route['pickup']['label'] ?? '';
-        $destination = $route['destination']['label'] ?? '';
+        $pickup = $route['pickup']['label'] ?? ($route['pickup_label'] ?? '');
+        $destination = $route['destination']['label'] ?? ($route['destination_label'] ?? '');
         return trim((string) $pickup . ' -> ' . (string) $destination, ' ->');
     }
 
@@ -1236,6 +1466,26 @@ final class LuxRide_Booking_Admin
     {
         $parts = self::split_datetime($value);
         return $parts['date'] && $parts['time'] ? $parts['date'] . 'T' . $parts['time'] : '';
+    }
+
+    private static function booking_datetime_label(string $value): string
+    {
+        $value = trim($value);
+        if ('' === $value) {
+            return '-';
+        }
+
+        $timezone = LuxRide_Booking_Settings::get('availability_timezone') ?: wp_timezone();
+        $date = date_create_immutable($value, $timezone);
+        if (!$date) {
+            return $value;
+        }
+
+        $date_format = trim((string) get_option('date_format', 'Y-m-d'));
+        $time_format = trim((string) get_option('time_format', 'H:i'));
+        $format = trim($date_format . ' ' . $time_format);
+
+        return wp_date($format ?: 'Y-m-d H:i', $date->getTimestamp(), $timezone);
     }
 
     private static function numeric_export($value)

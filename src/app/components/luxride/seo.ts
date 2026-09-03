@@ -190,26 +190,31 @@ export function useLuxRideSeo(lang: Lang) {
 
   useEffect(() => {
     const config = configFor(pathname);
+    const bookingConfirmation = canonicalPath(pathname) === "/booking-success";
+    const title = bookingConfirmation
+      ? (lang === "AR" ? "تأكيد الحجز | LuxRide Taxi" : "Booking Confirmation | LuxRide Taxi")
+      : config.title;
+    const seoConfig = bookingConfirmation ? { ...config, title } : config;
     const canonicalUrl = `${SITE_URL}${canonicalPath(pathname)}`;
-    const isNotFound = config.title.startsWith("Page Not Found");
+    const isNotFound = title.startsWith("Page Not Found");
 
-    document.title = config.title;
+    document.title = title;
     setMeta('meta[name="description"]', { name: "description", content: config.description });
     setMeta('meta[name="robots"]', { name: "robots", content: isNotFound ? "noindex,follow" : "index,follow" });
-    setMeta('meta[property="og:title"]', { property: "og:title", content: config.title });
+    setMeta('meta[property="og:title"]', { property: "og:title", content: title });
     setMeta('meta[property="og:description"]', { property: "og:description", content: config.description });
     setMeta('meta[property="og:type"]', { property: "og:type", content: "website" });
     setMeta('meta[property="og:url"]', { property: "og:url", content: canonicalUrl });
     setMeta('meta[property="og:image"]', { property: "og:image", content: OG_IMAGE_URL });
     setMeta('meta[name="twitter:card"]', { name: "twitter:card", content: "summary_large_image" });
-    setMeta('meta[name="twitter:title"]', { name: "twitter:title", content: config.title });
+    setMeta('meta[name="twitter:title"]', { name: "twitter:title", content: title });
     setMeta('meta[name="twitter:description"]', { name: "twitter:description", content: config.description });
     setMeta('meta[name="twitter:image"]', { name: "twitter:image", content: OG_IMAGE_URL });
     setLink("canonical", canonicalUrl);
 
     removeManagedJsonLd();
     if (!isNotFound) {
-      addJsonLd(breadcrumbJsonLd(config, canonicalUrl));
+      addJsonLd(breadcrumbJsonLd(seoConfig, canonicalUrl));
       if (pathname === "/") addJsonLd(localBusinessJsonLd(settings));
       if (["/", "/destinations", "/booking", "/experiences"].includes(canonicalPath(pathname))) addJsonLd(serviceJsonLd(canonicalUrl, settings));
       if (pathname === "/faq") addJsonLd(faqJsonLd(lang, pageFaqs));

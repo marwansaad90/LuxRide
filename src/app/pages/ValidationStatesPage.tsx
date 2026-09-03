@@ -4,9 +4,13 @@ import { PageShell } from "../components/luxride/PageShell";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { useL } from "../components/luxride/i18n";
+import { useSiteSettings } from "../components/luxride/cms";
 
 export function ValidationStatesPage() {
   const L = useL();
+  const { minimumLeadHours } = useSiteSettings();
+  const leadHours = Math.max(1, Math.round(minimumLeadHours || 3));
+  const leadHoursArabic = `${leadHours} ${leadHours === 1 ? "ساعة" : "ساعات"}`;
 
   return (
     <PageShell
@@ -49,13 +53,13 @@ export function ValidationStatesPage() {
               text={L("Required for Luxor, Aswan, Cairo and Sharm El Sheikh, where an official travel permit applies.", "مطلوب للأقصر وأسوان والقاهرة وشرم الشيخ، حيث يُطبّق تصريح سفر رسمي.")} />
           </div>
 
-          {/* 3-hour cut-off */}
+          {/* Configured booking cut-off */}
           <div className="rounded-2xl border border-lux-orange/40 bg-lux-orange/10 p-6">
             <div className="flex items-start gap-3">
               <AlertTriangle className="mt-0.5 h-6 w-6 shrink-0 text-lux-orange" />
               <div>
-                <h3 className="text-lux-charcoal" style={{ fontSize: "1.1rem" }}>{L("3-hour booking cut-off", "مهلة الحجز ٣ ساعات")}</h3>
-                <p className="mt-1 text-sm text-neutral-600">{L("This transfer must be booked at least 3 hours before departure. Standard online booking is unavailable for this departure time.", "يجب حجز هذه الرحلة قبل ٣ ساعات على الأقل من المغادرة. الحجز القياسي عبر الإنترنت غير متاح لهذا الموعد.")}</p>
+                <h3 className="text-lux-charcoal" style={{ fontSize: "1.1rem" }}>{L(`${leadHours}-hour booking cut-off`, `مهلة الحجز ${leadHoursArabic}`)}</h3>
+                <p className="mt-1 text-sm text-neutral-600">{L(`This transfer must be booked at least ${leadHours} hours before departure. Standard online booking is unavailable for this departure time.`, `يجب حجز هذه الرحلة قبل ${leadHoursArabic} على الأقل من المغادرة. الحجز القياسي عبر الإنترنت غير متاح لهذا الموعد.`)}</p>
                 <Link to="/last-minute" className="mt-3 inline-block rounded-full bg-lux-orange px-5 py-2 text-sm text-lux-dark transition-all hover:brightness-105">{L("Try Last-minute Booking", "جرّب الحجز اللحظي")}</Link>
               </div>
             </div>

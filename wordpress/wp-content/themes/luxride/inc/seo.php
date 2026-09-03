@@ -23,6 +23,7 @@ function luxride_seo_routes(): array
         '/cancellation-policy' => ['LuxRide Cancellation Policy | Private Transfers Hurghada', 'Review the LuxRide Taxi cancellation terms for private transfer bookings and experience start-time rules.'],
         '/privacy-policy' => ['LuxRide Privacy Policy | Hurghada Private Transfers', 'Read how LuxRide Taxi handles booking details, contact information, and private transfer request data.'],
         '/terms' => ['LuxRide Terms and Conditions | Private Transfers Hurghada', 'Review LuxRide Taxi terms for private transfers, booking requests, route pricing, airport pickup, permits, and customer responsibilities.'],
+        '/booking-success' => ['Booking Confirmation | LuxRide Taxi', 'LuxRide Taxi booking confirmation and request details.'],
     ];
 }
 
@@ -38,9 +39,29 @@ function luxride_current_seo(): array
     return $routes[luxride_current_path()] ?? ['Page Not Found | LuxRide Taxi', 'The requested LuxRide Taxi page could not be found. Return to booking, destinations, experiences, or contact pages.'];
 }
 
+function luxride_aioseo_active(): bool
+{
+    if (defined('AIOSEO_VERSION') || class_exists('AIOSEO\\Plugin\\Common\\Main\\Main')) {
+        return true;
+    }
+
+    $active_plugins = (array) get_option('active_plugins', []);
+    foreach ($active_plugins as $plugin) {
+        if (str_starts_with((string) $plugin, 'all-in-one-seo-pack/')) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 add_filter('pre_get_document_title', fn() => luxride_current_seo()[0], 20);
 
 add_action('wp_head', function (): void {
+    if (luxride_aioseo_active()) {
+        return;
+    }
+
     [$title, $description] = luxride_current_seo();
     $canonical = home_url(luxride_current_path());
     $image = LUXRIDE_THEME_URI . '/luxride-og-image.webp';

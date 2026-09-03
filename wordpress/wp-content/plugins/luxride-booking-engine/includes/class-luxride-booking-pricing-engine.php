@@ -55,6 +55,10 @@ final class LuxRide_Booking_Pricing_Engine
             return self::error('luxride_invalid_vehicle', 'Selected vehicle is not available for quoting.', 'السيارة المحددة غير متاحة للتسعير.', 400);
         }
 
+        if (!self::vehicle_booking_enabled($vehicle_key)) {
+            return self::error('luxride_vehicle_booking_disabled', 'Selected vehicle is temporarily unavailable for booking.', 'السيارة المحددة غير متاحة للحجز حالياً.', 409, ['vehicle' => $vehicle_key]);
+        }
+
         if ($passengers < 1 || $bags < 0) {
             return self::error('luxride_invalid_capacity', 'Passengers and bags must be valid whole numbers.', 'عدد الركاب والحقائب يجب أن يكون أرقاماً صحيحة.', 400);
         }
@@ -94,6 +98,8 @@ final class LuxRide_Booking_Pricing_Engine
 
         $base = 'one_way' === $trip_type ? (float) $price['one_way_price_eur'] : (float) $price['round_trip_price_eur'];
         $classification = 'one_way' === $trip_type ? 'one_way' : (string) $route['round_trip_classification'];
+        $trip_name = 'one_way' === $trip_type ? (string) ($route['trip_name_one_way'] ?? '') : (string) ($route['trip_name_return'] ?? '');
+        $trip_name_ar = 'one_way' === $trip_type ? (string) ($route['trip_name_one_way_ar'] ?? '') : (string) ($route['trip_name_return_ar'] ?? '');
         $airport_fee = (int) $route['airport_fee_applicable'] ? (float) $settings['airport_surcharge_eur'] : 0.0;
         $permit_fee = (int) $route['permit_required'] ? (float) $settings['permit_fee_' . $vehicle_key . '_eur'] : 0.0;
         $accommodation_enabled = (int) ($route['accommodation_applicable'] ?? 1) === 1;
@@ -101,13 +107,21 @@ final class LuxRide_Booking_Pricing_Engine
         $route_accommodation = isset($route['accommodation_fee_eur']) ? (float) $route['accommodation_fee_eur'] : 0.0;
         $accommodation_per_night = $route_accommodation > 0 ? $route_accommodation : (float) $settings['driver_accommodation_eur'];
         $accommodation_fee = $nights * $accommodation_per_night;
-        $discount = 0.0;
-        $total = $base + $airport_fee + $permit_fee + $accommodation_fee - $discount;
+        $promotion = LuxRide_Booking_Promotions::calculate($base, (int) $route['id'], $vehicle_key, $trip_type, $outbound_datetime);
+        $discount = (float) $promotion['promotion_discount_amount'];
+        $promotional_base = (float) $promotion['promotional_amount'];
+        $original_total = $base + $airport_fee + $permit_fee + $accommodation_fee;
+        $total = $promotional_base + $airport_fee + $permit_fee + $accommodation_fee;
         $required_fields = self::required_fields($route, $trip_type, $classification);
         $validation = self::validate_time_fields($trip_type, $classification, $outbound_datetime, $return_datetime, (int) $settings['minimum_lead_hours']);
 
         if (is_wp_error($validation)) {
             return $validation;
+        }
+
+        $availability = LuxRide_Booking_Bookings::check_vehicle_availability($vehicle_key, $outbound_datetime, '' !== $return_datetime ? $return_datetime : null);
+        if (is_wp_error($availability)) {
+            return $availability;
         }
 
         return [
@@ -116,14 +130,23 @@ final class LuxRide_Booking_Pricing_Engine
                 'route_code' => $route['route_code'],
                 'pickup' => ['key' => $route['pickup_key'], 'label' => $route['pickup_label'], 'ar' => $route['pickup_label_ar']],
                 'destination' => ['key' => $route['destination_key'], 'label' => $route['destination_label'], 'ar' => $route['destination_label_ar']],
+                'trip_name_one_way' => (string) ($route['trip_name_one_way'] ?? ''),
+                'trip_name_return' => (string) ($route['trip_name_return'] ?? ''),
+                'trip_name_one_way_ar' => (string) ($route['trip_name_one_way_ar'] ?? ''),
+                'trip_name_return_ar' => (string) ($route['trip_name_return_ar'] ?? ''),
                 'recommended_trip_type' => $route['recommended_trip_type'],
             ],
             'trip_type' => $trip_type,
             'classification' => $classification,
+            'trip_name' => $trip_name,
+            'trip_name_ar' => $trip_name_ar,
             'vehicle' => ['key' => $vehicle_key, 'label' => $vehicle['label']],
             'pricing' => [
                 'base' => self::money($base),
+                'original_base' => self::money($base),
                 'discount' => self::money($discount),
+                'promotion' => $promotion,
+                'promotional_base' => self::money($promotional_base),
                 'airport_fee' => self::money($airport_fee),
                 'permit_fee' => self::money($permit_fee),
                 'accommodation' => [
@@ -132,6 +155,8 @@ final class LuxRide_Booking_Pricing_Engine
                     'total' => self::money($accommodation_fee),
                 ],
                 'accommodation_fee' => self::money($accommodation_fee),
+                'original_total' => self::money($original_total),
+                'promotional_total' => self::money($total),
                 'child_seat' => [
                     'requested' => $child_seat,
                     'price' => self::money((float) $settings['child_seat_price_eur']),
@@ -163,6 +188,30 @@ final class LuxRide_Booking_Pricing_Engine
     {
         $key = sanitize_key($value);
         return self::VEHICLE_ALIASES[$key] ?? $key;
+    }
+
+    public static function vehicle_booking_enabled(string $vehicle_key): bool
+    {
+        $vehicle_key = self::normalize_vehicle($vehicle_key);
+        $aliases = array_keys(array_filter(self::VEHICLE_ALIASES, fn($value) => $value === $vehicle_key));
+        $posts = get_posts([
+            'post_type' => 'luxride_vehicle',
+            'post_status' => ['publish', 'draft', 'private'],
+            'numberposts' => 1,
+            'meta_query' => [
+                'relation' => 'OR',
+                ['key' => 'luxride_trip_type', 'value' => $vehicle_key],
+                ['key' => 'luxride_source_id', 'value' => $aliases, 'compare' => 'IN'],
+            ],
+            'suppress_filters' => false,
+        ]);
+
+        if (!$posts) {
+            return true;
+        }
+
+        $value = get_post_meta($posts[0]->ID, 'luxride_booking_enabled', true);
+        return '' === $value || in_array($value, [true, 1, '1', 'true', 'yes', 'on'], true);
     }
 
     private static function find_route(string $pickup, string $destination): ?array
@@ -234,7 +283,13 @@ final class LuxRide_Booking_Pricing_Engine
 
         $now = new DateTimeImmutable('now', $timezone);
         if (($outbound->getTimestamp() - $now->getTimestamp()) < $minimum_lead_hours * HOUR_IN_SECONDS) {
-            return self::error('luxride_last_minute', 'Standard bookings require at least 3 hours before departure.', 'الحجز القياسي يتطلب ثلاث ساعات على الأقل قبل الانطلاق.', 409, ['last_minute' => true]);
+            return self::error(
+                'luxride_last_minute',
+                sprintf('Standard bookings require at least %d hours before departure.', $minimum_lead_hours),
+                sprintf('الحجز القياسي يتطلب %d ساعات على الأقل قبل الانطلاق.', $minimum_lead_hours),
+                409,
+                ['last_minute' => true, 'minimum_lead_hours' => $minimum_lead_hours]
+            );
         }
 
         if ('round_trip' !== $trip_type) {

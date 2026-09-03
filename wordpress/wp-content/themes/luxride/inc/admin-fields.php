@@ -113,6 +113,16 @@ function luxride_meta_value(int $post_id, string $key, mixed $default = ''): mix
     return '' === $value || null === $value ? $default : $value;
 }
 
+function luxride_meta_bool_value(int $post_id, string $key, bool $default = false): bool
+{
+    $value = get_post_meta($post_id, $key, true);
+    if ('' === $value || null === $value) {
+        return $default;
+    }
+
+    return in_array($value, [true, 1, '1', 'true', 'yes', 'on'], true);
+}
+
 function luxride_field(string $label, string $name, mixed $value = '', string $type = 'text', array $attrs = []): void
 {
     $id = 'luxride_' . sanitize_key($name);
@@ -179,7 +189,8 @@ function luxride_render_vehicle_box(WP_Post $post): void
     $m = fn(string $key, mixed $default = '') => luxride_meta_value($post->ID, $key, $default);
     echo '<div class="luxride-admin-grid"><div>';
     echo '<div class="luxride-checks">';
-    luxride_checkbox('Active', 'luxride_active', (bool) $m('luxride_active', true));
+    luxride_checkbox('Published / Visible', 'luxride_active', (bool) $m('luxride_active', true));
+    luxride_checkbox('Available for Booking', 'luxride_booking_enabled', luxride_meta_bool_value($post->ID, 'luxride_booking_enabled', true));
     luxride_checkbox('WiFi', 'luxride_wifi', (bool) $m('luxride_wifi', true));
     luxride_checkbox('Air Conditioning', 'luxride_air_conditioning', (bool) $m('luxride_air_conditioning', true));
     luxride_checkbox('Ice Box', 'luxride_ice_box', (bool) $m('luxride_ice_box', false));
@@ -198,7 +209,7 @@ function luxride_render_vehicle_box(WP_Post $post): void
     luxride_field('Features EN', 'luxride_features_en', $m('luxride_features_en'));
     luxride_field('Features AR', 'luxride_features_ar', $m('luxride_features_ar'), 'text', ['dir' => 'rtl']);
     luxride_media_field('Vehicle Image', 'luxride_image_url', (string) $m('luxride_image_url'));
-    echo '<p class="luxride-admin-note">Internal vehicle keys stay stable: sedan, mpv, minivan. The hidden source id is preserved for the system.</p>';
+    echo '<p class="luxride-admin-note">Published / Visible controls whether the vehicle appears publicly. Available for Booking keeps the vehicle visible but prevents new bookings when unchecked. Internal vehicle keys stay stable: sedan, mpv, minivan.</p>';
     echo '</div></div>';
 }
 
@@ -224,7 +235,9 @@ function luxride_render_destination_box(WP_Post $post): void
     luxride_field('Section AR', 'luxride_group_ar', $m('luxride_group_ar'), 'text', ['dir' => 'rtl']);
     luxride_field('Context', 'luxride_context', $m('luxride_context', 'destination'));
     luxride_field('Duration', 'luxride_duration', $m('luxride_duration'));
-    luxride_field('From Price EUR', 'luxride_from_price', $m('luxride_from_price', 0), 'number', ['step' => '0.01']);
+    luxride_field('Sale Price EUR', 'luxride_from_price', $m('luxride_from_price', 0), 'number', ['step' => '0.01']);
+    luxride_field('Normal Price EUR', 'luxride_old_price', $m('luxride_old_price', 0), 'number', ['step' => '0.01']);
+    luxride_field('Discount Percent', 'luxride_discount_pct', $m('luxride_discount_pct', 0), 'number', ['step' => '1', 'min' => '0', 'max' => '100']);
     luxride_checkbox('Airport fee badge', 'luxride_airport_fee', (bool) $m('luxride_airport_fee', false));
     luxride_checkbox('Permit required badge', 'luxride_permit_required', (bool) $m('luxride_permit_required', false));
     luxride_media_field('Featured Image', 'luxride_image_url', (string) $m('luxride_image_url'));
@@ -312,6 +325,7 @@ function luxride_save_friendly_meta_boxes(int $post_id, WP_Post $post): void
 
     $checkboxes = [
         'luxride_active',
+        'luxride_booking_enabled',
         'luxride_wifi',
         'luxride_air_conditioning',
         'luxride_ice_box',

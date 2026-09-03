@@ -26,7 +26,9 @@ import {
   findRoute,
   pickupLocations,
   resolveTripType,
+  sortLocationOptions,
   tripRulesFor,
+  vehicleFeatureRows,
   workbookOneWayPrice,
   workbookRoundTripPrice,
 } from "./data";
@@ -77,7 +79,7 @@ function readActiveAppSources(dir: string): string {
 
 describe("workbook-derived route and pricing model", () => {
   it("keeps the workbook metadata and provisional yellow rows auditable", () => {
-    expect(WORKBOOK_PRICE_LIST_META.sourceFile).toBe("LuxRide-Pricelist.xlsx");
+    expect(WORKBOOK_PRICE_LIST_META.sourceFile).toBe("LuxRide-Price-List.xlsx");
     expect(WORKBOOK_PRICE_LIST_META.vehiclePricing).toBe("exact_workbook_values");
     expect(WORKBOOK_PRICE_LIST_META.sourceRows).toBe(320);
     expect(WORKBOOK_PRICE_LIST_META.confirmedRows).toBe(320);
@@ -101,6 +103,17 @@ describe("workbook-derived route and pricing model", () => {
     expect(workbookRoundTripPrice(workbookRow, hiace)).toBe(67);
   });
 
+  it("keeps the approved customer-facing trip labels separate from internal round-trip mechanics", () => {
+    const route = findRoute("Makadi Bay", "Hurghada City Center")!;
+    expect(route).toMatchObject({
+      outboundClassification: "City Transfer",
+      outboundClassificationAr: "نقل داخل المدينة",
+      returnClassification: "City Transfer",
+      returnClassificationAr: "نقل داخل المدينة",
+    });
+    expect(resolveTripType(route, "roundTrip")).toBe("overday");
+  });
+
   it("computes clean whole-Euro customer prices including unchanged airport and permit fees", () => {
     expect(price("Hurghada Airport", "El Gouna", "oneWay", xpander)).toMatchObject({ base: 21, airport: AIRPORT_SURCHARGE, total: 23 });
     expect(price("Hurghada City Center", "Hurghada Airport", "oneWay", xpander)).toMatchObject({ base: 13, airport: AIRPORT_SURCHARGE, total: 15 });
@@ -120,6 +133,21 @@ describe("workbook-derived route and pricing model", () => {
       airport: AIRPORT_SURCHARGE,
       total: 20,
     });
+  });
+
+  it("only applies a route promotion when the selected Cairo travel datetime is inside its validity window", () => {
+    const route = {
+      ...findRoute("Hurghada Airport", "El Gouna")!,
+      promotion: { type: "percent" as const, value: 10, startAt: "2030-06-10 00:00:00", endAt: "2030-06-20 23:59:00" },
+    };
+    const trip = resolveTripType(route, "oneWay")!;
+    expect(computePrice(route, trip, xpander, "2030-06-15 12:00")).toMatchObject({ base: 21, discount: 2.1, total: 20.9 });
+    expect(computePrice(route, trip, xpander, "2030-06-21 12:00")).toMatchObject({ base: 21, discount: 0, total: 23 });
+  });
+
+  it("does not apply legacy discount fields without an active promotion", () => {
+    const route = { ...findRoute("Hurghada Airport", "El Gouna")!, discountPct: 25 };
+    expect(computePrice(route, "oneWay", xpander)).toMatchObject({ base: 21, discount: 0, total: 23 });
   });
 
   it("supports One Way and Round Trip for every public workbook transfer while keeping Overday/Overnight internal", () => {
@@ -283,10 +311,30 @@ describe("vehicle and booking validation", () => {
     expect(fleetCopy).not.toContain("رحبة");
   });
 
+  it("shares the approved five-row feature list between homepage and fleet cards", () => {
+    expect(vehicleFeatureRows(hiace).map((feature) => feature.en)).toEqual([
+      "Up to 8 passengers and 8 bags",
+      "Air conditioning",
+      "USB charging available in the front cabin",
+      "WiFi on board",
+      "Ice Box / Chilled Drinks Box",
+    ]);
+    expect(readSource("./VehicleFeatures.tsx")).toContain("vehicleFeatureRows");
+    expect(readSource("../../pages/FleetPage.tsx")).toContain("<VehicleFeatures vehicle={v} lang={lang} />");
+    expect(readSource("./Sections.tsx")).toContain("<VehicleFeatures vehicle={v} lang={lang} />");
+  });
+
   it("provides workbook pickup and destination cascades", () => {
     expect(pickupLocations()).toContain("Hurghada Airport");
     expect(destinationsFor("Hurghada Airport")).toEqual(expect.arrayContaining(["Hurghada City Center", "El Gouna", "Village Road", "Al Ahyaa Subdivisions", "Wadi Lahmy"]));
     expect(destinationsFor("Hurghada City Center")).toEqual(expect.arrayContaining(["Luxor", "Cairo", "Marsa Alam", "Wadi El Gemal", "Wadi Lahmy"]));
+  });
+
+  it("sorts visible location options by translated display label without mutating the source", () => {
+    const options = ["Cairo", "Hurghada Airport", "Alexandria"];
+    expect(sortLocationOptions(options, "EN")).toEqual(["Alexandria", "Cairo", "Hurghada Airport"]);
+    expect(sortLocationOptions(options, "AR")).toEqual(["Alexandria", "Cairo", "Hurghada Airport"]);
+    expect(options).toEqual(["Cairo", "Hurghada Airport", "Alexandria"]);
   });
 
   it("uses valid, distinct imagery for major long-distance destination cards", () => {

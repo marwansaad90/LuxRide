@@ -10,6 +10,7 @@ import {
   destinationsForRoutes,
   findRoute,
   findRouteIn,
+  isVehicleSelectable,
   pickupLocationsFor,
   routeFromApiRoute,
   resolveTripType,
@@ -36,13 +37,22 @@ export function EstimateYourTrip() {
   const [luggage, setLuggage] = useState("2");
   const [notice, setNotice] = useState("");
   const [routes, setRoutes] = useState<Route[]>(ROUTES);
+  const [pickupOrder, setPickupOrder] = useState<string[] | null>(null);
   const vehicles = useVehicles();
 
-  const pickups = useMemo(() => pickupLocationsFor(routes), [routes]);
+  const routePickups = useMemo(() => pickupLocationsFor(routes), [routes]);
+  const pickups = useMemo(() => {
+    if (!pickupOrder) return routePickups;
+    const available = new Set(routePickups);
+    const explicit = pickupOrder.filter((pickup) => available.has(pickup));
+    const seen = new Set(explicit);
+    return [...explicit, ...routePickups.filter((pickup) => !seen.has(pickup))];
+  }, [pickupOrder, routePickups]);
   const allLocations = useMemo(() => Array.from(new Set(routes.flatMap((item) => [item.from, item.to]))), [routes]);
   const vehicle = vehicles.find((v) => v.id === vehicleId) ?? vehicles[0];
   const route = findRouteIn(routes, from, to) ?? findRoute(from, to);
   const trip = useMemo(() => resolveTripType(route, publicTrip), [route, publicTrip]);
+  const vehicleSelectable = vehicle ? isVehicleSelectable(vehicle) : false;
   const breakdown = useMemo(
     () => (route && vehicle && trip ? computePrice(route, trip, vehicle) : null),
     [route, trip, vehicle],
@@ -58,7 +68,11 @@ export function EstimateYourTrip() {
       .then((response) => (response.ok ? response.json() : null))
       .then((payload) => {
         if (!active || !Array.isArray(payload?.routes) || payload.routes.length === 0) return;
-        setRoutes(payload.routes.map(routeFromApiRoute));
+        const nextRoutes = payload.routes.map(routeFromApiRoute);
+        setRoutes(nextRoutes);
+        if (Array.isArray(payload.pickup_locations)) {
+          setPickupOrder(payload.pickup_locations.map((pickup: { label?: string }) => String(pickup?.label ?? "")).filter(Boolean));
+        }
       })
       .catch(() => {
         // Local Vite and static previews do not serve WordPress REST. Keep the compiled workbook fallback.
@@ -76,7 +90,10 @@ export function EstimateYourTrip() {
 
   function clampForVehicle(id: VehicleId) {
     const nextVehicle = vehicles.find((v) => v.id === id);
-    if (!nextVehicle) return;
+    if (!nextVehicle || !isVehicleSelectable(nextVehicle)) {
+      setNotice(isAR ? "هذه السيارة غير متاحة للحجز حالياً." : "This vehicle is temporarily unavailable for booking.");
+      return;
+    }
     const nextPax = Math.min(Number(pax), nextVehicle.pax);
     const nextLuggage = Math.min(Number(luggage), nextVehicle.luggage);
     setVehicleId(id);
@@ -99,7 +116,10 @@ export function EstimateYourTrip() {
   }
 
   function handleContinue() {
-    if (!breakdown || !date || !time || !vehicle) return;
+    if (!breakdown || !date || !time || !vehicle || !isVehicleSelectable(vehicle)) {
+      if (vehicle && !isVehicleSelectable(vehicle)) setNotice(isAR ? "هذه السيارة غير متاحة للحجز حالياً." : "This vehicle is temporarily unavailable for booking.");
+      return;
+    }
     const params = new URLSearchParams({
       trip: publicTrip,
       from,
@@ -238,7 +258,7 @@ export function EstimateYourTrip() {
         )}
 
         <div className="rounded-xl bg-gray-50 p-3">
-          {breakdown ? (
+          {breakdown && vehicleSelectable ? (
             <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.14em] text-gray-500">
@@ -259,13 +279,17 @@ export function EstimateYourTrip() {
               <button
                 type="button"
                 onClick={handleContinue}
-                disabled={!breakdown || !date || !time}
+                disabled={!breakdown || !date || !time || !vehicleSelectable}
                 className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-lux-green px-4 py-2 text-sm font-bold text-white shadow-none transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isAR ? "المتابعة لتفاصيل التوصيلة" : "Continue to Transfer Details"}
                 <ArrowRight className="h-4 w-4 rtl:rotate-180" />
               </button>
             </div>
+          ) : breakdown && !vehicleSelectable ? (
+            <p className="text-sm text-gray-500">
+              {isAR ? "السيارة المحددة غير متاحة للحجز حالياً. اختر سيارة أخرى لعرض السعر." : "The selected vehicle is temporarily unavailable for booking. Choose another vehicle to see the price."}
+            </p>
           ) : (
             <p className="text-sm text-gray-500">{isAR ? "اختر موقع الانطلاق والوجهة لعرض السعر الثابت." : "Select pickup and destination to see the fixed price."}</p>
           )}

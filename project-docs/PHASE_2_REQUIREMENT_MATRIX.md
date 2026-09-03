@@ -39,7 +39,7 @@ Generated: 2026-08-15
 | Booking API | LIVE VERIFIED | Public `/wp-json/luxride/v1/bookings` created QA booking `LXR-20260815-TB6I` and returned idempotent replay for the same key. |
 | Booking server recalculation | LIVE VERIFIED | Tampered client `total=1` was ignored; stored server total was EUR 80. |
 | Booking storage | LIVE VERIFIED | Booking endpoint stored route/customer/conditional/price snapshots in `wp_luxride_bookings`; QA references `LXR-20260815-TB6I` and `LXR-20260815-LVDS` were visible before cleanup. |
-| Booking reference | LIVE VERIFIED | Booking references are generated as `LXR-YYYYMMDD-XXXX`; live evidence: `LXR-20260815-TB6I`. |
+| Booking reference | LIVE VERIFIED | New booking references are generated as `LRT-YYYYMMDD-XXXX`; historical live evidence: `LXR-20260815-TB6I`. |
 | Review screen | LIVE VERIFIED | React review uses the latest successful server quote before enabling final submit; stale `review_total` returns `price_changed`. |
 | Final submit | LIVE VERIFIED | Final booking submit persists through the server-authoritative bookings endpoint and returns a success reference. |
 | Customer details | LIVE VERIFIED | Live booking storage included customer name, phone, passengers, bags, exact location, and conditional fields. |

@@ -24,6 +24,7 @@ import {
   destinationsForRoutes,
   findRoute,
   findRouteIn,
+  isVehicleSelectable,
   pickupLocationsFor,
   routeFromApiRoute,
   resolveTripType,
@@ -43,23 +44,55 @@ interface ServerQuote {
     pickup: { label: string; ar?: string };
     destination: { label: string; ar?: string };
     recommended_trip_type?: string;
+    trip_name_one_way?: string;
+    trip_name_return?: string;
+    trip_name_one_way_ar?: string;
+    trip_name_return_ar?: string;
   };
   trip_type: "one_way" | "round_trip";
   classification: "one_way" | "overday" | "overnight";
   vehicle: { key: string; label: string };
   pricing: {
     base: number;
+    original_base?: number;
     discount: number;
+    promotion?: {
+      has_promotion: boolean;
+      promotion_name?: string;
+      promotion_discount_amount?: number;
+      promotion_discount_percent?: number;
+      promotional_amount?: number;
+    };
+    promotional_base?: number;
     airport_fee: number;
     permit_fee: number;
     accommodation: { nights: number; price_per_night: number; total: number };
     accommodation_fee: number;
+    original_total?: number;
+    promotional_total?: number;
     child_seat: { requested: boolean; price: number; label: string; label_ar: string };
     total: number;
     currency: string;
     taxes_included: boolean;
   };
   required_fields: string[];
+}
+
+interface TurnstilePublicSettings {
+  enabled: boolean;
+  site_key: string;
+  mode: "managed";
+  minimum_lead_hours: number;
+}
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (container: HTMLElement, options: Record<string, unknown>) => string;
+      reset: (widgetId?: string) => void;
+      remove: (widgetId?: string) => void;
+    };
+  }
 }
 
 function makeIdempotencyKey() {
@@ -76,6 +109,7 @@ export function BookingPage() {
   const vehicles = useVehicles();
   const initial = useMemo(() => readInitialBookingState(searchParams), [searchParams]);
   const [routes, setRoutes] = useState<Route[]>(ROUTES);
+  const [pickupOrder, setPickupOrder] = useState<string[] | null>(null);
 
   // ── Step 1 state (pre-filled from URL params) ──────────────────────────────
   const [step, setStep] = useState<Step>(1);
@@ -110,31 +144,51 @@ export function BookingPage() {
   const [priceChangedNotice, setPriceChangedNotice] = useState("");
   const [idempotencyKey] = useState(makeIdempotencyKey);
   const [step1Errors, setStep1Errors] = useState<{ pickup?: string; destination?: string; date?: string; time?: string; leadTime?: string }>({});
+  const [availabilityError, setAvailabilityError] = useState("");
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [turnstile, setTurnstile] = useState<TurnstilePublicSettings>({ enabled: false, site_key: "", mode: "managed", minimum_lead_hours: BOOKING_CUTOFF_HOURS });
+  const [turnstileToken, setTurnstileToken] = useState("");
   const dateRef = useRef<HTMLInputElement>(null);
   const timeRef = useRef<HTMLInputElement>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetRef = useRef<string | null>(null);
 
   // ── Derived ─────────────────────────────────────────────────────────────────
-  const pickups = useMemo(() => pickupLocationsFor(routes), [routes]);
+  const routePickups = useMemo(() => pickupLocationsFor(routes), [routes]);
+  const pickups = useMemo(() => {
+    if (!pickupOrder) return routePickups;
+    const available = new Set(routePickups);
+    const explicit = pickupOrder.filter((pickup) => available.has(pickup));
+    const seen = new Set(explicit);
+    return [...explicit, ...routePickups.filter((pickup) => !seen.has(pickup))];
+  }, [pickupOrder, routePickups]);
   const allLocations = useMemo(() => Array.from(new Set(routes.flatMap((item) => [item.from, item.to]))), [routes]);
   const vehicle = vehicles.find((v) => v.id === vehicleId) ?? vehicles[0] ?? FLEET[0];
   const route = findRouteIn(routes, from, to) ?? findRoute(from, to);
   const trip = useMemo(() => resolveTripType(route, publicTrip), [route, publicTrip]);
   const breakdown = useMemo(
-    () => (route && trip ? computePrice(route, trip, vehicle) : null),
-    [route, trip, vehicle],
+    () => (route && trip ? computePrice(route, trip, vehicle, date && time ? `${date} ${time}` : "") : null),
+    [date, route, time, trip, vehicle],
   );
   const isAirportArrival = from === "Hurghada Airport";
   const needsPermit = !!route?.permit;
   const needsReturn = trip === "overday" || trip === "overnight";
   const todayLocal = useMemo(() => todayInBookingTimeZone(), []);
+  const leadHours = Math.max(1, Math.round(turnstile.minimum_lead_hours || BOOKING_CUTOFF_HOURS));
+  const leadHoursText = `${leadHours} ${leadHours === 1 ? "hour" : "hours"}`;
+  const leadHoursArabic = `${leadHours} ${leadHours === 1 ? "ساعة" : "ساعات"}`;
+  const leadTimeMessage = isAR
+    ? `الحجز القياسي يتطلب ${leadHoursArabic} على الأقل قبل الانطلاق. تواصل معنا للتوفر العاجل.`
+    : `Standard booking requires at least ${leadHoursText} before departure. Contact us for last-minute availability.`;
 
   const tooSoon = useMemo(() => {
     if (!date || !time) return false;
-    return isWithinLeadTime(date, time, BOOKING_CUTOFF_HOURS);
-  }, [date, time]);
+    return isWithinLeadTime(date, time, turnstile.minimum_lead_hours);
+  }, [date, time, turnstile.minimum_lead_hours]);
 
   const hasValidReturn = trip ? isValidReturn(trip, date, time, returnDate, returnTime) : false;
-  const step1Valid = !!(from && to && route && date && time && breakdown);
+  const vehicleSelectable = vehicle ? isVehicleSelectable(vehicle) : false;
+  const step1Valid = !!(from && to && route && date && time && breakdown && vehicleSelectable);
   const step2Valid =
     hotel.trim().length > 0 &&
     name.trim().length > 0 &&
@@ -171,9 +225,13 @@ export function BookingPage() {
         const code = payload?.code;
         const message =
           code === "luxride_last_minute" || code === "last_minute_required"
+            ? leadTimeMessage
+            : code === "luxride_daily_limit_reached"
             ? (isAR
-              ? "الحجز القياسي يتطلب ثلاث ساعات على الأقل قبل الانطلاق. تواصل معنا للتوفر العاجل."
-              : "Standard booking requires at least 3 hours before departure. Contact us for last-minute availability.")
+              ? String(payload?.details?.message_ar ?? "تم الوصول إلى الحد الأقصى للحجوزات المؤكدة لهذا اليوم. يرجى اختيار تاريخ آخر.")
+              : String(payload?.message ?? "This date has reached the maximum number of confirmed bookings. Please choose another date."))
+            : isAR && payload?.details?.message_ar
+            ? String(payload.details.message_ar)
             : (payload?.message ?? (isAR ? "تعذر تحديث السعر من الخادم." : "Could not refresh the server price."));
         if (showErrors) setQuoteError(message);
         setServerQuote(null);
@@ -188,7 +246,7 @@ export function BookingPage() {
     } finally {
       setQuoteLoading(false);
     }
-  }, [hasValidReturn, isAR, needsReturn, quotePayload, step1Valid]);
+  }, [hasValidReturn, isAR, leadTimeMessage, needsReturn, quotePayload, step1Valid]);
 
   useEffect(() => {
     let active = true;
@@ -196,7 +254,11 @@ export function BookingPage() {
       .then((response) => (response.ok ? response.json() : null))
       .then((payload) => {
         if (!active || !Array.isArray(payload?.routes) || payload.routes.length === 0) return;
-        setRoutes(payload.routes.map(routeFromApiRoute));
+        const nextRoutes = payload.routes.map(routeFromApiRoute);
+        setRoutes(nextRoutes);
+        if (Array.isArray(payload.pickup_locations)) {
+          setPickupOrder(payload.pickup_locations.map((pickup: { label?: string }) => String(pickup?.label ?? "")).filter(Boolean));
+        }
       })
       .catch(() => {
         // Static and Vite previews use the compiled workbook fallback.
@@ -205,6 +267,70 @@ export function BookingPage() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/wp-json/luxride/v1/public-settings", { headers: { Accept: "application/json" } })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload) => {
+        if (!active || !payload?.turnstile) return;
+        setTurnstile({
+          enabled: Boolean(payload.turnstile.enabled),
+          site_key: String(payload.turnstile.site_key ?? ""),
+          mode: "managed",
+          minimum_lead_hours: Math.max(1, Number(payload.minimum_lead_hours) || BOOKING_CUTOFF_HOURS),
+        });
+      })
+      .catch(() => {
+        // Turnstile is optional until production keys are configured.
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!turnstile.enabled || !turnstile.site_key || step !== 3) return;
+    if (!document.querySelector('script[data-luxride-turnstile="true"]')) {
+      const script = document.createElement("script");
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.async = true;
+      script.defer = true;
+      script.dataset.luxrideTurnstile = "true";
+      document.head.appendChild(script);
+    }
+
+    let cancelled = false;
+    const timer = window.setInterval(() => {
+      if (cancelled || !turnstileRef.current || !window.turnstile || turnstileWidgetRef.current) return;
+      turnstileWidgetRef.current = window.turnstile.render(turnstileRef.current, {
+        sitekey: turnstile.site_key,
+        size: "flexible",
+        theme: "light",
+        callback: (token: string) => setTurnstileToken(token),
+        "expired-callback": () => setTurnstileToken(""),
+        "error-callback": () => setTurnstileToken(""),
+      });
+      window.clearInterval(timer);
+    }, 200);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      if (turnstileWidgetRef.current && window.turnstile) {
+        window.turnstile.remove(turnstileWidgetRef.current);
+        turnstileWidgetRef.current = null;
+        setTurnstileToken("");
+      }
+    };
+  }, [step, turnstile.enabled, turnstile.site_key]);
+
+  function resetTurnstile() {
+    setTurnstileToken("");
+    if (turnstileWidgetRef.current && window.turnstile) {
+      window.turnstile.reset(turnstileWidgetRef.current);
+    }
+  }
 
   useEffect(() => {
     const nextDests = from && pickups.includes(from) ? destinationsForRoutes(routes, from) : [];
@@ -216,6 +342,7 @@ export function BookingPage() {
     setServerQuote(null);
     setQuoteError("");
     setPriceChangedNotice("");
+    setAvailabilityError("");
   }, [childSeat, date, from, luggage, pax, publicTrip, returnDate, returnTime, time, to, vehicleId]);
 
   useEffect(() => {
@@ -245,7 +372,10 @@ export function BookingPage() {
 
   function handleVehicleChange(id: VehicleId) {
     const v = vehicles.find((f) => f.id === id);
-    if (!v) return;
+    if (!v || !isVehicleSelectable(v)) {
+      setCapacityNotice(false);
+      return;
+    }
     setVehicleId(id);
     const exceedsCapacity = parseInt(pax) > v.pax || parseInt(luggage) > v.luggage;
     if (parseInt(pax) > v.pax) setPax(String(v.pax));
@@ -264,8 +394,11 @@ export function BookingPage() {
   }, [step]);
 
   const tripLabel = publicTrip === "roundTrip" ? (isAR ? "ذهاب وعودة" : "Round Trip") : (isAR ? "ذهاب فقط" : "One Way");
+  const tripClassificationLabel = publicTrip === "roundTrip"
+    ? (isAR ? route?.returnClassificationAr : route?.returnClassification)
+    : (isAR ? route?.outboundClassificationAr : route?.outboundClassification);
 
-  function handleStep1Next() {
+  async function handleStep1Next() {
     const nextErrors: typeof step1Errors = {};
     if (!from || !pickups.includes(from)) {
       nextErrors.pickup = isAR ? "يرجى اختيار موقع انطلاق من القائمة." : "Please choose a pickup location from the list.";
@@ -277,8 +410,11 @@ export function BookingPage() {
     if (!time) nextErrors.time = isAR ? "يرجى اختيار وقت الانطلاق." : "Please select a pickup time.";
     if (date && time && tooSoon) {
       nextErrors.leadTime = isAR
-        ? "الحجز القياسي يتطلب ثلاث ساعات على الأقل قبل الانطلاق بتوقيت القاهرة."
-        : "Standard booking requires at least 3 hours before departure in Cairo time.";
+        ? `الحجز القياسي يتطلب ${leadHoursArabic} على الأقل قبل الانطلاق بتوقيت القاهرة.`
+        : `Standard booking requires at least ${leadHoursText} before departure in Cairo time.`;
+    }
+    if (!vehicleSelectable) {
+      nextErrors.leadTime = isAR ? "السيارة المحددة غير متاحة للحجز حالياً." : "The selected vehicle is temporarily unavailable for booking.";
     }
     setStep1Errors(nextErrors);
     if (nextErrors.pickup || nextErrors.destination) return;
@@ -293,7 +429,33 @@ export function BookingPage() {
       return;
     }
     if (nextErrors.leadTime || !breakdown) return;
-    setStep(2);
+
+    setAvailabilityLoading(true);
+    setAvailabilityError("");
+    try {
+      const response = await fetch("/wp-json/luxride/v1/availability", {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vehicle: vehicleId,
+          outbound_datetime: `${date} ${time}`,
+          return_datetime: needsReturn && returnDate && returnTime ? `${returnDate} ${returnTime}` : "",
+        }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || payload?.available !== true) {
+        const message = isAR
+          ? String(payload?.details?.message_ar ?? "السيارة المحددة غير متاحة في هذا الوقت. اختر وقتاً آخر أو سيارة أخرى.")
+          : String(payload?.message ?? "The selected vehicle is unavailable for this time. Choose another time or vehicle.");
+        setAvailabilityError(message);
+        return;
+      }
+      setStep(2);
+    } catch {
+      setAvailabilityError(isAR ? "تعذر التحقق من توفر السيارة. حاول مرة أخرى." : "Could not check vehicle availability. Please try again.");
+    } finally {
+      setAvailabilityLoading(false);
+    }
   }
 
   async function handleSubmit() {
@@ -308,6 +470,10 @@ export function BookingPage() {
     if (!quote) {
       return;
     }
+    if (turnstile.enabled && !turnstileToken) {
+      setSubmitError(isAR ? "يرجى إكمال فحص أمان الحجز." : "Please complete the booking security check.");
+      return;
+    }
 
     setSubmitLoading(true);
     try {
@@ -319,6 +485,7 @@ export function BookingPage() {
           language: lang,
           idempotency_key: idempotencyKey,
           review_total: quote.pricing.total,
+          turnstile_token: turnstileToken,
           customer: { full_name: name, phone, email },
           details: {
             exact_location: hotel,
@@ -341,11 +508,12 @@ export function BookingPage() {
           );
           return;
         }
+        if (typeof payload?.code === "string" && payload.code.startsWith("luxride_turnstile")) {
+          resetTurnstile();
+        }
         const message =
           payload?.code === "last_minute_required"
-            ? (isAR
-              ? "الحجز القياسي يتطلب ثلاث ساعات على الأقل قبل الانطلاق. تواصل معنا للتوفر العاجل."
-              : "Standard booking requires at least 3 hours before departure. Contact us for last-minute availability.")
+            ? leadTimeMessage
             : (payload?.message ?? (isAR ? "تعذر إرسال طلب الحجز." : "Could not submit the booking request."));
         setSubmitError(message);
         return;
@@ -356,6 +524,7 @@ export function BookingPage() {
         state: {
           bookingReference: saved?.reference,
           tripLabel,
+          tripClassificationLabel: tripClassificationLabel || "",
           route: `${locationLabel(lang, from)} → ${locationLabel(lang, to)}`,
           vehicleName: vehicle.name,
           vehicleCategory: vehicleSegmentLabel(vehicle, lang),
@@ -577,10 +746,20 @@ export function BookingPage() {
                     : `Your selection was corrected. The selected vehicle supports up to ${vehicle.pax} passengers and ${vehicle.luggage} bags.`}
                 </div>
               )}
+              {!vehicleSelectable && (
+                <p role="alert" className="mt-4 rounded-xl border border-lux-orange/40 bg-orange-50 px-4 py-3 text-sm text-gray-700">
+                  {isAR ? "السيارة المحددة غير متاحة للحجز حالياً. اختر سيارة أخرى للمتابعة." : "The selected vehicle is temporarily unavailable for booking. Choose another vehicle to continue."}
+                </p>
+              )}
+              {availabilityError && (
+                <p role="alert" className="mt-4 rounded-xl border border-lux-orange/40 bg-orange-50 px-4 py-3 text-sm text-gray-700">
+                  {availabilityError}
+                </p>
+              )}
             </div>
 
             {/* Price preview */}
-            {breakdown && (
+            {breakdown && vehicleSelectable && (
               <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
                 <h3 className="text-lux-charcoal mb-4" style={{ fontFamily: hFamily, fontSize: "1.1rem", fontWeight: 700 }}>
                   {isAR ? "معاينة السعر" : "Price Preview"}
@@ -589,7 +768,7 @@ export function BookingPage() {
               </div>
             )}
 
-            {/* 3h cutoff */}
+            {/* Configured booking cutoff */}
             {tooSoon && (
               <div className="rounded-xl border border-lux-orange/30 bg-orange-50 p-4 flex gap-3">
                 <AlertTriangle className="h-5 w-5 text-lux-orange shrink-0 mt-0.5" />
@@ -599,8 +778,8 @@ export function BookingPage() {
                   </p>
                   <p className="mt-1 text-sm text-gray-600">
                     {isAR
-                      ? "يتطلب الحجز العادي 3 ساعات على الأقل. تواصل عبر واتساب."
-                      : "Standard booking requires at least 3 hours before departure. Contact us on WhatsApp to check last-minute availability."}
+                      ? `يتطلب الحجز العادي ${leadHoursArabic} على الأقل. تواصل عبر واتساب.`
+                      : `Standard booking requires at least ${leadHoursText} before departure. Contact us on WhatsApp to check last-minute availability.`}
                   </p>
                   <a
                     href={settingsWhatsappLink(settings, "Hi LuxRide, I need a last-minute transfer.")}
@@ -623,11 +802,12 @@ export function BookingPage() {
               <button
                 type="button"
                 onClick={handleStep1Next}
-                aria-disabled={!step1Valid || tooSoon}
+                disabled={!step1Valid || tooSoon || availabilityLoading}
+                aria-disabled={!step1Valid || tooSoon || availabilityLoading}
                 className="flex items-center gap-2 rounded-full bg-lux-green px-8 py-3.5 text-white font-medium transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ fontFamily: hFamily, fontWeight: 700, fontSize: "1.05rem" }}
               >
-                {isAR ? "التالي: بياناتك" : "Next: Your Details"}
+                {availabilityLoading ? (isAR ? "جارٍ التحقق..." : "Checking availability...") : (isAR ? "التالي: بياناتك" : "Next: Your Details")}
                 <ArrowRight className="h-5 w-5" />
               </button>
             </div>
@@ -744,6 +924,7 @@ export function BookingPage() {
               {/* Trip summary */}
               <ReviewSection title={isAR ? "تفاصيل التوصيلة" : "Transfer Details"} hFamily={hFamily}>
                 <ReviewRow label={isAR ? "نوع التوصيلة" : "Transfer Type"} value={tripLabel} />
+                {tripClassificationLabel && <ReviewRow label={isAR ? "تصنيف الرحلة" : "Trip classification"} value={tripClassificationLabel} />}
                 <ReviewRow label={isAR ? "مسار" : "Route"} value={`${locationLabel(lang, from)} → ${locationLabel(lang, to)}`} />
                 <ReviewRow label={isAR ? "المغادرة" : "Departure"} value={`${date} at ${time}`} />
                 {needsReturn && <ReviewRow label={isAR ? "العودة" : "Return"} value={`${returnDate || "-"} at ${returnTime || "-"}`} />}
@@ -789,6 +970,16 @@ export function BookingPage() {
                 <p className="font-medium text-gray-700 mb-1">{isAR ? "سياسة الإلغاء" : "Cancellation Policy"}</p>
                 <p>{isAR ? "استرداد كامل عند الإلغاء قبل 24 ساعة على الأقل من وقت بدء التجربة بالتوقيت المحلي. لا استرداد عند الإلغاء قبل أقل من 24 ساعة." : "Full refund when cancelled at least 24 hours before the experience start time in the local timezone. No refund for cancellation less than 24 hours before the start time."}</p>
               </div>
+              {turnstile.enabled && (
+                <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+                  <p className="mb-3 text-sm font-medium text-gray-700">
+                    {isAR ? "فحص أمان سريع لإرسال الحجز" : "Quick booking security check"}
+                  </p>
+                  <div className="min-w-0 max-w-full overflow-hidden" dir="ltr">
+                    <div ref={turnstileRef} className="min-h-[65px] max-w-full overflow-hidden" data-turnstile-mode={turnstile.mode} />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* THE ONE SUBMIT BUTTON */}
@@ -803,7 +994,7 @@ export function BookingPage() {
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={submitLoading || quoteLoading || !serverQuote}
+                disabled={submitLoading || quoteLoading || !serverQuote || (turnstile.enabled && !turnstileToken)}
                 className="inline-flex items-center justify-center gap-3 rounded-full bg-lux-green px-10 py-4 text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                 style={{ fontFamily: hFamily, fontWeight: 800, fontSize: "1.15rem" }}
               >
@@ -892,6 +1083,13 @@ function PriceTable({
   preliminaryOvernight: boolean;
 }) {
   const visibleTotal = preliminaryOvernight ? breakdown.total - breakdown.overnight : breakdown.total;
+  const discountLabel = route?.promotion
+    ? route.promotion.type === "fixed"
+      ? route.promotion.name || (isAR ? "عرض خاص" : "Special offer")
+      : `${route.promotion.name || (isAR ? "عرض خاص" : "Special offer")} (${Math.round(route.promotion.value)}%)`
+    : route?.discountPct
+      ? `${isAR ? "خصم" : "Discount"} (${route.discountPct}%)`
+      : (isAR ? "خصم" : "Discount");
   return (
     <div className="space-y-2 text-sm">
       <div className="flex justify-between text-gray-600">
@@ -900,7 +1098,7 @@ function PriceTable({
       </div>
       {breakdown.discount > 0 && (
         <div className="flex justify-between text-lux-orange">
-          <span>{isAR ? "خصم" : "Discount"} ({route?.discountPct}%)</span>
+          <span>{discountLabel}</span>
           <span>-{formatEur(breakdown.discount)}</span>
         </div>
       )}
@@ -972,16 +1170,28 @@ function QuotePriceTable({ quote, isAR, hFamily }: { quote: ServerQuote; isAR: b
   const nights = Number(pricing.accommodation?.nights ?? 0);
   const accommodationPerNight = Number(pricing.accommodation?.price_per_night ?? 0);
   const accommodationFee = Number(pricing.accommodation_fee);
+  const promotion = pricing.promotion;
+  const hasPromotion = Boolean(promotion?.has_promotion && Number(promotion?.promotion_discount_amount) > 0);
+  const promoPercent = Number(promotion?.promotion_discount_percent ?? 0);
   return (
     <div className="space-y-2 text-sm">
       <div className="flex justify-between text-gray-600">
         <span>{isAR ? "السعر الأساسي" : "Base price"}</span>
-        <span>{formatEur(Number(pricing.base))}</span>
+        <span className={hasPromotion ? "text-gray-400 line-through" : ""}>{formatEur(Number(pricing.base))}</span>
       </div>
-      {Number(pricing.discount) > 0 && (
-        <div className="flex justify-between text-lux-orange">
-          <span>{isAR ? "خصم" : "Discount"}</span>
+      {hasPromotion && (
+        <div className="flex justify-between gap-4 text-lux-orange">
+          <span className="min-w-0">
+            <span className="block">{isAR ? "عرض خاص" : "Special offer"}{promoPercent > 0 ? ` · ${Math.round(promoPercent)}% OFF` : ""}</span>
+            {promotion?.promotion_name && <span className="block text-xs text-lux-orange/80">{promotion.promotion_name}</span>}
+          </span>
           <span>-{formatEur(Number(pricing.discount))}</span>
+        </div>
+      )}
+      {hasPromotion && (
+        <div className="flex justify-between text-gray-600">
+          <span>{isAR ? "السعر بعد العرض" : "Promotional fare"}</span>
+          <span>{formatEur(Number(pricing.promotional_base ?? pricing.base))}</span>
         </div>
       )}
       {Number(pricing.airport_fee) > 0 && (
