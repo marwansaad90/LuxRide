@@ -78,6 +78,41 @@ function luxride_experience_images(int $post_id): array
     return array_map('luxride_asset_or_url', $gallery);
 }
 
+function luxride_public_route_key(string $value): string
+{
+    $key = sanitize_title($value);
+    $aliases = [
+        'hurghada' => 'hurghada-city-center',
+        'al-ahyaa' => 'al-ahyaa-subdivisions',
+    ];
+
+    return $aliases[$key] ?? $key;
+}
+
+function luxride_public_route_flags(): array
+{
+    if (!class_exists('LuxRide_Booking_Schema')) {
+        return [];
+    }
+
+    global $wpdb;
+    $rows = $wpdb->get_results(
+        'SELECT pickup_label, destination_label, airport_fee_applicable, permit_required FROM ' . LuxRide_Booking_Schema::table('routes'),
+        ARRAY_A
+    );
+
+    $flags = [];
+    foreach (is_array($rows) ? $rows : [] as $row) {
+        $key = luxride_public_route_key((string) ($row['pickup_label'] ?? '')) . '|' . luxride_public_route_key((string) ($row['destination_label'] ?? ''));
+        $flags[$key] = [
+            'airport' => !empty($row['airport_fee_applicable']),
+            'permit' => !empty($row['permit_required']),
+        ];
+    }
+
+    return $flags;
+}
+
 function luxride_content_payload(): array
 {
     $payload = [
@@ -89,6 +124,8 @@ function luxride_content_payload(): array
         'experiences' => [],
         'faqs' => [],
     ];
+
+    $route_flags = luxride_public_route_flags();
 
     foreach (luxride_posts('luxride_vehicle') as $post) {
         if (!luxride_bool_meta($post->ID, 'luxride_active', true)) {
@@ -168,6 +205,12 @@ function luxride_content_payload(): array
             ],
             'displayOrder' => (int) $post->menu_order,
         ];
+
+        $route_key = luxride_public_route_key((string) $item['from']) . '|' . luxride_public_route_key((string) $item['to']);
+        if (isset($route_flags[$route_key])) {
+            $item['airport'] = $route_flags[$route_key]['airport'];
+            $item['permit'] = $route_flags[$route_key]['permit'];
+        }
 
         if (in_array('popular', $contexts, true)) {
             $payload['popularTransfers'][] = $item;
