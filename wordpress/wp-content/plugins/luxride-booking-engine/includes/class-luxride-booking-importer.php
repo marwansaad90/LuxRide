@@ -271,7 +271,7 @@ final class LuxRide_Booking_Importer
 
     private static function template_headers(): array
     {
-        return ['route_code', 'pickup', 'destination', 'pickup_ar', 'destination_ar', 'trip_name_one_way', 'trip_name_return', 'trip_name_one_way_ar', 'trip_name_return_ar', 'enabled', 'recommended_trip_type', 'round_trip_classification', 'airport_fee_applicable', 'permit_required', 'accommodation_applicable', 'accommodation_fee_eur', 'sedan_one_way_eur', 'sedan_round_trip_eur', 'mpv_one_way_eur', 'mpv_round_trip_eur', 'minivan_one_way_eur', 'minivan_round_trip_eur', 'source_row', 'source_checksum', 'updated_at'];
+        return ['route_code', 'pickup', 'destination', 'pickup_ar', 'destination_ar', 'trip_name_one_way', 'trip_name_return', 'trip_name_one_way_ar', 'trip_name_return_ar', 'enabled', 'recommended_trip_type', 'round_trip_classification', 'airport_fee_applicable', 'permit_required', 'accommodation_applicable', 'accommodation_fee_eur', 'sedan_one_way_eur', 'sedan_round_trip_eur', 'mpv_one_way_eur', 'mpv_round_trip_eur', 'minivan_one_way_eur', 'minivan_round_trip_eur'];
     }
 
     public static function export_csv(): string
@@ -354,7 +354,7 @@ final class LuxRide_Booking_Importer
         rewind($handle);
         $csv = stream_get_contents($handle);
         fclose($handle);
-        return (string) $csv;
+        return "\xEF\xBB\xBF" . (string) $csv;
     }
 
     private static function read_csv(string $path)
@@ -544,7 +544,12 @@ final class LuxRide_Booking_Importer
             }
             $rows[] = '<row r="' . ($row_number + 1) . '">' . implode('', $cells) . '</row>';
         }
-        return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>' . implode('', $rows) . '</sheetData></worksheet>';
+        $widths = [18, 22, 24, 28, 28, 28, 28, 30, 30, 10, 24, 28, 24, 18, 26, 20, 20, 22, 18, 22, 22, 24, 18, 22, 24];
+        $columns = [];
+        foreach ($widths as $index => $width) {
+            $columns[] = '<col min="' . ($index + 1) . '" max="' . ($index + 1) . '" width="' . $width . '" customWidth="1"/>';
+        }
+        return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols>' . implode('', $columns) . '</cols><sheetData>' . implode('', $rows) . '</sheetData></worksheet>';
     }
 
     private static function xlsx_xml_text(string $value): string

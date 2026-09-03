@@ -124,8 +124,10 @@ enabled, recommended_trip_type, round_trip_classification,
 airport_fee_applicable, permit_required, accommodation_applicable,
 accommodation_fee_eur, sedan_one_way_eur, sedan_round_trip_eur,
 mpv_one_way_eur, mpv_round_trip_eur, minivan_one_way_eur,
-minivan_round_trip_eur, source_row, source_checksum, updated_at
+minivan_round_trip_eur
 ```
+
+The template contains only user-entry fields. The system-managed fields `source_row`, `source_checksum`, and `updated_at` are included in the pricing backup export, not in the blank template.
 
 Never use a missing price, a guessed price, a changed route code, or an accidental zero to hide an import error. Keep a backup before applying a production workbook.
 
