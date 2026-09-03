@@ -1,5 +1,7 @@
 # LuxRide Handoff
 
+> **Current delivery note (2026-09-03):** This repository contains the React/Vite frontend, WordPress theme, custom booking plugin, approved pricing/import tooling, and complete bilingual documentation. Use [the English complete guide](project-docs/LUXRIDE_COMPLETE_DOCUMENTATION_EN.md) or [الدليل العربي](project-docs/LUXRIDE_COMPLETE_DOCUMENTATION_AR.md) as the current source of truth. The historical notes below are retained for context and may describe an earlier prototype state.
+
 Last updated: 2026-08-14 18:15 +03:00  
 Project path: `C:\Users\h0676\Documents\my_projects\luxdure`  
 Current branch: `main`

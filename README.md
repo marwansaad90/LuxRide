@@ -1,6 +1,15 @@
-# LuxRide client-review application
+# LuxRide Taxi
 
-LuxRide is a bilingual English/Arabic React and Vite application for fixed-price private transfers from Hurghada across the Red Sea coast and Egypt. It includes the homepage calculator, three-step booking flow, route pricing, fleet selection, Unforgettable Experiences, customer information pages, official Tripadvisor widgets, and direct review screens for future notification and availability workflows.
+> Current delivery: bilingual React/Vite frontend, WordPress theme, custom booking engine, pricing/import tooling, and complete programmer/administrator documentation.
+
+## Documentation
+
+- [Complete documentation in English](project-docs/LUXRIDE_COMPLETE_DOCUMENTATION_EN.md)
+- [الوثائق الكاملة بالعربية](project-docs/LUXRIDE_COMPLETE_DOCUMENTATION_AR.md)
+- [Documentation index](project-docs/README.md)
+- [Current delivery and historical handoff](HANDOFF.md)
+
+LuxRide is a bilingual English/Arabic React and Vite application for fixed-price private transfers from Hurghada across the Red Sea coast and Egypt. It includes the homepage calculator, three-step booking flow, live WordPress route pricing, fleet selection, Unforgettable Experiences, customer information pages, official Tripadvisor widgets, availability, promotions, and booking operations.
 
 ## Setup and development
 
@@ -103,13 +112,13 @@ Direct review routes are intentionally excluded from normal customer navigation:
 - `/email-preview`
 - `/booking-error`
 
-## Future production integration
+## Current production integration
 
-A production backend, persistent availability management, operational WhatsApp/email delivery, payment processing, final legal approval, and final client-owned content remain outside this React client-review release. Confirmed missing client inputs are tracked in `CLIENT_INPUT_REQUIRED.md`; the application does not invent them.
+A custom WordPress backend supplies live routes, pricing, quotes, availability, promotions, booking persistence, email status, and admin operations. Confirmed missing client inputs are tracked in `CLIENT_INPUT_REQUIRED.md`; the application does not invent them.
 
 For the WordPress phase, Unforgettable Experiences is intended to map to:
 
 - CPT: `Experiences`
 - fields such as `journey_gallery`, `route_type`, `vehicle_type`, `pickup_location`, `dropoff_location`, and `direct_booking_link`
 
-No WordPress backend, CPT, or ACF implementation is included in this React prototype.
+The current WordPress theme and booking plugin are included in `wordpress/wp-content/`. Use the complete bilingual guides for the REST API, administration, workbook import, deployment, and final QA workflow.
