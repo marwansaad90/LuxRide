@@ -9,6 +9,8 @@ final class LuxRide_Booking_Admin
     public static function register_hooks(): void
     {
         add_action('admin_menu', [self::class, 'admin_menu']);
+        add_action('admin_enqueue_scripts', [self::class, 'enqueue_assets']);
+        add_filter('admin_body_class', [self::class, 'admin_body_class']);
         add_action('admin_post_luxride_booking_save_settings', [self::class, 'save_settings']);
         add_action('admin_post_luxride_booking_save_route', [self::class, 'save_route']);
         add_action('admin_post_luxride_booking_import', [self::class, 'handle_import']);
@@ -17,6 +19,7 @@ final class LuxRide_Booking_Admin
         add_action('admin_post_luxride_booking_export_bookings', [self::class, 'export_bookings']);
         add_action('admin_post_luxride_booking_export_bookings_xlsx', [self::class, 'export_bookings_xlsx']);
         add_action('admin_post_luxride_booking_update_status', [self::class, 'update_booking_status']);
+        add_action('admin_post_luxride_booking_send_confirmation_email', [self::class, 'send_confirmation_email']);
         add_action('admin_post_luxride_booking_update_operations', [self::class, 'update_booking_operations']);
         add_action('admin_post_luxride_booking_delete', [self::class, 'delete_booking']);
         add_action('admin_post_luxride_booking_save_block', [self::class, 'save_block']);
@@ -25,6 +28,86 @@ final class LuxRide_Booking_Admin
         add_action('admin_post_luxride_booking_save_promotion', [self::class, 'save_promotion']);
         add_action('admin_post_luxride_booking_toggle_promotion', [self::class, 'toggle_promotion']);
         add_action('admin_post_luxride_booking_delete_promotion', [self::class, 'delete_promotion']);
+    }
+
+    public static function enqueue_assets(string $hook): void
+    {
+        $page = sanitize_key((string) ($_GET['page'] ?? ''));
+        if (!in_array($page, ['luxride-booking-engine', 'luxride-bookings', 'luxride-promotions', 'luxride-availability', 'luxride-pickup-order'], true)) {
+            return;
+        }
+
+        wp_register_style('luxride-booking-admin', false, [], LUXRIDE_BOOKING_ENGINE_VERSION);
+        wp_enqueue_style('luxride-booking-admin');
+        wp_add_inline_style('luxride-booking-admin', self::admin_css());
+
+        wp_register_script('luxride-booking-admin', false, [], LUXRIDE_BOOKING_ENGINE_VERSION, true);
+        wp_enqueue_script('luxride-booking-admin');
+        wp_add_inline_script('luxride-booking-admin', "document.addEventListener('click',function(event){var button=event.target.closest('[data-luxride-copy]');if(!button)return;var value=button.getAttribute('data-luxride-copy')||'';if(!value)return;var done=function(){var original=button.textContent;button.textContent='Copied';setTimeout(function(){button.textContent=original;},1200);};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(value).then(done);}else{var input=document.createElement('input');input.value=value;document.body.appendChild(input);input.select();document.execCommand('copy');input.remove();done();}});document.addEventListener('change',function(event){if(event.target.id!=='booking_discount_type')return;var type=event.target.value;var value=document.querySelector('[name=booking_discount_value]');var suffix=document.querySelector('[data-luxride-discount-suffix]');if(value)value.max=type==='percent'?'100':'';if(suffix)suffix.textContent=type==='percent'?'%':'EUR';});");
+    }
+
+    public static function admin_body_class(string $classes): string
+    {
+        $page = sanitize_key((string) ($_GET['page'] ?? ''));
+        if (in_array($page, ['luxride-booking-engine', 'luxride-bookings', 'luxride-promotions', 'luxride-availability', 'luxride-pickup-order'], true)) {
+            $classes .= ' luxride-booking-admin';
+        }
+
+        return $classes;
+    }
+
+    private static function admin_css(): string
+    {
+        return <<<'CSS'
+body.luxride-booking-admin #wpcontent { background: #f4f7f6; }
+body.luxride-booking-admin .wrap { max-width: 1320px; }
+body.luxride-booking-admin .wrap > h1 { color: #10251d; font-size: 30px; font-weight: 700; letter-spacing: 0; }
+body.luxride-booking-admin .wrap > h2,
+body.luxride-booking-admin .wrap > h3 { color: #10251d; }
+body.luxride-booking-admin .luxride-admin-card { box-sizing: border-box; background: #fff; border: 1px solid #d9e5df; border-radius: 10px; box-shadow: 0 4px 18px rgba(16,37,29,.05); padding: 22px; }
+body.luxride-booking-admin .luxride-admin-card h3 { margin: 0 0 16px; color: #10251d; font-size: 18px; }
+body.luxride-booking-admin .luxride-booking-hero { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(260px, 1fr); gap: 22px; margin: 18px 0 22px; padding: 26px; color: #fff; background: #176b49; border-radius: 12px; box-shadow: 0 8px 24px rgba(16,37,29,.14); }
+body.luxride-booking-admin .luxride-booking-hero h2 { margin: 8px 0 18px; color: #fff; font-size: 30px; }
+body.luxride-booking-admin .luxride-booking-hero .button { border-color: rgba(255,255,255,.4); color: #fff; background: rgba(255,255,255,.08); }
+body.luxride-booking-admin .luxride-hero-route { margin: 0; font-size: 20px; font-weight: 600; }
+body.luxride-booking-admin .luxride-hero-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-content: center; }
+body.luxride-booking-admin .luxride-hero-meta div { padding: 13px 14px; border: 1px solid rgba(255,255,255,.18); border-radius: 8px; background: rgba(255,255,255,.08); }
+body.luxride-booking-admin .luxride-hero-meta strong { display: block; margin-top: 4px; color: #fff; }
+body.luxride-booking-admin .luxride-status-pill { display: inline-flex; align-items: center; min-height: 28px; padding: 3px 11px; border-radius: 999px; background: #e6f5ed; color: #147342; font-size: 12px; font-weight: 700; }
+body.luxride-booking-admin .luxride-status-cancelled { background: #fde9e7; color: #b42318; }
+body.luxride-booking-admin .luxride-status-completed { background: #e8eefc; color: #2453a6; }
+body.luxride-booking-admin .luxride-status-pending { background: #fff4d6; color: #8a5b00; }
+body.luxride-booking-admin .luxride-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-bottom: 22px; }
+body.luxride-booking-admin .luxride-admin-card table.widefat { border: 0; box-shadow: none; }
+body.luxride-booking-admin .luxride-admin-card table.widefat th { width: 35%; color: #50625b; font-weight: 600; }
+body.luxride-booking-admin .luxride-admin-card table.widefat td,
+body.luxride-booking-admin .luxride-admin-card table.widefat th { padding: 11px 12px; }
+body.luxride-booking-admin .luxride-operation-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+body.luxride-booking-admin .luxride-operation-grid form { margin: 0; }
+body.luxride-booking-admin .luxride-operation-grid .form-table { margin: 0; }
+body.luxride-booking-admin .luxride-operation-grid .form-table th { width: 36%; padding-left: 0; }
+body.luxride-booking-admin .luxride-operation-grid .form-table td { padding-right: 0; }
+body.luxride-booking-admin .luxride-form-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 16px; }
+body.luxride-booking-admin .luxride-danger-zone { border-color: #f0c9c4; background: #fffafa; }
+body.luxride-booking-admin .luxride-price-card { margin-top: 22px; }
+body.luxride-booking-admin .luxride-price-card table tr:last-child { background: #eaf7ef; }
+body.luxride-booking-admin .luxride-price-card table tr:last-child td,
+body.luxride-booking-admin .luxride-price-card table tr:last-child th { color: #08783e; font-size: 17px; }
+body.luxride-booking-admin .luxride-confirmation-card { margin-top: 22px; }
+body.luxride-booking-admin .luxride-booking-table { overflow-x: auto; }
+body.luxride-booking-admin .luxride-booking-table table { min-width: 980px; }
+body.luxride-booking-admin .luxride-booking-table td { vertical-align: top; }
+body.luxride-booking-admin .luxride-admin-wrap .form-table input[type=text],
+body.luxride-booking-admin .luxride-admin-wrap .form-table input[type=email],
+body.luxride-booking-admin .luxride-admin-wrap .form-table input[type=number],
+body.luxride-booking-admin .luxride-admin-wrap .form-table select,
+body.luxride-booking-admin .luxride-admin-wrap .form-table textarea { border-color: #cbdad3; border-radius: 6px; }
+@media (max-width: 900px) {
+  body.luxride-booking-admin .luxride-booking-hero { grid-template-columns: 1fr; }
+  body.luxride-booking-admin .luxride-detail-grid,
+  body.luxride-booking-admin .luxride-operation-grid { grid-template-columns: 1fr; }
+}
+CSS;
     }
 
     public static function admin_menu(): void
@@ -248,11 +331,39 @@ final class LuxRide_Booking_Admin
         $status = sanitize_key((string) ($_POST['status'] ?? ''));
         $result = $booking_id ? LuxRide_Booking_Bookings::update_status_with_confirmation($booking_id, $status) : [];
         $updated = !empty($result['updated']);
+        $notice = $updated ? 'booking_status_saved' : 'booking_status_failed';
+        $email_result = is_array($result['confirmation_email'] ?? null) ? $result['confirmation_email'] : [];
+        if ($updated && !empty($email_result['sent'])) {
+            $notice = 'booking_status_saved_confirmation_sent';
+        } elseif ($updated && 'failed' === (string) ($email_result['status'] ?? '')) {
+            $notice = 'booking_status_saved_confirmation_failed';
+        } elseif ($updated && 'unavailable' === (string) ($email_result['status'] ?? '')) {
+            $notice = 'booking_status_saved_confirmation_unavailable';
+        }
 
         wp_safe_redirect(add_query_arg([
             'page' => 'luxride-bookings',
             'booking_id' => $booking_id,
-            'luxride_notice' => $updated ? 'booking_status_saved' : 'booking_status_failed',
+            'luxride_notice' => $notice,
+        ], admin_url('admin.php')));
+        exit;
+    }
+
+    public static function send_confirmation_email(): void
+    {
+        self::guard_action('luxride_booking_send_confirmation_email');
+
+        $booking_id = isset($_POST['booking_id']) ? absint($_POST['booking_id']) : 0;
+        $result = $booking_id ? LuxRide_Booking_Bookings::send_confirmation_email($booking_id, true) : ['sent' => false, 'status' => 'failed'];
+        $notice = !empty($result['sent']) ? 'confirmation_email_sent' : 'confirmation_email_failed';
+        if ('unavailable' === (string) ($result['status'] ?? '')) {
+            $notice = 'confirmation_email_unavailable';
+        }
+
+        wp_safe_redirect(add_query_arg([
+            'page' => 'luxride-bookings',
+            'booking_id' => $booking_id,
+            'luxride_notice' => $notice,
         ], admin_url('admin.php')));
         exit;
     }
@@ -960,100 +1071,135 @@ final class LuxRide_Booking_Admin
         $customer = self::decoded($booking['customer_snapshot']);
         $details = self::decoded($booking['conditional_details']);
         $price = self::decoded($booking['price_snapshot']);
+        $whatsapp_url = LuxRide_Booking_Bookings::confirmation_whatsapp_url($booking);
+        $trip_direction_label = 'round_trip' === (string) $booking['trip_type'] ? 'Round trip' : 'One way';
+        $trip_name_key = 'round_trip' === (string) $booking['trip_type'] ? 'trip_name_return' : 'trip_name_one_way';
+        $trip_label = $trip_direction_label;
+        if (!empty($route[$trip_name_key])) {
+            $trip_label .= ' / ' . (string) $route[$trip_name_key];
+        }
+        $status = sanitize_html_class((string) ($booking['status'] ?? 'new'));
         ?>
-        <p><a class="button" href="<?php echo esc_url(admin_url('admin.php?page=luxride-bookings')); ?>"><?php echo esc_html__('Back to bookings', 'luxride-booking-engine'); ?></a></p>
-        <h2><?php echo esc_html($booking['booking_reference']); ?></h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; max-width: 1200px;">
+        <p><a class="button" href="<?php echo esc_url(admin_url('admin.php?page=luxride-bookings')); ?>">&larr; <?php echo esc_html__('Back to bookings', 'luxride-booking-engine'); ?></a></p>
+
+        <section class="luxride-booking-hero" aria-labelledby="luxride-booking-reference">
             <div>
-                <h3><?php echo esc_html__('Booking Summary', 'luxride-booking-engine'); ?></h3>
-                <table class="widefat striped">
-                    <tbody>
-                        <tr><th><?php echo esc_html__('Route', 'luxride-booking-engine'); ?></th><td><?php echo esc_html(self::route_label($route)); ?></td></tr>
-                        <tr><th><?php echo esc_html__('Trip', 'luxride-booking-engine'); ?></th><td><?php echo esc_html($booking['trip_type'] . ' / ' . $booking['system_classification']); ?></td></tr>
-                        <tr><th><?php echo esc_html__('Vehicle', 'luxride-booking-engine'); ?></th><td><?php echo esc_html(self::labelize((string) $booking['vehicle_key'])); ?></td></tr>
-                        <tr><th><?php echo esc_html__('Passengers / bags', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) $booking['passengers'] . ' / ' . (string) $booking['bags']); ?></td></tr>
-                        <tr><th><?php echo esc_html__('Outbound', 'luxride-booking-engine'); ?></th><td><?php echo esc_html(self::booking_datetime_label((string) $booking['outbound_datetime'])); ?></td></tr>
-                        <tr><th><?php echo esc_html__('Return', 'luxride-booking-engine'); ?></th><td><?php echo esc_html(self::booking_datetime_label((string) ($booking['return_datetime'] ?? ''))); ?></td></tr>
-                        <tr><th><?php echo esc_html__('Language', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) $booking['language']); ?></td></tr>
-                    </tbody>
-                </table>
+                <span class="luxride-status-pill luxride-status-<?php echo esc_attr($status); ?>"><?php echo esc_html(self::labelize((string) ($booking['status'] ?? 'new'))); ?></span>
+                <h2 id="luxride-booking-reference"><?php echo esc_html($booking['booking_reference']); ?></h2>
+                <button type="button" class="button" data-luxride-copy="<?php echo esc_attr($booking['booking_reference']); ?>"><?php echo esc_html__('Copy reference', 'luxride-booking-engine'); ?></button>
+                <p class="luxride-hero-route"><?php echo esc_html(self::route_label($route)); ?></p>
             </div>
-            <div>
+            <div class="luxride-hero-meta">
+                <div><span><?php echo esc_html__('Trip', 'luxride-booking-engine'); ?></span><strong><?php echo esc_html($trip_label); ?></strong></div>
+                <div><span><?php echo esc_html__('Vehicle', 'luxride-booking-engine'); ?></span><strong><?php echo esc_html(self::vehicle_label((string) $booking['vehicle_key'])); ?></strong></div>
+                <div><span><?php echo esc_html__('Passengers / bags', 'luxride-booking-engine'); ?></span><strong><?php echo esc_html((string) $booking['passengers'] . ' / ' . (string) $booking['bags']); ?></strong></div>
+                <div><span><?php echo esc_html__('Outbound', 'luxride-booking-engine'); ?></span><strong><?php echo esc_html(self::booking_datetime_label((string) $booking['outbound_datetime'])); ?></strong></div>
+                <?php if (!empty($booking['return_datetime'])) : ?><div><span><?php echo esc_html__('Return', 'luxride-booking-engine'); ?></span><strong><?php echo esc_html(self::booking_datetime_label((string) $booking['return_datetime'])); ?></strong></div><?php endif; ?>
+                <div><span><?php echo esc_html__('Language / created', 'luxride-booking-engine'); ?></span><strong><?php echo esc_html((string) $booking['language'] . ' / ' . (string) $booking['created_at']); ?></strong></div>
+            </div>
+        </section>
+
+        <div class="luxride-detail-grid">
+            <section class="luxride-admin-card">
                 <h3><?php echo esc_html__('Customer', 'luxride-booking-engine'); ?></h3>
-                <table class="widefat striped">
-                    <tbody>
-                        <tr><th><?php echo esc_html__('Name', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) ($customer['full_name'] ?? '')); ?></td></tr>
-                        <tr><th><?php echo esc_html__('Phone', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) ($customer['phone'] ?? '')); ?></td></tr>
-                        <tr><th><?php echo esc_html__('WhatsApp', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) ($customer['whatsapp'] ?? '')); ?></td></tr>
-                        <tr><th><?php echo esc_html__('Email', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) ($customer['email'] ?? '')); ?></td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <div>
-                <h3><?php echo esc_html__('Required Details', 'luxride-booking-engine'); ?></h3>
-                <table class="widefat striped">
-                    <tbody>
-                        <?php foreach (self::detail_fields() as $key => $label) : ?>
-                            <tr><th><?php echo esc_html($label); ?></th><td><?php echo esc_html(self::detail_value($details[$key] ?? '')); ?></td></tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-            <div>
-                <h3><?php echo esc_html__('Price', 'luxride-booking-engine'); ?></h3>
-                <?php self::render_price_table($price['quote']['pricing'] ?? [], $booking); ?>
-            </div>
+                <table class="widefat striped"><tbody>
+                    <tr><th><?php echo esc_html__('Name', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) ($customer['full_name'] ?? '')); ?></td></tr>
+                    <tr><th><?php echo esc_html__('Phone', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) ($customer['phone'] ?? '')); ?></td></tr>
+                    <tr><th><?php echo esc_html__('WhatsApp', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) ($customer['whatsapp'] ?? '')); ?></td></tr>
+                    <tr><th><?php echo esc_html__('Email', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) ($customer['email'] ?? '')); ?></td></tr>
+                </tbody></table>
+            </section>
+            <section class="luxride-admin-card">
+                <h3><?php echo esc_html__('Required Booking Details', 'luxride-booking-engine'); ?></h3>
+                <table class="widefat striped"><tbody>
+                    <?php foreach (self::detail_fields() as $key => $label) : ?>
+                        <tr><th><?php echo esc_html($label); ?></th><td><?php echo esc_html(self::detail_value($details[$key] ?? '')); ?></td></tr>
+                    <?php endforeach; ?>
+                </tbody></table>
+            </section>
         </div>
 
-        <h3><?php echo esc_html__('Operations', 'luxride-booking-engine'); ?></h3>
-        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="max-width: 900px;">
-            <input type="hidden" name="action" value="luxride_booking_update_operations">
-            <input type="hidden" name="booking_id" value="<?php echo esc_attr((string) $booking_id); ?>">
-            <?php wp_nonce_field('luxride_booking_update_operations'); ?>
-            <table class="form-table" role="presentation">
-                <tr>
-                    <th scope="row"><label for="status"><?php echo esc_html__('Booking status', 'luxride-booking-engine'); ?></label></th>
-                    <td>
-                        <select id="status" name="status" disabled>
-                            <option><?php echo esc_html(self::labelize((string) $booking['status'])); ?></option>
-                        </select>
-                        <span class="description"><?php echo esc_html__('Use the status form below for workflow changes.', 'luxride-booking-engine'); ?></span>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="payment_status"><?php echo esc_html__('Payment status', 'luxride-booking-engine'); ?></label></th>
-                    <td><select id="payment_status" name="payment_status"><?php foreach (self::payment_statuses() as $option) : ?><option value="<?php echo esc_attr($option); ?>" <?php selected((string) ($booking['payment_status'] ?? 'unpaid'), $option); ?>><?php echo esc_html(self::labelize($option)); ?></option><?php endforeach; ?></select></td>
-                </tr>
-                <tr><th scope="row"><label for="payment_method"><?php echo esc_html__('Payment method', 'luxride-booking-engine'); ?></label></th><td><input class="regular-text" id="payment_method" name="payment_method" value="<?php echo esc_attr((string) ($booking['payment_method'] ?? '')); ?>"></td></tr>
-                <tr><th scope="row"><label for="payment_note"><?php echo esc_html__('Payment note', 'luxride-booking-engine'); ?></label></th><td><input class="regular-text" id="payment_note" name="payment_note" value="<?php echo esc_attr((string) ($booking['payment_note'] ?? '')); ?>"></td></tr>
-                <tr><th scope="row"><label for="cancel_reason"><?php echo esc_html__('Cancel reason', 'luxride-booking-engine'); ?></label></th><td><textarea class="large-text" id="cancel_reason" name="cancel_reason" rows="2"><?php echo esc_textarea((string) ($booking['cancel_reason'] ?? '')); ?></textarea></td></tr>
-                <tr><th scope="row"><label for="driver_name"><?php echo esc_html__('Driver name', 'luxride-booking-engine'); ?></label></th><td><input class="regular-text" id="driver_name" name="driver_name" value="<?php echo esc_attr((string) ($booking['driver_name'] ?? '')); ?>"></td></tr>
-                <tr><th scope="row"><label for="vehicle_plate"><?php echo esc_html__('Vehicle plate', 'luxride-booking-engine'); ?></label></th><td><input class="regular-text" id="vehicle_plate" name="vehicle_plate" value="<?php echo esc_attr((string) ($booking['vehicle_plate'] ?? '')); ?>"></td></tr>
-                <tr><th scope="row"><label for="customer_rating"><?php echo esc_html__('Customer rating', 'luxride-booking-engine'); ?></label></th><td><input class="small-text" id="customer_rating" name="customer_rating" type="number" min="0" max="5" value="<?php echo esc_attr((string) ($booking['customer_rating'] ?? 0)); ?>"></td></tr>
-                <tr><th scope="row"><label for="rating_feedback"><?php echo esc_html__('Rating feedback', 'luxride-booking-engine'); ?></label></th><td><textarea class="large-text" id="rating_feedback" name="rating_feedback" rows="2"><?php echo esc_textarea((string) ($booking['rating_feedback'] ?? '')); ?></textarea></td></tr>
-                <tr><th scope="row"><label for="admin_notes"><?php echo esc_html__('Admin notes', 'luxride-booking-engine'); ?></label></th><td><textarea class="large-text" id="admin_notes" name="admin_notes" rows="4"><?php echo esc_textarea((string) ($booking['admin_notes'] ?? '')); ?></textarea></td></tr>
-            </table>
-            <?php submit_button(__('Save operations', 'luxride-booking-engine')); ?>
-        </form>
+        <section class="luxride-admin-card" aria-labelledby="luxride-operations-heading">
+            <h3 id="luxride-operations-heading"><?php echo esc_html__('Operations', 'luxride-booking-engine'); ?></h3>
+            <div class="luxride-operation-grid">
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                    <input type="hidden" name="action" value="luxride_booking_update_operations">
+                    <input type="hidden" name="booking_id" value="<?php echo esc_attr((string) $booking_id); ?>">
+                    <input type="hidden" name="operations_group" value="payment_discount">
+                    <?php wp_nonce_field('luxride_booking_update_operations'); ?>
+                    <table class="form-table" role="presentation">
+                        <tr><th scope="row"><label for="payment_status"><?php echo esc_html__('Payment status', 'luxride-booking-engine'); ?></label></th><td><select id="payment_status" name="payment_status"><?php foreach (self::payment_statuses() as $option) : ?><option value="<?php echo esc_attr($option); ?>" <?php selected((string) ($booking['payment_status'] ?? 'unpaid'), $option); ?>><?php echo esc_html(self::labelize($option)); ?></option><?php endforeach; ?></select></td></tr>
+                        <tr><th scope="row"><label for="payment_method"><?php echo esc_html__('Payment method', 'luxride-booking-engine'); ?></label></th><td><input class="regular-text" id="payment_method" name="payment_method" value="<?php echo esc_attr((string) ($booking['payment_method'] ?? '')); ?>"></td></tr>
+                        <tr><th scope="row"><label for="payment_note"><?php echo esc_html__('Payment note', 'luxride-booking-engine'); ?></label></th><td><input class="regular-text" id="payment_note" name="payment_note" value="<?php echo esc_attr((string) ($booking['payment_note'] ?? '')); ?>"></td></tr>
+                        <tr><th scope="row"><label for="booking_discount_type"><?php echo esc_html__('Booking discount', 'luxride-booking-engine'); ?></label></th><td><select id="booking_discount_type" name="booking_discount_type"><option value="" <?php selected((string) ($booking['booking_discount_type'] ?? ''), ''); ?>><?php echo esc_html__('No discount', 'luxride-booking-engine'); ?></option><option value="percent" <?php selected((string) ($booking['booking_discount_type'] ?? ''), 'percent'); ?>><?php echo esc_html__('Percentage', 'luxride-booking-engine'); ?></option><option value="fixed" <?php selected((string) ($booking['booking_discount_type'] ?? ''), 'fixed'); ?>><?php echo esc_html__('Fixed amount', 'luxride-booking-engine'); ?></option></select> <input class="small-text" name="booking_discount_value" type="number" min="0" max="100" step="0.01" value="<?php echo esc_attr((string) ($booking['booking_discount_value'] ?? 0)); ?>"> <span class="description" data-luxride-discount-suffix><?php echo 'percent' === (string) ($booking['booking_discount_type'] ?? '') ? '%' : 'EUR'; ?></span></td></tr>
+                        <tr><th scope="row"><label for="booking_discount_reason"><?php echo esc_html__('Discount reason', 'luxride-booking-engine'); ?></label></th><td><input class="regular-text" id="booking_discount_reason" name="booking_discount_reason" value="<?php echo esc_attr((string) ($booking['booking_discount_reason'] ?? '')); ?>"><p class="description"><?php echo esc_html__('Internal only. Not sent to the customer.', 'luxride-booking-engine'); ?></p></td></tr>
+                    </table>
+                    <div class="luxride-form-actions">
+                        <?php submit_button(__('Apply payment & discount', 'luxride-booking-engine'), 'primary', 'submit', false); ?>
+                        <button type="submit" class="button" name="booking_discount_action" value="remove"><?php echo esc_html__('Remove discount', 'luxride-booking-engine'); ?></button>
+                    </div>
+                </form>
 
-        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 12px 0 20px;">
-            <input type="hidden" name="action" value="luxride_booking_update_status">
-            <input type="hidden" name="booking_id" value="<?php echo esc_attr((string) $booking_id); ?>">
-            <?php wp_nonce_field('luxride_booking_update_status'); ?>
-            <select name="status">
-                <?php foreach (LuxRide_Booking_Bookings::STATUSES as $status) : ?>
-                    <option value="<?php echo esc_attr($status); ?>" <?php selected($booking['status'], $status); ?>><?php echo esc_html(self::labelize($status)); ?></option>
-                <?php endforeach; ?>
-            </select>
-            <?php submit_button(__('Update status', 'luxride-booking-engine'), 'primary', 'submit', false); ?>
-        </form>
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                    <input type="hidden" name="action" value="luxride_booking_update_operations">
+                    <input type="hidden" name="booking_id" value="<?php echo esc_attr((string) $booking_id); ?>">
+                    <input type="hidden" name="operations_group" value="assignment_notes">
+                    <?php wp_nonce_field('luxride_booking_update_operations'); ?>
+                    <table class="form-table" role="presentation">
+                        <tr><th scope="row"><label for="driver_name"><?php echo esc_html__('Driver name', 'luxride-booking-engine'); ?></label></th><td><input class="regular-text" id="driver_name" name="driver_name" value="<?php echo esc_attr((string) ($booking['driver_name'] ?? '')); ?>"></td></tr>
+                        <tr><th scope="row"><label for="vehicle_plate"><?php echo esc_html__('Vehicle plate', 'luxride-booking-engine'); ?></label></th><td><input class="regular-text" id="vehicle_plate" name="vehicle_plate" value="<?php echo esc_attr((string) ($booking['vehicle_plate'] ?? '')); ?>"></td></tr>
+                        <tr><th scope="row"><label for="cancel_reason"><?php echo esc_html__('Cancel reason', 'luxride-booking-engine'); ?></label></th><td><textarea class="large-text" id="cancel_reason" name="cancel_reason" rows="2"><?php echo esc_textarea((string) ($booking['cancel_reason'] ?? '')); ?></textarea></td></tr>
+                        <tr><th scope="row"><label for="customer_rating"><?php echo esc_html__('Customer rating', 'luxride-booking-engine'); ?></label></th><td><input class="small-text" id="customer_rating" name="customer_rating" type="number" min="0" max="5" value="<?php echo esc_attr((string) ($booking['customer_rating'] ?? 0)); ?>"></td></tr>
+                        <tr><th scope="row"><label for="rating_feedback"><?php echo esc_html__('Rating feedback', 'luxride-booking-engine'); ?></label></th><td><textarea class="large-text" id="rating_feedback" name="rating_feedback" rows="2"><?php echo esc_textarea((string) ($booking['rating_feedback'] ?? '')); ?></textarea></td></tr>
+                        <tr><th scope="row"><label for="admin_notes"><?php echo esc_html__('Admin notes', 'luxride-booking-engine'); ?></label></th><td><textarea class="large-text" id="admin_notes" name="admin_notes" rows="4"><?php echo esc_textarea((string) ($booking['admin_notes'] ?? '')); ?></textarea></td></tr>
+                    </table>
+                    <div class="luxride-form-actions"><?php submit_button(__('Update assignment & notes', 'luxride-booking-engine'), 'secondary', 'submit', false); ?></div>
+                </form>
+            </div>
+        </section>
 
-        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" onsubmit="return confirm('<?php echo esc_js(__('Delete this booking permanently?', 'luxride-booking-engine')); ?>');">
-            <input type="hidden" name="action" value="luxride_booking_delete">
-            <input type="hidden" name="booking_id" value="<?php echo esc_attr((string) $booking_id); ?>">
-            <?php wp_nonce_field('luxride_booking_delete'); ?>
-            <?php submit_button(__('Delete booking', 'luxride-booking-engine'), 'delete', 'submit', false); ?>
-        </form>
+        <section class="luxride-admin-card luxride-price-card" aria-labelledby="luxride-price-heading">
+            <h3 id="luxride-price-heading"><?php echo esc_html__('Price Summary', 'luxride-booking-engine'); ?></h3>
+            <?php self::render_price_table($price['quote']['pricing'] ?? [], $booking); ?>
+            <p class="description"><strong><?php echo esc_html__('Payment:', 'luxride-booking-engine'); ?></strong> <?php echo esc_html(self::labelize((string) ($booking['payment_status'] ?? 'unpaid')) . ' / ' . ((string) ($booking['payment_method'] ?? '') ?: __('Pay on transfer', 'luxride-booking-engine'))); ?></p>
+        </section>
+
+        <section class="luxride-admin-card luxride-danger-zone" aria-labelledby="luxride-status-heading">
+            <h3 id="luxride-status-heading"><?php echo esc_html__('Status & deletion', 'luxride-booking-engine'); ?></h3>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="luxride-form-actions">
+                <input type="hidden" name="action" value="luxride_booking_update_status">
+                <input type="hidden" name="booking_id" value="<?php echo esc_attr((string) $booking_id); ?>">
+                <?php wp_nonce_field('luxride_booking_update_status'); ?>
+                <label for="status"><?php echo esc_html__('Booking status', 'luxride-booking-engine'); ?></label>
+                <select id="status" name="status"><?php foreach (LuxRide_Booking_Bookings::STATUSES as $option) : ?><option value="<?php echo esc_attr($option); ?>" <?php selected($booking['status'], $option); ?>><?php echo esc_html(self::labelize($option)); ?></option><?php endforeach; ?></select>
+                <?php submit_button(__('Update status', 'luxride-booking-engine'), 'primary', 'submit', false); ?>
+            </form>
+            <form id="luxride-delete-booking-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" onsubmit="return confirm('<?php echo esc_js(__('Are you sure you want to permanently delete this booking?', 'luxride-booking-engine')); ?>');" class="luxride-form-actions">
+                <input type="hidden" name="action" value="luxride_booking_delete">
+                <input type="hidden" name="booking_id" value="<?php echo esc_attr((string) $booking_id); ?>">
+                <?php wp_nonce_field('luxride_booking_delete'); ?>
+                <?php submit_button(__('Delete Booking', 'luxride-booking-engine'), 'delete', 'submit', false); ?>
+            </form>
+        </section>
+
+        <section class="luxride-admin-card luxride-confirmation-card" aria-labelledby="luxride-confirmation-heading">
+            <h3 id="luxride-confirmation-heading"><?php echo esc_html__('Customer Confirmation', 'luxride-booking-engine'); ?></h3>
+            <table class="widefat striped"><tbody>
+                <tr><th><?php echo esc_html__('Customer email', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) ($customer['email'] ?? '-')); ?></td></tr>
+                <tr><th><?php echo esc_html__('Email status', 'luxride-booking-engine'); ?></th><td><?php echo esc_html(self::labelize((string) ($booking['confirmation_email_status'] ?? 'not_sent'))); ?></td></tr>
+                <tr><th><?php echo esc_html__('Last sent time', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) ($booking['confirmation_email_sent_at'] ?? '') ?: '-'); ?></td></tr>
+                <?php if (!empty($booking['confirmation_email_last_error'])) : ?><tr><th><?php echo esc_html__('Last email error', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) $booking['confirmation_email_last_error']); ?></td></tr><?php endif; ?>
+            </tbody></table>
+            <div class="luxride-form-actions">
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                    <input type="hidden" name="action" value="luxride_booking_send_confirmation_email">
+                    <input type="hidden" name="booking_id" value="<?php echo esc_attr((string) $booking_id); ?>">
+                    <?php wp_nonce_field('luxride_booking_send_confirmation_email'); ?>
+                    <?php submit_button(__('Send / resend confirmation email', 'luxride-booking-engine'), 'secondary', 'submit', false); ?>
+                </form>
+                <?php if ($whatsapp_url) : ?><a class="button button-secondary" href="<?php echo esc_url($whatsapp_url); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html__('Send confirmation via WhatsApp', 'luxride-booking-engine'); ?></a><?php else : ?><span class="description"><?php echo esc_html__('WhatsApp confirmation is unavailable because the customer phone is missing.', 'luxride-booking-engine'); ?></span><?php endif; ?>
+            </div>
+        </section>
         <?php
     }
 
@@ -1171,6 +1317,12 @@ final class LuxRide_Booking_Admin
             'import_dry_run' => __('Dry run completed.', 'luxride-booking-engine'),
             'import_applied' => __('Clean import applied.', 'luxride-booking-engine'),
             'booking_status_saved' => __('Booking status updated.', 'luxride-booking-engine'),
+            'booking_status_saved_confirmation_sent' => __('Booking status updated and customer confirmation email sent.', 'luxride-booking-engine'),
+            'booking_status_saved_confirmation_failed' => __('Booking status updated, but the customer confirmation email failed. Check the booking confirmation panel for details.', 'luxride-booking-engine'),
+            'booking_status_saved_confirmation_unavailable' => __('Booking status updated, but no customer confirmation email was sent because the customer email is missing or invalid.', 'luxride-booking-engine'),
+            'confirmation_email_sent' => __('Customer confirmation email sent.', 'luxride-booking-engine'),
+            'confirmation_email_failed' => __('Customer confirmation email failed. Check the booking confirmation panel for details.', 'luxride-booking-engine'),
+            'confirmation_email_unavailable' => __('Customer confirmation email was not sent because the booking is not confirmed or the customer email is missing.', 'luxride-booking-engine'),
             'booking_status_failed' => __('Booking status could not be updated.', 'luxride-booking-engine'),
             'booking_operations_saved' => __('Booking operations saved.', 'luxride-booking-engine'),
             'booking_operations_failed' => __('Booking operations could not be saved.', 'luxride-booking-engine'),
@@ -1190,7 +1342,7 @@ final class LuxRide_Booking_Admin
         ];
 
         if ($notice && isset($messages[$notice])) {
-            $class = in_array($notice, ['import_failed', 'import_missing', 'import_invalid_file', 'import_invalid_json', 'route_missing', 'booking_status_failed', 'booking_operations_failed', 'booking_delete_failed', 'booking_xlsx_failed', 'block_failed', 'block_delete_failed', 'pickup_order_failed', 'promotion_failed'], true) ? 'notice notice-error' : 'notice notice-success';
+            $class = in_array($notice, ['import_failed', 'import_missing', 'import_invalid_file', 'import_invalid_json', 'route_missing', 'booking_status_failed', 'booking_status_saved_confirmation_failed', 'booking_status_saved_confirmation_unavailable', 'confirmation_email_failed', 'confirmation_email_unavailable', 'booking_operations_failed', 'booking_delete_failed', 'booking_xlsx_failed', 'block_failed', 'block_delete_failed', 'pickup_order_failed', 'promotion_failed'], true) ? 'notice notice-error' : 'notice notice-success';
             echo '<div class="' . esc_attr($class) . '"><p>' . esc_html($messages[$notice]) . '</p>';
             $result_key = sanitize_key((string) ($_GET['result_key'] ?? ''));
             if ($result_key) {
@@ -1692,15 +1844,31 @@ final class LuxRide_Booking_Admin
 
     private static function render_price_table(array $pricing, array $booking): void
     {
+        $promotion = is_array($pricing['promotion'] ?? null) ? $pricing['promotion'] : [];
+        $promotion_discount = (float) ($promotion['promotion_discount_amount'] ?? $pricing['discount'] ?? 0);
+        $booking_discount = (float) ($booking['booking_discount_amount_eur'] ?? 0);
+        $original_total = (float) ($pricing['original_total'] ?? $booking['final_total_eur'] ?? 0);
+        $promotional_total = (float) ($pricing['promotional_total'] ?? $pricing['total'] ?? $booking['final_total_eur'] ?? 0);
         ?>
         <table class="widefat striped">
             <tbody>
                 <tr><th><?php echo esc_html__('Base', 'luxride-booking-engine'); ?></th><td><?php echo esc_html(self::money_display($pricing['base'] ?? 0, $booking)); ?></td></tr>
+                <?php if ($promotion_discount > 0) : ?>
+                    <tr><th><?php echo esc_html__('Promotion', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) ($promotion['promotion_name'] ?? __('Active promotion', 'luxride-booking-engine'))); ?></td></tr>
+                    <tr><th><?php echo esc_html__('Promotional discount', 'luxride-booking-engine'); ?></th><td>-<?php echo esc_html(self::money_display($promotion_discount, $booking)); ?> <?php if (!empty($promotion['promotion_discount_percent'])) : ?>(<?php echo esc_html(rtrim(rtrim(number_format((float) $promotion['promotion_discount_percent'], 2), '0'), '.') . '%'); ?>)<?php endif; ?></td></tr>
+                <?php endif; ?>
                 <tr><th><?php echo esc_html__('Airport fee', 'luxride-booking-engine'); ?></th><td><?php echo esc_html(self::money_display($pricing['airport_fee'] ?? 0, $booking)); ?></td></tr>
                 <tr><th><?php echo esc_html__('Permit fee', 'luxride-booking-engine'); ?></th><td><?php echo esc_html(self::money_display($pricing['permit_fee'] ?? 0, $booking)); ?></td></tr>
                 <tr><th><?php echo esc_html__('Accommodation nights', 'luxride-booking-engine'); ?></th><td><?php echo esc_html((string) ($pricing['accommodation']['nights'] ?? 0)); ?></td></tr>
                 <tr><th><?php echo esc_html__('Accommodation fee', 'luxride-booking-engine'); ?></th><td><?php echo esc_html(self::money_display($pricing['accommodation_fee'] ?? 0, $booking)); ?></td></tr>
                 <tr><th><?php echo esc_html__('Child seat', 'luxride-booking-engine'); ?></th><td><?php echo !empty($pricing['child_seat']['requested']) ? esc_html__('Requested / free', 'luxride-booking-engine') : esc_html__('Not requested', 'luxride-booking-engine'); ?></td></tr>
+                <tr><th><?php echo esc_html__('Original total', 'luxride-booking-engine'); ?></th><td><?php echo esc_html(self::money_display($original_total, $booking)); ?></td></tr>
+                <?php if ($promotion_discount > 0) : ?>
+                    <tr><th><?php echo esc_html__('Subtotal after promotion', 'luxride-booking-engine'); ?></th><td><?php echo esc_html(self::money_display($promotional_total, $booking)); ?></td></tr>
+                <?php endif; ?>
+                <?php if ($booking_discount > 0) : ?>
+                    <tr><th><?php echo esc_html__('Special booking discount', 'luxride-booking-engine'); ?></th><td>-<?php echo esc_html(self::money_display($booking_discount, $booking)); ?></td></tr>
+                <?php endif; ?>
                 <tr><th><?php echo esc_html__('Final total', 'luxride-booking-engine'); ?></th><td><strong><?php echo esc_html(self::money_display($booking['final_total_eur'] ?? 0, $booking)); ?></strong></td></tr>
             </tbody>
         </table>
@@ -1730,6 +1898,18 @@ final class LuxRide_Booking_Admin
     private static function labelize(string $value): string
     {
         return ucwords(str_replace('_', ' ', $value));
+    }
+
+    private static function vehicle_label(string $value): string
+    {
+        $key = sanitize_key($value);
+        $labels = [
+            'sedan' => 'Sedan',
+            'mpv' => 'MPV',
+            'minivan' => 'Mini Van',
+        ];
+
+        return $labels[$key] ?? self::labelize($value);
     }
 
     private static function guard_action(string $nonce): void
