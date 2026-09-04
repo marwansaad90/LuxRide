@@ -17,6 +17,8 @@ function cmsDestinationRoute(destination: CmsDestination): DestinationRoute | nu
   return {
     ...baseRoute,
     image: destination.image || baseRoute.image,
+    airport: destination.airport ?? baseRoute.airport,
+    permit: destination.permit ?? baseRoute.permit,
     displayFrom: destination.displayFrom,
     displayTo: destination.displayTo,
     imagePosition: destination.imagePosition,
