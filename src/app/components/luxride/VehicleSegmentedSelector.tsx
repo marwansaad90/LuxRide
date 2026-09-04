@@ -40,7 +40,7 @@ export function VehicleSegmentedSelector({
         role="radiogroup"
         aria-describedby={helperId}
         aria-label={isAR ? "نوع السيارة" : "Vehicle type"}
-        className="grid grid-cols-3 overflow-visible rounded-xl border border-gray-200 bg-gray-100 p-1"
+        className="grid grid-cols-1 gap-1 overflow-visible rounded-xl border border-gray-200 bg-gray-100 p-1 sm:grid-cols-3"
       >
         {vehicles.map((vehicle) => {
           const selected = vehicle.id === value;
