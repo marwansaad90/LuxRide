@@ -293,24 +293,9 @@ function luxride_camel_settings(): array
     ];
 }
 
-function luxride_inline_content_bootstrap(): void
-{
-    if (!wp_script_is('luxride-app', 'enqueued')) {
-        return;
-    }
-
-    wp_add_inline_script(
-        'luxride-app',
-        'window.__LUXRIDE_BOOTSTRAP__ = ' . wp_json_encode(luxride_content_payload(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . ';',
-        'before'
-    );
-}
-
-add_action('wp_enqueue_scripts', 'luxride_inline_content_bootstrap', 30);
-
 add_action('wp_head', function (): void {
     printf(
-        '<script id="luxride-content-bootstrap">window.__LUXRIDE_BOOTSTRAP__ = %s;</script>' . "\n",
+        '<script id="luxride-content-bootstrap" type="application/javascript" data-no-optimize="1">window.__LUXRIDE_BOOTSTRAP__ = %s;</script>' . "\n",
         wp_json_encode(luxride_content_payload(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
     );
 }, 90);
