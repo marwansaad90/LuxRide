@@ -30,8 +30,15 @@
 }
 
 .luxride-shell {
+  box-sizing: border-box;
   font-family: var(--font-body);
   color: var(--lux-charcoal);
+}
+
+.luxride-shell *,
+.luxride-shell *::before,
+.luxride-shell *::after {
+  box-sizing: inherit;
 }
 
 .luxride-shell h1,
