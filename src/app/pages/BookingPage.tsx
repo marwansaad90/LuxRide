@@ -626,7 +626,7 @@ export function BookingPage() {
               {/* Transfer type */}
               <div className="mb-6">
                 <label className={labelCls}>{isAR ? "نوع التوصيلة" : "Transfer Type"}</label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {tripTypes.map((tt) => (
                     <button
                       type="button"
@@ -720,7 +720,7 @@ export function BookingPage() {
               </div>
 
               {/* Pax + Luggage */}
-              <div className="mt-5 grid grid-cols-2 gap-4">
+              <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label htmlFor="booking-passengers" className={labelCls}><Users className="h-4 w-4 text-lux-green" />{isAR ? "ركاب" : "Passengers"}</label>
                   <select id="booking-passengers" value={pax} onChange={(e) => setPax(e.target.value)} className={inputCls}>
