@@ -1083,13 +1083,12 @@ function PriceTable({
   preliminaryOvernight: boolean;
 }) {
   const visibleTotal = preliminaryOvernight ? breakdown.total - breakdown.overnight : breakdown.total;
-  const discountLabel = route?.promotion
-    ? route.promotion.type === "fixed"
-      ? route.promotion.name || (isAR ? "عرض خاص" : "Special offer")
-      : `${route.promotion.name || (isAR ? "عرض خاص" : "Special offer")} (${Math.round(route.promotion.value)}%)`
-    : route?.discountPct
-      ? `${isAR ? "خصم" : "Discount"} (${route.discountPct}%)`
-      : (isAR ? "خصم" : "Discount");
+  const discountPercent = route?.promotion
+    ? route.promotion.type === "percent"
+      ? Math.round(route.promotion.value)
+      : 0
+    : Math.round(route?.discountPct ?? 0);
+  const discountLabel = `${isAR ? "خصم ترويجي" : "Promotional Discount"}${discountPercent > 0 ? ` (${discountPercent}%)` : ""}`;
   return (
     <div className="space-y-2 text-sm">
       <div className="flex justify-between text-gray-600">
@@ -1182,8 +1181,7 @@ function QuotePriceTable({ quote, isAR, hFamily }: { quote: ServerQuote; isAR: b
       {hasPromotion && (
         <div className="flex justify-between gap-4 text-lux-orange">
           <span className="min-w-0">
-            <span className="block">{isAR ? "عرض خاص" : "Special offer"}{promoPercent > 0 ? ` · ${Math.round(promoPercent)}% OFF` : ""}</span>
-            {promotion?.promotion_name && <span className="block text-xs text-lux-orange/80">{promotion.promotion_name}</span>}
+            <span className="block">{isAR ? "خصم ترويجي" : "Promotional Discount"}{promoPercent > 0 ? ` · ${Math.round(promoPercent)}% OFF` : ""}</span>
           </span>
           <span>-{formatEur(Number(pricing.discount))}</span>
         </div>

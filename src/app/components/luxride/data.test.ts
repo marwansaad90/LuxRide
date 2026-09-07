@@ -469,6 +469,7 @@ describe("latest desktop client-review integration", () => {
 
   it("guards the final booking UX closeout copy and validation behavior", () => {
     const booking = readSource("../../pages/BookingPage.tsx");
+    const bookingNotifications = readSource("../../../../wordpress/wp-content/plugins/luxride-booking-engine/includes/class-luxride-booking-bookings.php");
     const translations = readSource("./i18n.ts");
     const selector = readSource("./VehicleSegmentedSelector.tsx");
     const seed = readSource("../../../../wordpress/wp-content/themes/luxride/inc/seed-data.php");
@@ -497,6 +498,10 @@ describe("latest desktop client-review integration", () => {
     expect(booking).toContain("Driver Accommodation");
     expect(booking).toContain("nightLabel");
     expect(booking).toContain("requestQuote(false)");
+    expect(booking).toContain('isAR ? "خصم ترويجي" : "Promotional Discount"');
+    expect(booking).not.toContain("route.promotion.name ||");
+    expect(booking).not.toContain("promotion?.promotion_name &&");
+    expect(bookingNotifications).toContain("Promotional Discount");
     expect(booking + translations).not.toContain("Steigenberger Al Dau, El Gouna");
     expect(booking + translations).not.toContain("شتيجنبرجر الداو، الجونة");
     expect(selector).toContain('xpander: { en: "MPV", ar: "MPV"');
