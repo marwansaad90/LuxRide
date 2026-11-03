@@ -2,7 +2,7 @@
 /**
  * Plugin Name: LuxRide Booking Engine
  * Description: Server-side route pricing, quotes, and booking operations for LuxRide.
- * Version: 0.6.0
+ * Version: 0.7.0
  * Author: LuxRide
  * Text Domain: luxride-booking-engine
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('LUXRIDE_BOOKING_ENGINE_VERSION', '0.6.0');
+define('LUXRIDE_BOOKING_ENGINE_VERSION', '0.7.0');
 define('LUXRIDE_BOOKING_ENGINE_FILE', __FILE__);
 define('LUXRIDE_BOOKING_ENGINE_DIR', plugin_dir_path(__FILE__));
 

@@ -6,6 +6,118 @@ if (!defined('ABSPATH')) {
 
 final class LuxRide_Booking_Importer
 {
+    public static function dry_run_price_update(array $payload): array
+    {
+        $rows = self::payload_routes($payload);
+        $existing = self::existing_routes();
+        $seen = [];
+        $invalid = [];
+        $duplicates = [];
+
+        foreach ($rows as $index => $row) {
+            $route_code = sanitize_text_field((string) ($row['route_code'] ?? ''));
+            $prices = $row['prices'] ?? [];
+
+            if ('' === $route_code) {
+                $invalid[] = ['index' => $index, 'reason' => 'missing route_code'];
+                continue;
+            }
+            if (!isset($existing[$route_code])) {
+                $invalid[] = ['index' => $index, 'route_code' => $route_code, 'reason' => 'unknown route_code'];
+                continue;
+            }
+            if (isset($seen[$route_code])) {
+                $duplicates[] = ['index' => $index, 'first_index' => $seen[$route_code], 'route_code' => $route_code];
+                continue;
+            }
+
+            $seen[$route_code] = $index;
+            foreach (['sedan', 'mpv', 'minivan'] as $vehicle) {
+                foreach (['one_way', 'round_trip'] as $trip_type) {
+                    $value = $prices[$vehicle][$trip_type] ?? null;
+                    if (null === $value || '' === trim((string) $value) || !is_numeric($value)) {
+                        $invalid[] = ['index' => $index, 'route_code' => $route_code, 'reason' => 'missing or non-numeric price', 'vehicle' => $vehicle, 'trip_type' => $trip_type];
+                    } elseif ((float) $value < 0) {
+                        $invalid[] = ['index' => $index, 'route_code' => $route_code, 'reason' => 'negative price', 'vehicle' => $vehicle, 'trip_type' => $trip_type];
+                    }
+                }
+            }
+        }
+
+        $invalid_indexes = array_unique(array_merge(array_column($invalid, 'index'), array_column($duplicates, 'index')));
+        $valid_rows = max(0, count($rows) - count($invalid_indexes));
+
+        return [
+            'source_file' => sanitize_text_field((string) ($payload['summary']['workbook'] ?? '')),
+            'source_checksum' => sanitize_text_field((string) ($payload['summary']['sha256'] ?? '')),
+            'import_type' => 'price_update_only',
+            'total_rows' => count($rows),
+            'valid_rows' => $valid_rows,
+            'invalid_rows' => $invalid,
+            'duplicates' => $duplicates,
+            'routes_to_update' => $valid_rows,
+            'routes_to_disable' => 0,
+            'price_records_to_update' => $valid_rows * 3,
+            'clean' => !$invalid && !$duplicates && (bool) $rows,
+        ];
+    }
+
+    public static function apply_price_update(array $payload, int $user_id = 0)
+    {
+        global $wpdb;
+
+        $dry_run = self::dry_run_price_update($payload);
+        if (!$dry_run['clean']) {
+            return new WP_Error('luxride_price_update_not_clean', 'Price update dry run is not clean.', ['status' => 400, 'dry_run' => $dry_run]);
+        }
+
+        $existing = self::existing_routes();
+        $prices_table = LuxRide_Booking_Schema::table('route_prices');
+        $updated_prices = 0;
+        $now = current_time('mysql');
+        $wpdb->query('START TRANSACTION');
+
+        foreach (self::payload_routes($payload) as $row) {
+            $route_code = sanitize_text_field((string) $row['route_code']);
+            $route_id = (int) $existing[$route_code]['id'];
+
+            foreach (['sedan', 'mpv', 'minivan'] as $vehicle_key) {
+                $prices = $row['prices'][$vehicle_key];
+                $price_data = [
+                    'route_id' => $route_id,
+                    'vehicle_key' => $vehicle_key,
+                    'one_way_price_eur' => round((float) $prices['one_way'], 2),
+                    'round_trip_price_eur' => round((float) $prices['round_trip'], 2),
+                    'updated_at' => $now,
+                ];
+                $price_id = (int) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$prices_table} WHERE route_id = %d AND vehicle_key = %s", $route_id, $vehicle_key));
+                $result = $price_id
+                    ? $wpdb->update($prices_table, $price_data, ['id' => $price_id])
+                    : $wpdb->insert($prices_table, array_merge($price_data, ['created_at' => $now]));
+
+                if (false === $result) {
+                    $wpdb->query('ROLLBACK');
+                    return new WP_Error('luxride_price_update_failed', 'A route price could not be updated.', ['status' => 500, 'route' => $route_code, 'vehicle' => $vehicle_key]);
+                }
+                $updated_prices++;
+            }
+        }
+
+        $wpdb->insert(LuxRide_Booking_Schema::table('pricing_imports'), [
+            'source_file' => sanitize_text_field((string) ($payload['summary']['workbook'] ?? '')),
+            'source_checksum' => sanitize_text_field((string) ($payload['summary']['sha256'] ?? '')),
+            'raw_route_count' => count(self::payload_routes($payload)),
+            'applied_route_count' => (int) $dry_run['routes_to_update'],
+            'applied_price_count' => $updated_prices,
+            'summary' => wp_json_encode($dry_run, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            'applied_by' => $user_id,
+            'created_at' => $now,
+        ]);
+        $wpdb->query('COMMIT');
+
+        return array_merge($dry_run, ['applied_price_count' => $updated_prices]);
+    }
+
     public static function dry_run(array $payload): array
     {
         $rows = self::payload_routes($payload);
@@ -230,6 +342,32 @@ final class LuxRide_Booking_Importer
         ];
     }
 
+    public static function parse_price_upload(string $path, string $filename = '')
+    {
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $matrix = 'xlsx' === $extension ? self::read_xlsx($path) : self::read_csv($path);
+        if (is_wp_error($matrix)) {
+            return $matrix;
+        }
+        if (count($matrix) < 2) {
+            return new WP_Error('luxride_price_update_empty_file', 'The uploaded price workbook has no route rows.');
+        }
+
+        $routes = self::matrix_price_updates($matrix);
+        if (is_wp_error($routes)) {
+            return $routes;
+        }
+
+        return [
+            'summary' => [
+                'workbook' => sanitize_text_field($filename),
+                'sha256' => hash_file('sha256', $path),
+                'raw_data_rows' => count($routes),
+            ],
+            'routes' => $routes,
+        ];
+    }
+
     public static function export_xlsx()
     {
         return self::build_xlsx(self::export_matrix(), 'luxride-pricing-routes.xlsx');
@@ -238,6 +376,11 @@ final class LuxRide_Booking_Importer
     public static function template_xlsx()
     {
         return self::build_xlsx([self::template_headers()], 'luxride-pricing-routes-template.xlsx');
+    }
+
+    public static function price_update_template_xlsx()
+    {
+        return self::build_xlsx(self::price_update_matrix(), 'luxride-price-update-template.xlsx');
     }
 
     private static function build_xlsx(array $matrix, string $temporary_name)
@@ -274,6 +417,11 @@ final class LuxRide_Booking_Importer
         return ['route_code', 'pickup', 'destination', 'pickup_ar', 'destination_ar', 'trip_name_one_way', 'trip_name_return', 'trip_name_one_way_ar', 'trip_name_return_ar', 'enabled', 'recommended_trip_type', 'round_trip_classification', 'airport_fee_applicable', 'permit_required', 'accommodation_applicable', 'accommodation_fee_eur', 'sedan_one_way_eur', 'sedan_round_trip_eur', 'mpv_one_way_eur', 'mpv_round_trip_eur', 'minivan_one_way_eur', 'minivan_round_trip_eur'];
     }
 
+    private static function price_update_headers(): array
+    {
+        return ['route_code', 'sedan_one_way_eur', 'sedan_round_trip_eur', 'mpv_one_way_eur', 'mpv_round_trip_eur', 'minivan_one_way_eur', 'minivan_round_trip_eur'];
+    }
+
     public static function export_csv(): string
     {
         global $wpdb;
@@ -308,6 +456,10 @@ final class LuxRide_Booking_Importer
             'destination',
             'pickup_ar',
             'destination_ar',
+            'trip_name_one_way',
+            'trip_name_return',
+            'trip_name_one_way_ar',
+            'trip_name_return_ar',
             'enabled',
             'recommended_trip_type',
             'round_trip_classification',
@@ -333,6 +485,10 @@ final class LuxRide_Booking_Importer
                 $row['destination_label'],
                 $row['pickup_label_ar'],
                 $row['destination_label_ar'],
+                $row['trip_name_one_way'],
+                $row['trip_name_return'],
+                $row['trip_name_one_way_ar'],
+                $row['trip_name_return_ar'],
                 $row['enabled'],
                 $row['recommended_trip_type'],
                 $row['round_trip_classification'],
@@ -422,11 +578,12 @@ final class LuxRide_Booking_Importer
             $row_node = $row->children($ns[''] ?? null);
             foreach ($row_node->c as $cell) {
                 $cell_node = $cell->children($ns[''] ?? null);
-                $ref = (string) $cell['r'];
+                $attributes = $cell->attributes();
+                $ref = (string) ($attributes['r'] ?? 'A1');
                 preg_match('/^([A-Z]+)/', $ref, $match);
                 $index = self::xlsx_column_index($match[1] ?? 'A');
-                $type = (string) $cell['t'];
-                $value = 'inlineStr' === $type ? (string) ($cell_node->is->t ?? '') : (string) ($cell_node->v ?? '');
+                $type = (string) ($attributes['t'] ?? '');
+                $value = 'inlineStr' === $type ? (string) ($cell_node->{'is'}->t ?? '') : (string) ($cell_node->v ?? '');
                 if ('s' === $type && isset($shared[(int) $value])) {
                     $value = $shared[(int) $value];
                 }
@@ -447,31 +604,7 @@ final class LuxRide_Booking_Importer
 
     private static function matrix_routes(array $matrix): array
     {
-        $header_aliases = [
-            'Pickup Location' => 'pickup',
-            'Destination' => 'destination',
-            'نقطة الانطلاق' => 'pickup_ar',
-            'الوجهة' => 'destination_ar',
-            'Sedan One Way (€)' => 'sedan_one_way_eur',
-            'Sedan Round Trip (€)' => 'sedan_round_trip_eur',
-            'MPV One Way (€)' => 'mpv_one_way_eur',
-            'MPV Round Trip (€)' => 'mpv_round_trip_eur',
-            'Mini Van One Way (€)' => 'minivan_one_way_eur',
-            'Mini Van Round Trip (€)' => 'minivan_round_trip_eur',
-            'Trip Name (One Way)' => 'trip_name_one_way',
-            'Trip Name (Outbound)' => 'trip_name_one_way',
-            'Trip Name (Return)' => 'trip_name_return',
-            'اسم الرحلة - ذهاب' => 'trip_name_one_way_ar',
-            'اسم الرحلة - عودة' => 'trip_name_return_ar',
-        ];
-        $headers = array_map(static function ($value) use ($header_aliases): string {
-            $label = trim((string) $value);
-            if (isset($header_aliases[$label])) {
-                return $header_aliases[$label];
-            }
-
-            return sanitize_key(str_replace([' ', '-', '(', ')', '€'], ['', '_', '', '', 'eur'], $label));
-        }, array_shift($matrix));
+        $headers = self::normalize_headers(array_shift($matrix));
         $routes = [];
         foreach ($matrix as $values) {
             $row = [];
@@ -503,6 +636,79 @@ final class LuxRide_Booking_Importer
             ];
         }
         return $routes;
+    }
+
+    private static function normalize_headers(array $values): array
+    {
+        $header_aliases = [
+            'Pickup Location' => 'pickup',
+            'Destination' => 'destination',
+            'نقطة الانطلاق' => 'pickup_ar',
+            'الوجهة' => 'destination_ar',
+            'Sedan One Way (€)' => 'sedan_one_way_eur',
+            'Sedan Round Trip (€)' => 'sedan_round_trip_eur',
+            'MPV One Way (€)' => 'mpv_one_way_eur',
+            'MPV Round Trip (€)' => 'mpv_round_trip_eur',
+            'Mini Van One Way (€)' => 'minivan_one_way_eur',
+            'Mini Van Round Trip (€)' => 'minivan_round_trip_eur',
+            'Trip Name (One Way)' => 'trip_name_one_way',
+            'Trip Name (Outbound)' => 'trip_name_one_way',
+            'Trip Name (Return)' => 'trip_name_return',
+            'اسم الرحلة - ذهاب' => 'trip_name_one_way_ar',
+            'اسم الرحلة - عودة' => 'trip_name_return_ar',
+        ];
+        return array_map(static function ($value) use ($header_aliases): string {
+            $label = trim((string) $value);
+            if (isset($header_aliases[$label])) {
+                return $header_aliases[$label];
+            }
+
+            return sanitize_key(str_replace([' ', '-', '(', ')', '€'], ['', '_', '', '', 'eur'], $label));
+        }, $values);
+    }
+
+    private static function matrix_price_updates(array $matrix)
+    {
+        $headers = self::normalize_headers(array_shift($matrix));
+        $missing = array_values(array_diff(self::price_update_headers(), $headers));
+        if ($missing) {
+            return new WP_Error('luxride_price_update_missing_columns', 'The price workbook is missing required columns: ' . implode(', ', $missing));
+        }
+
+        $routes = [];
+        foreach ($matrix as $values) {
+            $row = [];
+            foreach ($headers as $index => $header) {
+                $row[$header] = $values[$index] ?? '';
+            }
+            if (!array_filter($row, static fn($value) => '' !== trim((string) $value))) {
+                continue;
+            }
+            $routes[] = [
+                'route_code' => trim((string) $row['route_code']),
+                'prices' => [
+                    'sedan' => ['one_way' => $row['sedan_one_way_eur'], 'round_trip' => $row['sedan_round_trip_eur']],
+                    'mpv' => ['one_way' => $row['mpv_one_way_eur'], 'round_trip' => $row['mpv_round_trip_eur']],
+                    'minivan' => ['one_way' => $row['minivan_one_way_eur'], 'round_trip' => $row['minivan_round_trip_eur']],
+                ],
+            ];
+        }
+        return $routes;
+    }
+
+    private static function price_update_matrix(): array
+    {
+        $matrix = self::export_matrix();
+        $headers = array_shift($matrix);
+        $wanted = self::price_update_headers();
+        $indexes = array_map(static fn($header) => array_search($header, $headers, true), $wanted);
+        $result = [$wanted];
+
+        foreach ($matrix as $row) {
+            $result[] = array_map(static fn($index) => false === $index ? '' : ($row[$index] ?? ''), $indexes);
+        }
+
+        return $result;
     }
 
     private static function import_bool($value): bool
@@ -544,7 +750,12 @@ final class LuxRide_Booking_Importer
             }
             $rows[] = '<row r="' . ($row_number + 1) . '">' . implode('', $cells) . '</row>';
         }
-        $widths = [18, 22, 24, 28, 28, 28, 28, 30, 30, 10, 24, 28, 24, 18, 26, 20, 20, 22, 18, 22, 22, 24, 18, 22, 24];
+        $default_widths = [18, 22, 24, 28, 28, 28, 28, 30, 30, 10, 24, 28, 24, 18, 26, 20, 20, 22, 18, 22, 22, 24, 18, 22, 24];
+        $column_count = count($matrix[0] ?? []);
+        $widths = array_slice($default_widths, 0, $column_count);
+        while (count($widths) < $column_count) {
+            $widths[] = 22;
+        }
         $columns = [];
         foreach ($widths as $index => $width) {
             $columns[] = '<col min="' . ($index + 1) . '" max="' . ($index + 1) . '" width="' . $width . '" customWidth="1"/>';

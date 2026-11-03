@@ -69,6 +69,20 @@ Expected approved result:
 
 ## Import Updated Price Data
 
+For routine price changes, use the dedicated price-only workflow:
+
+1. Open LuxRide -> Pricing & Routes.
+2. Click Download populated price update template (.xlsx).
+3. Change only the six Sedan/MPV/Mini Van one-way and round-trip price columns. Keep every `route_code` unchanged.
+4. Upload the workbook and click Validate prices.
+5. Confirm the result is clean and `routes_to_disable` is `0`.
+6. Upload the same workbook and click Apply price update.
+7. Verify sample quotes for all three vehicles and both trip types.
+
+Column order does not matter because headers are matched by name. Price-only mode never updates route labels, trip names, fee flags, classifications, settings, display order, or enabled status.
+
+For a complete route-data replacement only:
+
 1. Open LuxRide -> Pricing & Routes.
 2. Upload `build\luxride-workbook-import.json`.
 3. Click Dry run / validate.
@@ -117,10 +131,10 @@ Supported customer trip types remain One Way and Round Trip even when the recomm
 ## Export Current Pricing
 
 1. Open LuxRide -> Pricing & Routes.
-2. Click Export pricing backup.
-3. Store the CSV next to the deployment/import evidence.
+2. Click Export full pricing backup (.xlsx).
+3. Store the XLSX next to the deployment/import evidence.
 
-The export is one route per row and includes route code, bilingual labels, enabled/recommended/classification fields, airport/permit/accommodation flags, accommodation override, sedan/MPV/minivan one-way and round-trip price columns, and workbook source metadata.
+The export is one route per row and uses the same full-import column order. It includes route code, bilingual labels and trip names, enabled/recommended/classification fields, airport/permit/accommodation flags, accommodation override, sedan/MPV/minivan one-way and round-trip price columns, and workbook source metadata.
 
 ## Manage Bookings
 

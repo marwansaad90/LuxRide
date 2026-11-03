@@ -106,14 +106,13 @@ Expected approved matrix:
 ### Template download and import
 
 1. Open `LuxRide > Pricing & Routes`.
-2. Under `Workbook Import`, click `Download import template (.xlsx)`.
-3. Add or edit rows in the downloaded workbook while preserving stable route codes.
-4. Keep Arabic text in the `pickup_ar` and `destination_ar` columns. Save the workbook as UTF-8-compatible content when using CSV.
-5. Upload the `.xlsx`, `.csv`, or approved JSON payload.
-6. Click `Dry run / validate` and fix every reported error.
-7. Export a pricing backup.
-8. Click `Apply clean import` only after the dry run and backup are confirmed.
-9. Recheck route count and price-value count, then test representative quotes in EN and AR.
+2. For routine price changes, click `Download populated price update template (.xlsx)`.
+3. Change only the six price columns and keep every `route_code` unchanged. Column order does not matter.
+4. Upload the file and click `Validate prices`; fix every reported error.
+5. Confirm `routes_to_disable` is zero, then export a full pricing backup.
+6. Upload the same file and click `Apply price update`.
+7. Recheck route and price-value counts, then test representative quotes for all vehicles and both trip types.
+8. Use `Full routes import (advanced)` only for a complete route-data replacement; omitted routes may be disabled by a full import.
 
 Template columns are:
 

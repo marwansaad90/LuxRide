@@ -16,6 +16,7 @@ final class LuxRide_Booking_Admin
         add_action('admin_post_luxride_booking_import', [self::class, 'handle_import']);
         add_action('admin_post_luxride_booking_export', [self::class, 'handle_export']);
         add_action('admin_post_luxride_booking_template_xlsx', [self::class, 'download_template_xlsx']);
+        add_action('admin_post_luxride_booking_price_template_xlsx', [self::class, 'download_price_template_xlsx']);
         add_action('admin_post_luxride_booking_export_bookings', [self::class, 'export_bookings']);
         add_action('admin_post_luxride_booking_export_bookings_xlsx', [self::class, 'export_bookings_xlsx']);
         add_action('admin_post_luxride_booking_update_status', [self::class, 'update_booking_status']);
@@ -273,7 +274,12 @@ CSS;
             self::redirect(['luxride_notice' => 'import_missing']);
         }
 
-        $payload = LuxRide_Booking_Importer::parse_upload(
+        $mode = sanitize_key((string) ($_POST['import_mode'] ?? 'dry_run'));
+        $price_only = in_array($mode, ['price_dry_run', 'price_apply'], true);
+        $payload = $price_only ? LuxRide_Booking_Importer::parse_price_upload(
+            (string) $upload['tmp_name'],
+            sanitize_file_name((string) ($upload['name'] ?? ''))
+        ) : LuxRide_Booking_Importer::parse_upload(
             (string) $upload['tmp_name'],
             sanitize_file_name((string) ($upload['name'] ?? ''))
         );
@@ -281,10 +287,15 @@ CSS;
             self::redirect(['luxride_notice' => 'import_invalid_file']);
         }
 
-        $mode = sanitize_key((string) ($_POST['import_mode'] ?? 'dry_run'));
-        $result = 'apply' === $mode
-            ? LuxRide_Booking_Importer::apply($payload, get_current_user_id())
-            : LuxRide_Booking_Importer::dry_run($payload);
+        if ($price_only) {
+            $result = 'price_apply' === $mode
+                ? LuxRide_Booking_Importer::apply_price_update($payload, get_current_user_id())
+                : LuxRide_Booking_Importer::dry_run_price_update($payload);
+        } else {
+            $result = 'apply' === $mode
+                ? LuxRide_Booking_Importer::apply($payload, get_current_user_id())
+                : LuxRide_Booking_Importer::dry_run($payload);
+        }
 
         $key = 'luxride_import_' . get_current_user_id() . '_' . wp_generate_password(8, false, false);
         set_transient($key, is_wp_error($result) ? [
@@ -292,7 +303,11 @@ CSS;
             'details' => $result->get_error_data(),
         ] : $result, 15 * MINUTE_IN_SECONDS);
 
-        self::redirect(['luxride_notice' => is_wp_error($result) ? 'import_failed' : ('apply' === $mode ? 'import_applied' : 'import_dry_run'), 'result_key' => $key]);
+        $applied = in_array($mode, ['apply', 'price_apply'], true);
+        $success_notice = $price_only
+            ? ($applied ? 'price_update_applied' : 'price_update_dry_run')
+            : ($applied ? 'import_applied' : 'import_dry_run');
+        self::redirect(['luxride_notice' => is_wp_error($result) ? 'import_failed' : $success_notice, 'result_key' => $key]);
     }
 
     public static function handle_export(): void
@@ -300,9 +315,32 @@ CSS;
         self::guard_action('luxride_booking_export');
 
         nocache_headers();
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="luxride-pricing-routes-' . gmdate('Ymd-His') . '.csv"');
-        echo LuxRide_Booking_Importer::export_csv(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        $xlsx = LuxRide_Booking_Importer::export_xlsx();
+        if (is_wp_error($xlsx)) {
+            wp_die(esc_html($xlsx->get_error_message()));
+        }
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="luxride-pricing-routes-' . gmdate('Ymd-His') . '.xlsx"');
+        header('Content-Length: ' . strlen($xlsx));
+        echo $xlsx; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        exit;
+    }
+
+    public static function download_price_template_xlsx(): void
+    {
+        self::guard_action('luxride_booking_price_template_xlsx');
+        $xlsx = LuxRide_Booking_Importer::price_update_template_xlsx();
+
+        if (is_wp_error($xlsx)) {
+            wp_die(esc_html($xlsx->get_error_message()));
+        }
+
+        nocache_headers();
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="luxride-price-update-template.xlsx"');
+        header('Content-Length: ' . strlen($xlsx));
+        echo $xlsx; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         exit;
     }
 
@@ -709,20 +747,26 @@ CSS;
     private static function render_import_form(): void
     {
         ?>
-        <h2><?php echo esc_html__('Workbook Import', 'luxride-booking-engine'); ?></h2>
+        <h2><?php echo esc_html__('Update prices from Excel', 'luxride-booking-engine'); ?></h2>
+        <p><?php echo esc_html__('Download the populated price template, change only the six price columns, validate it, then apply it. This mode never changes route names, fees, settings, or route status.', 'luxride-booking-engine'); ?></p>
+        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 8px 0 16px;">
+            <input type="hidden" name="action" value="luxride_booking_price_template_xlsx">
+            <?php wp_nonce_field('luxride_booking_price_template_xlsx'); ?>
+            <?php submit_button(__('Download populated price update template (.xlsx)', 'luxride-booking-engine'), 'secondary', 'submit', false); ?>
+        </form>
         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data" style="max-width: 900px;">
             <input type="hidden" name="action" value="luxride_booking_import">
             <?php wp_nonce_field('luxride_booking_import'); ?>
             <table class="form-table" role="presentation">
                 <tr>
-                    <th scope="row"><label for="pricing_payload"><?php echo esc_html__('Pricing & routes workbook', 'luxride-booking-engine'); ?></label></th>
-                    <td><input id="pricing_payload" name="pricing_payload" type="file" accept="application/json,.json,.csv,.xlsx" required><p class="description"><?php echo esc_html__('Upload the downloaded template after adding your route data.', 'luxride-booking-engine'); ?></p></td>
+                    <th scope="row"><label for="price_update_payload"><?php echo esc_html__('Price update workbook', 'luxride-booking-engine'); ?></label></th>
+                    <td><input id="price_update_payload" name="pricing_payload" type="file" accept=".csv,.xlsx" required><p class="description"><?php echo esc_html__('Column order may be changed. Keep every route_code and all six price columns.', 'luxride-booking-engine'); ?></p></td>
                 </tr>
                 <tr>
                     <th scope="row"><?php echo esc_html__('Action', 'luxride-booking-engine'); ?></th>
                     <td>
-                        <button class="button" name="import_mode" value="dry_run"><?php echo esc_html__('Dry run / validate', 'luxride-booking-engine'); ?></button>
-                        <button class="button button-primary" name="import_mode" value="apply"><?php echo esc_html__('Apply clean import', 'luxride-booking-engine'); ?></button>
+                        <button class="button" name="import_mode" value="price_dry_run"><?php echo esc_html__('Validate prices', 'luxride-booking-engine'); ?></button>
+                        <button class="button button-primary" name="import_mode" value="price_apply"><?php echo esc_html__('Apply price update', 'luxride-booking-engine'); ?></button>
                     </td>
                 </tr>
             </table>
@@ -730,12 +774,33 @@ CSS;
         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 8px 0 24px;">
             <input type="hidden" name="action" value="luxride_booking_export">
             <?php wp_nonce_field('luxride_booking_export'); ?>
-            <?php submit_button(__('Export pricing backup', 'luxride-booking-engine'), 'secondary', 'submit', false); ?>
+            <?php submit_button(__('Export full pricing backup (.xlsx)', 'luxride-booking-engine'), 'secondary', 'submit', false); ?>
         </form>
+
+        <hr>
+        <h2><?php echo esc_html__('Full routes import (advanced)', 'luxride-booking-engine'); ?></h2>
+        <p><?php echo esc_html__('Use this only when adding or changing complete route data. Routes omitted from a full import may be disabled.', 'luxride-booking-engine'); ?></p>
         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin: 8px 0 24px;">
             <input type="hidden" name="action" value="luxride_booking_template_xlsx">
             <?php wp_nonce_field('luxride_booking_template_xlsx'); ?>
-            <?php submit_button(__('Download import template (.xlsx)', 'luxride-booking-engine'), 'secondary', 'submit', false); ?>
+            <?php submit_button(__('Download full routes import template (.xlsx)', 'luxride-booking-engine'), 'secondary', 'submit', false); ?>
+        </form>
+        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" enctype="multipart/form-data" style="max-width: 900px; margin-bottom: 24px;">
+            <input type="hidden" name="action" value="luxride_booking_import">
+            <?php wp_nonce_field('luxride_booking_import'); ?>
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row"><label for="pricing_payload"><?php echo esc_html__('Pricing & routes workbook', 'luxride-booking-engine'); ?></label></th>
+                    <td><input id="pricing_payload" name="pricing_payload" type="file" accept="application/json,.json,.csv,.xlsx" required></td>
+                </tr>
+                <tr>
+                    <th scope="row"><?php echo esc_html__('Action', 'luxride-booking-engine'); ?></th>
+                    <td>
+                        <button class="button" name="import_mode" value="dry_run"><?php echo esc_html__('Dry run / validate full import', 'luxride-booking-engine'); ?></button>
+                        <button class="button" name="import_mode" value="apply"><?php echo esc_html__('Apply clean full import', 'luxride-booking-engine'); ?></button>
+                    </td>
+                </tr>
+            </table>
         </form>
         <?php
     }
@@ -1316,6 +1381,8 @@ CSS;
             'import_failed' => __('Import failed validation.', 'luxride-booking-engine'),
             'import_dry_run' => __('Dry run completed.', 'luxride-booking-engine'),
             'import_applied' => __('Clean import applied.', 'luxride-booking-engine'),
+            'price_update_dry_run' => __('Price update validation completed. No data was changed.', 'luxride-booking-engine'),
+            'price_update_applied' => __('Price update applied. Route details and status were not changed.', 'luxride-booking-engine'),
             'booking_status_saved' => __('Booking status updated.', 'luxride-booking-engine'),
             'booking_status_saved_confirmation_sent' => __('Booking status updated and customer confirmation email sent.', 'luxride-booking-engine'),
             'booking_status_saved_confirmation_failed' => __('Booking status updated, but the customer confirmation email failed. Check the booking confirmation panel for details.', 'luxride-booking-engine'),
