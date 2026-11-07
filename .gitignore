@@ -8,5 +8,16 @@ coverage/
 !.env.example
 .DS_Store
 Thumbs.db
+*.sql
+*.sql.gz
+*.dump
+*.bak
+backups/
+wordpress/wp-config.php
+wordpress/wp-content/uploads/
+wordpress/wp-content/cache/
+wordpress/wp-content/upgrade/
+wordpress/wp-content/ai1wm-backups/
+wordpress/wp-content/updraft/
 qa-screenshots/**/profile-*/
 qa-screenshots/**/profile-abs-*/

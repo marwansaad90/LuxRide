@@ -10,6 +10,7 @@ This folder contains the maintained handoff and operating documentation for LuxR
 | Pricing administrator | [Pricing admin guide](PRICING_ADMIN_GUIDE.md) | [تدريب الإدارة](LUXRIDE_ADMIN_TRAINING_AR.md) |
 | Booking operations | [Phase 3 operations training](PHASE_3_BOOKING_OPERATIONS_TRAINING.md) | [تدريب الإدارة](LUXRIDE_ADMIN_TRAINING_AR.md) |
 | Search and indexing | [SEO audit](SEO_AUDIT.md) | See the Arabic complete guide |
+| GitHub ownership and future updates | [GitHub handoff guide](GITHUB_HANDOFF_EN.md) | [دليل تسليم GitHub](GITHUB_HANDOFF_AR.md) |
 
 The complete guides are the preferred entry point because they explain the current architecture, bilingual customer/admin workflows, REST contract, pricing workbook, availability, promotions, booking operations, deployment, and QA. Older phase documents remain useful for historical decisions but should not override the current code or the complete guides.
 

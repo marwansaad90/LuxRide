@@ -7,6 +7,8 @@
 - [Complete documentation in English](project-docs/LUXRIDE_COMPLETE_DOCUMENTATION_EN.md)
 - [الوثائق الكاملة بالعربية](project-docs/LUXRIDE_COMPLETE_DOCUMENTATION_AR.md)
 - [Documentation index](project-docs/README.md)
+- [GitHub ownership and update guide](project-docs/GITHUB_HANDOFF_EN.md)
+- [دليل تسليم ورفع المشروع على GitHub](project-docs/GITHUB_HANDOFF_AR.md)
 - [Current delivery and historical handoff](HANDOFF.md)
 
 LuxRide is a bilingual English/Arabic React and Vite application for fixed-price private transfers from Hurghada across the Red Sea coast and Egypt. It includes the homepage calculator, three-step booking flow, live WordPress route pricing, fleet selection, Unforgettable Experiences, customer information pages, official Tripadvisor widgets, availability, promotions, and booking operations.
