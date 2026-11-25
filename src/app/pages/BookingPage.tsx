@@ -824,37 +824,29 @@ export function BookingPage() {
               <div className="space-y-4">
                 {needsReturn && (
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    {trip === "overday" ? (
-                      <Field
-                        label={isAR ? "تاريخ العودة" : "Return Date"}
-                        labelCls={labelCls}
-                        note={isAR ? "هذا المسار يعود في نفس تاريخ المغادرة." : "This route returns on the same date as departure."}
-                      >
-                        <input type="date" value={date} readOnly className={`${inputCls} bg-gray-50`} aria-readonly="true" />
-                      </Field>
-                    ) : (
-                      <Field
-                        label={isAR ? "تاريخ العودة *" : "Return Date *"}
-                        labelCls={labelCls}
-                        note={isAR ? "هذا المسار يتطلب تاريخ عودة لاحقاً." : "This route requires a later return date."}
-                      >
-                        <input
-                          type="date"
-                          value={returnDate}
-                          onChange={(e) => setReturnDate(e.target.value)}
-                          className={inputCls}
-                          min={date ? addDays(date, 1) : todayLocal}
-                        />
-                      </Field>
-                    )}
+                    <Field
+                      label={isAR ? "تاريخ العودة *" : "Return Date *"}
+                      labelCls={labelCls}
+                      note={trip === "overnight"
+                        ? (isAR ? "هذا المسار يتطلب تاريخ عودة لاحقاً." : "This route requires a later return date.")
+                        : (isAR ? "يمكنك اختيار يوم المغادرة أو تاريخ عودة لاحق." : "Choose the departure date or a later return date.")}
+                    >
+                      <input
+                        type="date"
+                        value={returnDate}
+                        onChange={(e) => setReturnDate(e.target.value)}
+                        className={inputCls}
+                        min={trip === "overnight" ? (date ? addDays(date, 1) : todayLocal) : (date || todayLocal)}
+                      />
+                    </Field>
                     <Field label={isAR ? "وقت العودة *" : "Return Time *"} labelCls={labelCls}>
                       <input type="time" value={returnTime} onChange={(e) => setReturnTime(e.target.value)} className={inputCls} />
                     </Field>
                     {returnTime && !hasValidReturn && (
                       <p role="alert" className="text-sm text-red-600 sm:col-span-2">
                         {isAR
-                          ? trip === "overday" ? "يجب أن تكون العودة في اليوم نفسه وبعد المغادرة." : "يجب أن تكون العودة في يوم لاحق."
-                          : trip === "overday" ? "Return must be later on the same day." : "Return must be on a later date."}
+                          ? trip === "overday" ? "يجب أن تكون العودة بعد المغادرة وفي التاريخ نفسه أو تاريخ لاحق." : "يجب أن تكون العودة في يوم لاحق."
+                          : trip === "overday" ? "Return must be after departure, on the same date or a later date." : "Return must be on a later date."}
                       </p>
                     )}
                   </div>

@@ -407,12 +407,15 @@ describe("vehicle and booking validation", () => {
     });
   });
 
-  it("validates return fields for automatic Overday and Overnight classifications", () => {
+  it("allows editable same-day or later returns for Overday while preserving Overnight rules", () => {
     expect(isValidReturn("overday", "2026-08-10", "08:00", "2026-08-10", "18:00")).toBe(true);
-    expect(isValidReturn("overday", "2026-08-10", "08:00", "2026-08-11", "08:00")).toBe(false);
+    expect(isValidReturn("overday", "2026-08-10", "08:00", "2026-08-11", "08:00")).toBe(true);
+    expect(isValidReturn("overday", "2026-08-10", "08:00", "2026-08-09", "18:00")).toBe(false);
     expect(isValidReturn("overnight", "2026-08-10", "20:00", "2026-08-11", "07:00")).toBe(true);
     expect(isValidReturn("overnight", "2026-08-10", "08:00", "2026-08-10", "20:00")).toBe(false);
     expect(normalizeReturnFields("overday", "2026-08-10", "", "18:00")).toEqual({ returnDate: "2026-08-10", returnTime: "18:00" });
+    expect(normalizeReturnFields("overday", "2026-08-10", "2026-08-12", "18:00")).toEqual({ returnDate: "2026-08-12", returnTime: "18:00" });
+    expect(normalizeReturnFields("overday", "2026-08-10", "2026-08-09", "18:00")).toEqual({ returnDate: "2026-08-10", returnTime: "18:00" });
   });
 
   it("keeps the verified Alexandria overnight examples derived from workbook values", () => {

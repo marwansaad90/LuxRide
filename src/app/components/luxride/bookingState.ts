@@ -159,7 +159,7 @@ export function isValidReturn(
 ): boolean {
   if (trip === "oneWay") return true;
   if (!departureDate || !departureTime || !returnDate || !returnTime) return false;
-  if (trip === "overday" && returnDate !== departureDate) return false;
+  if (returnDate < departureDate) return false;
   if (trip === "overnight" && returnDate <= departureDate) return false;
 
   const departure = new Date(`${departureDate}T${departureTime}`).getTime();
@@ -182,7 +182,8 @@ export function normalizeReturnFields(
 ): { returnDate: string; returnTime: string } {
   if (trip === "oneWay") return { returnDate: "", returnTime: "" };
   if (trip === "overday") {
-    return { returnDate: departureDate || "", returnTime };
+    if (!departureDate) return { returnDate: "", returnTime };
+    return { returnDate: !returnDate || returnDate < departureDate ? departureDate : returnDate, returnTime };
   }
   if (!departureDate || !returnDate || returnDate <= departureDate) {
     return { returnDate: "", returnTime };

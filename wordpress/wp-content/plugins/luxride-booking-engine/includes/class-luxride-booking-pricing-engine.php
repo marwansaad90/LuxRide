@@ -103,7 +103,7 @@ final class LuxRide_Booking_Pricing_Engine
         $airport_fee = (int) $route['airport_fee_applicable'] ? (float) $settings['airport_surcharge_eur'] : 0.0;
         $permit_fee = (int) $route['permit_required'] ? (float) $settings['permit_fee_' . $vehicle_key . '_eur'] : 0.0;
         $accommodation_enabled = (int) ($route['accommodation_applicable'] ?? 1) === 1;
-        $nights = $accommodation_enabled ? self::overnight_nights($classification, $outbound_datetime, $return_datetime) : 0;
+        $nights = $accommodation_enabled ? self::return_nights($outbound_datetime, $return_datetime) : 0;
         $route_accommodation = isset($route['accommodation_fee_eur']) ? (float) $route['accommodation_fee_eur'] : 0.0;
         $accommodation_per_night = $route_accommodation > 0 ? $route_accommodation : (float) $settings['driver_accommodation_eur'];
         $accommodation_fee = $nights * $accommodation_per_night;
@@ -112,7 +112,7 @@ final class LuxRide_Booking_Pricing_Engine
         $promotional_base = (float) $promotion['promotional_amount'];
         $original_total = $base + $airport_fee + $permit_fee + $accommodation_fee;
         $total = $promotional_base + $airport_fee + $permit_fee + $accommodation_fee;
-        $required_fields = self::required_fields($route, $trip_type, $classification);
+        $required_fields = self::required_fields($route, $trip_type);
         $validation = self::validate_time_fields($trip_type, $classification, $outbound_datetime, $return_datetime, (int) $settings['minimum_lead_hours']);
 
         if (is_wp_error($validation)) {
@@ -244,16 +244,13 @@ final class LuxRide_Booking_Pricing_Engine
         ) ?: null;
     }
 
-    private static function required_fields(array $route, string $trip_type, string $classification): array
+    private static function required_fields(array $route, string $trip_type): array
     {
         $fields = ['customer_name', 'phone', 'passengers', 'bags', 'outbound_datetime', 'exact_location'];
 
         if ('round_trip' === $trip_type) {
-            $fields[] = 'return_time';
-        }
-
-        if ('overnight' === $classification) {
             $fields[] = 'return_date';
+            $fields[] = 'return_time';
         }
 
         if ((int) $route['airport_fee_applicable'] && false !== strpos(strtolower((string) $route['pickup_label']), 'airport')) {
@@ -307,10 +304,6 @@ final class LuxRide_Booking_Pricing_Engine
             return self::error('luxride_invalid_return_datetime', 'Return date and time must be after departure.', 'تاريخ ووقت العودة يجب أن يكونا بعد الانطلاق.', 400);
         }
 
-        if ('overday' === $classification && $returning->format('Y-m-d') !== $outbound->format('Y-m-d')) {
-            return self::error('luxride_invalid_overday_return', 'Overday returns must be on the departure date.', 'عودة اليوم الكامل يجب أن تكون في نفس تاريخ الانطلاق.', 400);
-        }
-
         if ('overnight' === $classification && $returning->format('Y-m-d') <= $outbound->format('Y-m-d')) {
             return self::error('luxride_invalid_overnight_return', 'Overnight returns must use a later return date.', 'رحلات المبيت يجب أن تستخدم تاريخ عودة لاحقاً.', 400);
         }
@@ -318,9 +311,9 @@ final class LuxRide_Booking_Pricing_Engine
         return true;
     }
 
-    private static function overnight_nights(string $classification, string $outbound_datetime, string $return_datetime): int
+    private static function return_nights(string $outbound_datetime, string $return_datetime): int
     {
-        if ('overnight' !== $classification || '' === $outbound_datetime || '' === $return_datetime) {
+        if ('' === $outbound_datetime || '' === $return_datetime) {
             return 0;
         }
 
@@ -331,11 +324,11 @@ final class LuxRide_Booking_Pricing_Engine
             ?: date_create_immutable($return_datetime, $timezone);
 
         if (!$outbound || !$returning || $returning <= $outbound) {
-            return 1;
+            return 0;
         }
 
         $days = (int) $outbound->setTime(0, 0)->diff($returning->setTime(0, 0))->format('%a');
-        return max(1, $days);
+        return max(0, $days);
     }
 
     private static function suggest_vehicles(int $passengers, int $bags): array
